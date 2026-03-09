@@ -1,0 +1,171 @@
+<div class="auth-page">
+
+  <!-- ── Brand Panel ──────────────────────────────────── -->
+  <aside class="brand-panel">
+    <div class="bp-inner">
+
+      <div class="bp-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="bp-logo-icon">
+          <path d="M12 1.5l-9.5 4.5v6c0 5.5 3.8 10.7 9.5 12 5.7-1.3 9.5-6.5 9.5-12v-6L12 1.5z" opacity="0.2"/>
+          <path d="M12 3.5L6.5 16h2.5l1.3-3h3.4l1.3 3h2.5L12 3.5zm-1.2 7h2.4L12 6.5 10.8 10.5z" opacity="0.6"/>
+          <path d="M9.5 13.5l2.5 2.5 6-6-1.5-1.5-4.5 4.5-1-1-1.5 1.5z" />
+        </svg>
+        <span>AssureFlow</span>
+      </div>
+
+      <div class="bp-hero">
+        <h1>Manage insurance<br><em>with confidence.</em></h1>
+        <p>Streamline your workflows, automate claims and deliver exceptional service to your clients.</p>
+      </div>
+
+      <ul class="bp-features">
+        <li>
+          <div class="feat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <span>Smart claims processing &amp; automation</span>
+        </li>
+        <li>
+          <div class="feat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <span>Real-time dashboards &amp; analytics</span>
+        </li>
+        <li>
+          <div class="feat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <span>Secure &amp; enterprise-grade compliant</span>
+        </li>
+      </ul>
+
+      <div class="bp-stats">
+        <div class="stat">
+          <strong>10k+</strong>
+          <span>Clients</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <strong>99.9%</strong>
+          <span>Uptime</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <strong>ISO 27001</strong>
+          <span>Certified</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="bp-deco bp-deco--1"></div>
+    <div class="bp-deco bp-deco--2"></div>
+    <div class="bp-deco bp-deco--3"></div>
+  </aside>
+
+  <!-- ── Form Panel ──────────────────────────────────── -->
+  <main class="form-panel">
+    <div class="fc">
+
+      <!-- Mobile logo -->
+      <div class="fc-mobile-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+          <path d="M12 1.5l-9.5 4.5v6c0 5.5 3.8 10.7 9.5 12 5.7-1.3 9.5-6.5 9.5-12v-6L12 1.5z" opacity="0.2"/>
+          <path d="M12 3.5L6.5 16h2.5l1.3-3h3.4l1.3 3h2.5L12 3.5zm-1.2 7h2.4L12 6.5 10.8 10.5z" opacity="0.6"/>
+          <path d="M9.5 13.5l2.5 2.5 6-6-1.5-1.5-4.5 4.5-1-1-1.5 1.5z" />
+        </svg>
+        <span>AssureFlow</span>
+      </div>
+
+      <header class="fc-header">
+        <h2>Welcome back</h2>
+        <p>Sign in to your account to continue</p>
+      </header>
+
+      <form
+        (submit)="onSubmit(email.value, password.value); $event.preventDefault()"
+        class="fc-form"
+        novalidate
+      >
+
+        <!-- Email -->
+        <div class="field">
+          <label for="email">Email address</label>
+          <div class="field-wrap">
+            <svg class="field-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"/>
+              <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z"/>
+            </svg>
+            <input #email id="email" type="email" placeholder="you@company.com" autocomplete="email" required />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+          <div class="field-label-row">
+            <label for="password">Password</label>
+            <a href="#" class="forgot-link" tabindex="-1">Forgot password?</a>
+          </div>
+          <div class="field-wrap">
+            <svg class="field-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/>
+            </svg>
+            <input #password id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required />
+            <button type="button" class="toggle-pw" (click)="showPassword = !showPassword" [title]="showPassword ? 'Hide password' : 'Show password'">
+              @if (showPassword) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z" clip-rule="evenodd"/>
+                  <path d="m10.748 13.93 2.523 2.524a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z"/>
+                </svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                  <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd"/>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        @if (error) {
+          <div class="alert alert--error" role="alert">
+            <svg class="alert-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
+            </svg>
+            {{ error }}
+          </div>
+        }
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          @if (isLoading) {
+            <span class="spinner" aria-hidden="true"></span>
+            Signing in…
+          } @else {
+            Sign In
+            <svg class="btn-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/>
+            </svg>
+          }
+        </button>
+
+      </form>
+
+      <p class="fc-switch">
+        Don't have an account? <a routerLink="/register">Create one</a>
+      </p>
+
+    </div>
+  </main>
+
+</div>
