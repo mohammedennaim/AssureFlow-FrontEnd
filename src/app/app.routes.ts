@@ -7,11 +7,47 @@ export const routes: Routes = [
 	{ path: 'register', loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
 
 	// Dashboard Routes protected by auth and role guards
+	// Dashboard Routes protected by auth and role guards
 	{
-		path: 'admin-dashboard',
-		loadComponent: () => import('./features/dashboard/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+		path: 'admin',
+		loadComponent: () => import('./features/admin/layout/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
 		canActivate: [authGuard, roleGuard],
-		data: { roles: ['ADMIN'] }
+		data: { roles: ['ADMIN'] },
+		children: [
+			{
+				path: 'dashboard',
+				loadComponent: () => import('./features/dashboard/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+			},
+			{
+				path: 'users',
+				loadComponent: () => import('./features/admin/users/users.component').then(m => m.UsersComponent)
+			},
+			{
+				path: 'clients',
+				loadComponent: () => import('./features/admin/clients/clients.component').then(m => m.ClientsComponent)
+			},
+			{
+				path: 'policies',
+				loadComponent: () => import('./features/admin/policies/policies.component').then(m => m.PoliciesComponent)
+			},
+			{
+				path: 'claims',
+				loadComponent: () => import('./features/admin/claims/claims.component').then(m => m.ClaimsComponent)
+			},
+			{
+				path: 'billing',
+				loadComponent: () => import('./features/admin/billing/billing.component').then(m => m.BillingComponent)
+			},
+			{
+				path: 'workflows',
+				loadComponent: () => import('./features/admin/workflows/workflows.component').then(m => m.WorkflowsComponent)
+			},
+			{
+				path: 'notifications',
+				loadComponent: () => import('./features/admin/notifications/notifications.component').then(m => m.NotificationsComponent)
+			},
+			{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+		]
 	},
 	{
 		path: 'agent-dashboard',

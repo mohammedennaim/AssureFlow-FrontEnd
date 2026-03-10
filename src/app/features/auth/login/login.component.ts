@@ -23,9 +23,16 @@ export class LoginComponent {
         this.isLoading = false;
         const role = this.auth.getUserRole();
 
+        console.log('[LoginComponent] Login successful. Extracted Role:', role);
+
         switch (role) {
           case 'ADMIN':
-            this.router.navigateByUrl('/admin-dashboard');
+            console.log('[LoginComponent] Navigating to /admin/dashboard');
+            this.router.navigateByUrl('/admin/dashboard').then(success => {
+              console.log('[LoginComponent] Navigation result:', success);
+            }).catch(err => {
+              console.error('[LoginComponent] Navigation error:', err);
+            });
             break;
           case 'AGENT':
             this.router.navigateByUrl('/agent-dashboard');
@@ -37,6 +44,7 @@ export class LoginComponent {
             this.router.navigateByUrl('/client-dashboard');
             break;
           default:
+            console.log('[LoginComponent] No matching role found, navigating to /login');
             this.router.navigateByUrl('/login');
             break;
         }

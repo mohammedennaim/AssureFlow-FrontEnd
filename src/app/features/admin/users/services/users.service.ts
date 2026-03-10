@@ -1,0 +1,35 @@
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { GetUsersUseCase } from '../../../../core/application/use-cases/users/get-users.use-case';
+import { CreateUserUseCase } from '../../../../core/application/use-cases/users/create-user.use-case';
+import { UpdateUserUseCase } from '../../../../core/application/use-cases/users/update-user.use-case';
+import { DeleteUserUseCase } from '../../../../core/application/use-cases/users/delete-user.use-case';
+import { User } from '../../../../core/domain/models/user.model';
+
+export type { User };
+
+@Injectable({ providedIn: 'root' })
+export class UsersService {
+  constructor(
+    private getUsersUseCase: GetUsersUseCase,
+    private createUserUseCase: CreateUserUseCase,
+    private updateUserUseCase: UpdateUserUseCase,
+    private deleteUserUseCase: DeleteUserUseCase
+  ) { }
+
+  getUsers(): Observable<User[]> {
+    return this.getUsersUseCase.execute();
+  }
+
+  createUser(data: { username: string; email: string; password: string; role?: string }): Observable<User> {
+    return this.createUserUseCase.execute(data);
+  }
+
+  updateUser(id: string, data: Partial<User>): Observable<User> {
+    return this.updateUserUseCase.execute(id, data);
+  }
+
+  deleteUser(id: string): Observable<void> {
+    return this.deleteUserUseCase.execute(id);
+  }
+}

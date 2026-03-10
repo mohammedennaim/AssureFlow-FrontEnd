@@ -1,0 +1,165 @@
+<div class="admin-wrapper d-flex w-100 h-100 bg-light">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar bg-dark text-white d-flex flex-column transition-all"
+        [class.collapsed]="isSidebarCollapsed">
+        <!-- Brand -->
+        <div class="sidebar-brand d-flex align-items-center justify-content-center py-4 border-bottom border-secondary">
+            <i class="fa-solid fa-shield-halved fs-3 text-primary me-2"></i>
+            <span class="fs-4 fw-bold text-uppercase tracking-wider brand-text" *ngIf="!isSidebarCollapsed">Assure<span
+                    class="text-primary">Flow</span></span>
+        </div>
+
+        <!-- Navigation List -->
+        <ul class="nav nav-pills flex-column mb-auto mt-3 px-2">
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/dashboard" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-gauge-high fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1 mt-3">
+                <small class="text-uppercase text-muted fw-bold px-3 nav-text" *ngIf="!isSidebarCollapsed"
+                    style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/users" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-users-gear fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Users & Roles</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/clients" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-building-user fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Clients</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/policies" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-file-shield fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Policies</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/claims" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-file-medical fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Claims</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1 mt-3">
+                <small class="text-uppercase text-muted fw-bold px-3 nav-text" *ngIf="!isSidebarCollapsed"
+                    style="font-size: 0.7rem; letter-spacing: 1px;">Operations</small>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/billing" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-file-invoice-dollar fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Billing</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/workflows" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-diagram-project fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Workflows</span>
+                </a>
+            </li>
+
+            <li class="nav-item mb-1">
+                <a routerLink="/admin/notifications" routerLinkActive="active"
+                    class="nav-link text-white d-flex align-items-center rounded-3 px-3 py-2 transition-colors">
+                    <i class="fa-solid fa-bell fs-5 text-center sidebar-icon"></i>
+                    <span class="ms-3 nav-text" *ngIf="!isSidebarCollapsed">Notifications</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Logout / Bottom Action -->
+        <div class="mt-auto px-2 py-3 border-top border-secondary">
+            <a class="nav-link text-danger d-flex align-items-center rounded-3 px-3 py-2 transition-colors"
+                role="button" tabindex="0">
+                <i class="fa-solid fa-right-from-bracket fs-5 text-center sidebar-icon"></i>
+                <span class="ms-3 nav-text fw-semibold" *ngIf="!isSidebarCollapsed">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="admin-main d-flex flex-column flex-grow-1 overflow-hidden transition-all">
+
+        <!-- Topbar Header -->
+        <header
+            class="admin-header bg-white shadow-sm d-flex justify-content-between align-items-center px-4 py-3 border-bottom z-1">
+            <button
+                class="btn btn-light rounded-circle shadow-sm border-0 d-flex align-items-center justify-content-center p-2"
+                (click)="toggleSidebar()" style="width: 40px; height: 40px;">
+                <i class="fa-solid fa-bars text-secondary fs-5"></i>
+            </button>
+
+            <div class="header-actions d-flex align-items-center">
+                <!-- Search -->
+                <div class="input-group d-none d-md-flex me-4 bg-light rounded-pill overflow-hidden border">
+                    <span class="input-group-text bg-transparent border-0 pe-1 text-muted"><i
+                            class="fa-solid fa-search"></i></span>
+                    <input type="text" class="form-control bg-transparent border-0 shadow-none" placeholder="Search...">
+                </div>
+
+                <!-- Notifications -->
+                <div class="position-relative me-4" role="button">
+                    <i class="fa-regular fa-bell fs-5 text-secondary"></i>
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                        <span class="visually-hidden">New alerts</span>
+                    </span>
+                </div>
+
+                <!-- User Profile -->
+                <div class="dropdown">
+                    <div class="d-flex align-items-center" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                            style="width: 40px; height: 40px;">
+                            AD
+                        </div>
+                        <div class="d-none d-md-flex flex-column ms-2">
+                            <span class="fw-bold fs-6 lh-1 mb-1 text-dark">Admin User</span>
+                            <span class="text-muted small lh-1">System Administrator</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down ms-2 text-muted small d-none d-md-inline"></i>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item py-2" href="#"><i class="fa-regular fa-user me-2 text-muted"></i>
+                                Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-gear me-2 text-muted"></i>
+                                Settings</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item py-2 text-danger" href="#"><i
+                                    class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area where child routes render -->
+        <main class="admin-content flex-grow-1 overflow-auto bg-light position-relative">
+            <div class="p-4 h-100 w-100">
+                <router-outlet></router-outlet>
+            </div>
+        </main>
+
+    </div>
+</div>

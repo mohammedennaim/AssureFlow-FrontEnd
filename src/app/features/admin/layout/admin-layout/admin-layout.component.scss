@@ -1,0 +1,76 @@
+:host {
+    display: block;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.admin-wrapper {
+    height: 100vh;
+}
+
+// Sidebar Defaults
+.admin-sidebar {
+    width: 260px;
+    background-color: #1e293b !important; // Modern deeper dark blue
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+
+    .sidebar-icon {
+        width: 24px; // Fixed width to ensure alignment
+    }
+
+    .nav-link {
+        color: #cbd5e1 !important;
+        opacity: 0.8;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff !important;
+            opacity: 1;
+        }
+
+        &.active {
+            background-color: var(--bs-primary);
+            color: #ffffff !important;
+            opacity: 1;
+            box-shadow: 0 4px 6px -1px rgba(var(--bs-primary-rgb), 0.4);
+        }
+    }
+
+    // Collapsed State Sidebar
+    &.collapsed {
+        width: 80px;
+
+        .nav-link {
+            justify-content: center;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+    }
+}
+
+// Main Content
+.admin-main {
+    width: calc(100% - 260px);
+
+    .admin-header {
+        height: 70px;
+    }
+
+    .admin-content {
+        height: calc(100vh - 70px);
+    }
+}
+
+.transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-colors {
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
