@@ -8,21 +8,27 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   const isAuthenticated = authService.isAuthenticated();
   const isPublicRoute = route.data['public'];
+  const currentUrl = state.url;
 
-  if (isPublicRoute && isAuthenticated) {
-    const role = authService.getUserRole();
-    switch (role) {
-      case 'ADMIN':
-        return router.parseUrl('/admin/dashboard');
-      case 'AGENT':
-        return router.parseUrl('/agent/dashboard');
-      case 'FINANCE':
-        return router.parseUrl('/finance/dashboard');
-      case 'CLIENT':
-        return router.parseUrl('/client/dashboard');
-      default:
-        return router.parseUrl('/login');
+
+  if (isPublicRoute && (currentUrl === '/login' || currentUrl === '/register')) {
+    if (isAuthenticated) {
+      const role = authService.getUserRole();
+      switch (role) {
+        case 'ADMIN':
+          return router.parseUrl('/admin/dashboard');
+        case 'AGENT':
+          return router.parseUrl('/agent/dashboard');
+        case 'FINANCE':
+          return router.parseUrl('/finance/dashboard');
+        case 'CLIENT':
+          return router.parseUrl('/client/dashboard');
+        default:
+          authService.logout();
+          return true;
+      }
     }
+    return true;
   }
 
   if (!isAuthenticated) {
