@@ -7,7 +7,7 @@ export type { DashboardStats };
 
 @Injectable({ providedIn: 'root' })
 export class AdminStatsService {
-  constructor(private getDashboardStatsUseCase: GetDashboardStatsUseCase) { }
+  constructor(private getDashboardStatsUseCase: GetDashboardStatsUseCase) {}
 
   getDashboardStats(): Observable<DashboardStats> {
     return this.getDashboardStatsUseCase.execute();
