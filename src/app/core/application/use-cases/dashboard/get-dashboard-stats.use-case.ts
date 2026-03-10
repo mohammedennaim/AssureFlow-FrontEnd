@@ -1,11 +1,11 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { IDashboardRepository, DASHBOARD_REPOSITORY } from '../../../domain/ports/dashboard.repository.port';
+import { DASHBOARD_REPOSITORY } from '../../../domain/ports/dashboard.repository.port';
 import { DashboardStats } from '../../../domain/models/dashboard-stats.model';
 
 @Injectable({ providedIn: 'root' })
 export class GetDashboardStatsUseCase {
-  constructor(@Inject(DASHBOARD_REPOSITORY) private dashboardRepository: IDashboardRepository) { }
+  private dashboardRepository = inject(DASHBOARD_REPOSITORY);
 
   execute(): Observable<DashboardStats> {
     return this.dashboardRepository.getStats();

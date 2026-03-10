@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LoginUseCase } from '../application/use-cases/auth/login.use-case';
 import { RegisterUseCase } from '../application/use-cases/auth/register.use-case';
@@ -6,10 +6,8 @@ import { AuthToken } from '../domain/models/auth.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  constructor(
-    private loginUseCase: LoginUseCase,
-    private registerUseCase: RegisterUseCase
-  ) {}
+  private loginUseCase = inject(LoginUseCase);
+  private registerUseCase = inject(RegisterUseCase);
 
   login(email: string, password: string): Observable<AuthToken> {
     return this.loginUseCase.execute({ email, password });

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UsersService, User } from './services/users.service';
@@ -11,6 +11,9 @@ import { UsersService, User } from './services/users.service';
   styleUrl: './users.component.scss'
 })
 export class UsersComponent implements OnInit {
+  private usersService = inject(UsersService);
+  private fb = inject(FormBuilder);
+
   users: User[] = [];
   isLoading = true;
   error: string | null = null;
@@ -26,7 +29,7 @@ export class UsersComponent implements OnInit {
 
   readonly roles = ['ADMIN', 'AGENT', 'CLIENT', 'FINANCE'];
 
-  constructor(private usersService: UsersService, private fb: FormBuilder) {
+  constructor() {
     this.initForm();
   }
 

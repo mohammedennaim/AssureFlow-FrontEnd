@@ -50,22 +50,43 @@ export const routes: Routes = [
 		]
 	},
 	{
-		path: 'agent-dashboard',
-		loadComponent: () => import('./features/dashboard/agent-dashboard/agent-dashboard.component').then(m => m.AgentDashboardComponent),
+		path: 'agent',
+		loadComponent: () => import('./features/agent/layout/agent-layout/agent-layout.component').then(m => m.AgentLayoutComponent),
 		canActivate: [authGuard, roleGuard],
-		data: { roles: ['AGENT'] }
+		data: { roles: ['AGENT'] },
+		children: [
+			{
+				path: 'dashboard',
+				loadComponent: () => import('./features/agent/dashboard/agent-dashboard.component').then(m => m.AgentDashboardComponent)
+			},
+			{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+		]
 	},
 	{
-		path: 'finance-dashboard',
-		loadComponent: () => import('./features/dashboard/finance-dashboard/finance-dashboard.component').then(m => m.FinanceDashboardComponent),
+		path: 'client',
+		loadComponent: () => import('./features/client/layout/client-layout/client-layout.component').then(m => m.ClientLayoutComponent),
 		canActivate: [authGuard, roleGuard],
-		data: { roles: ['FINANCE'] }
+		data: { roles: ['CLIENT'] },
+		children: [
+			{
+				path: 'dashboard',
+				loadComponent: () => import('./features/client/dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent)
+			},
+			{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+		]
 	},
 	{
-		path: 'client-dashboard',
-		loadComponent: () => import('./features/dashboard/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent),
+		path: 'finance',
+		loadComponent: () => import('./features/finance/layout/finance-layout/finance-layout.component').then(m => m.FinanceLayoutComponent),
 		canActivate: [authGuard, roleGuard],
-		data: { roles: ['CLIENT'] }
+		data: { roles: ['FINANCE'] },
+		children: [
+			{
+				path: 'dashboard',
+				loadComponent: () => import('./features/finance/dashboard/finance-dashboard.component').then(m => m.FinanceDashboardComponent)
+			},
+			{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+		]
 	},
 
 	{ path: '', redirectTo: '/login', pathMatch: 'full' },

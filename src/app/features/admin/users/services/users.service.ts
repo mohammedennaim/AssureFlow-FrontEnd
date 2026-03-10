@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { GetUsersUseCase } from '../../../../core/application/use-cases/users/get-users.use-case';
 import { CreateUserUseCase } from '../../../../core/application/use-cases/users/create-user.use-case';
@@ -10,12 +10,10 @@ export type { User };
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  constructor(
-    private getUsersUseCase: GetUsersUseCase,
-    private createUserUseCase: CreateUserUseCase,
-    private updateUserUseCase: UpdateUserUseCase,
-    private deleteUserUseCase: DeleteUserUseCase
-  ) { }
+  private getUsersUseCase = inject(GetUsersUseCase);
+  private createUserUseCase = inject(CreateUserUseCase);
+  private updateUserUseCase = inject(UpdateUserUseCase);
+  private deleteUserUseCase = inject(DeleteUserUseCase);
 
   getUsers(): Observable<User[]> {
     return this.getUsersUseCase.execute();

@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
   imports: [RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
@@ -35,13 +36,13 @@ export class LoginComponent {
             });
             break;
           case 'AGENT':
-            this.router.navigateByUrl('/agent-dashboard');
+            this.router.navigateByUrl('/agent/dashboard');
             break;
           case 'FINANCE':
-            this.router.navigateByUrl('/finance-dashboard');
+            this.router.navigateByUrl('/finance/dashboard');
             break;
           case 'CLIENT':
-            this.router.navigateByUrl('/client-dashboard');
+            this.router.navigateByUrl('/client/dashboard');
             break;
           default:
             console.log('[LoginComponent] No matching role found, navigating to /login');

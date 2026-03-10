@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StatCardComponent } from './components/stat-card/stat-card.component';
 import { AdminStatsService, DashboardStats } from './services/admin-stats.service';
@@ -11,11 +11,11 @@ import { AdminStatsService, DashboardStats } from './services/admin-stats.servic
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
+  private adminStatsService = inject(AdminStatsService);
+
   stats: DashboardStats | null = null;
   loading = true;
   error: string | null = null;
-
-  constructor(private adminStatsService: AdminStatsService) {}
 
   ngOnInit(): void {
     this.loadStats();

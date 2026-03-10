@@ -25,9 +25,9 @@ export const roleGuard: CanActivateFn = (route, state) => {
   console.log('[RoleGuard] Access denied. Redirecting based on role fallback.');
   switch (userRole) {
     case 'ADMIN': return router.parseUrl('/admin/dashboard');
-    case 'AGENT': return router.parseUrl('/agent-dashboard');
-    case 'FINANCE': return router.parseUrl('/finance-dashboard');
-    case 'CLIENT': return router.parseUrl('/client-dashboard');
+    case 'AGENT': return router.parseUrl('/agent/dashboard');
+    case 'FINANCE': return router.parseUrl('/finance/dashboard');
+    case 'CLIENT': return router.parseUrl('/client/dashboard');
     default: return router.parseUrl('/login');
   }
 };
