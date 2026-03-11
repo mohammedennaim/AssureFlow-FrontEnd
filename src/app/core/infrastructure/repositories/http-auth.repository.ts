@@ -4,16 +4,20 @@ import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { IAuthRepository } from '../../domain/ports/auth.repository.port';
 import { LoginCredentials, RegisterCredentials, AuthToken } from '../../domain/models/auth.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class HttpAuthRepository implements IAuthRepository {
-  private readonly baseUrl = 'http://localhost:8080/api/v1/auth';
+  private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   constructor(private http: HttpClient) {}
 
   login(credentials: LoginCredentials): Observable<AuthToken> {
-    return this.http.post<{ data?: AuthToken } & AuthToken>(`${this.baseUrl}/login`, credentials).pipe(
-      map((res) => (res as { data?: AuthToken }).data ?? (res as AuthToken)),
+    return this.http.post<{ data?: { token?: string } }>(`${this.baseUrl}/login`, credentials).pipe(
+      map((res) => {
+        const token = res.data?.token ?? '';
+        return { token };
+      }),
       catchError(this.handleError)
     );
   }

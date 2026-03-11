@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GetUsersUseCase } from '../../../../core/application/use-cases/users/get-users.use-case';
-import { CreateUserUseCase } from '../../../../core/application/use-cases/users/create-user.use-case';
-import { UpdateUserUseCase } from '../../../../core/application/use-cases/users/update-user.use-case';
-import { DeleteUserUseCase } from '../../../../core/application/use-cases/users/delete-user.use-case';
-import { User } from '../../../../core/domain/models/user.model';
+import { GetUsersUseCase } from '../use-cases/users/get-users.use-case';
+import { CreateUserUseCase } from '../use-cases/users/create-user.use-case';
+import { UpdateUserUseCase } from '../use-cases/users/update-user.use-case';
+import { DeleteUserUseCase } from '../use-cases/users/delete-user.use-case';
+import { User } from '../../domain/models/user.model';
 
 export type { User };
 

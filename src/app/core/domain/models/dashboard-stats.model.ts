@@ -5,4 +5,7 @@ export interface DashboardStats {
   totalClaims: number;
   totalInvoices: number;
   totalWorkflows: number;
+  activePolicies?: number;
+  pendingClaims?: number;
+  monthlyRevenue?: number;
 }

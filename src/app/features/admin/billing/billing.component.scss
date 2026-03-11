@@ -1,0 +1,225 @@
+// Billing Component Styles
+:host { display: block; font-family: var(--font-family); }
+
+.billing-page { padding: 0; }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+
+  &__start {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    &__icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+  }
+
+  &__content {
+    .page-header__title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .page-header__subtitle {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+  }
+
+  &__actions {
+    .btn--primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-primary);
+      transition: all var(--transition-base);
+
+      &:hover {
+        box-shadow: var(--shadow-primary-lg);
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.125rem;
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    .stat-card__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .stat-card__value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+  }
+}
+
+.table-wrapper { animation: slideUp 0.5s ease-out; }
+
+.data-card {
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    th {
+      padding: 0.875rem 1rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+    }
+  }
+
+  tbody {
+    .billing-table__row {
+      border-bottom: 1px solid var(--border-light);
+      transition: all var(--transition-fast);
+      &:hover { background: var(--surface-alt); }
+      td { padding: 1rem; }
+    }
+  }
+}
+
+.invoice-number {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.client-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.amount {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.date, .due-date {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+
+  &.overdue {
+    color: var(--danger-500);
+    font-weight: 600;
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--paid {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+  }
+
+  &--pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+  }
+
+  &--overdue {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+  }
+
+  &--draft {
+    background: rgba(107, 114, 128, 0.1);
+    color: #475569;
+  }
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--surface-alt);
+    color: var(--primary);
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

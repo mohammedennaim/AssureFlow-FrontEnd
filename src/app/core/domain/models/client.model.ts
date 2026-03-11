@@ -5,6 +5,11 @@ export interface Client {
   email: string;
   phone?: string;
   address?: string;
+  city?: string;
+  zipCode?: string;
+  policiesCount?: number;
+  totalPremium?: number;
+  status?: string;
   createdAt: string;
   updatedAt: string;
 }

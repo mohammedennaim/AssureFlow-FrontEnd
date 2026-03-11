@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -12,6 +12,9 @@ import { AuthService } from '../../../../core/auth/auth.service';
 })
 export class AdminLayoutComponent {
   isSidebarCollapsed = false;
+  isUserMenuOpen = false;
+  isDark = false;
+
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -19,8 +22,33 @@ export class AdminLayoutComponent {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
+  toggleUserMenu(): void {
+    this.isUserMenuOpen = !this.isUserMenuOpen;
+  }
+
+  closeUserMenu(): void {
+    this.isUserMenuOpen = false;
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    if (this.isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.topbar__user-menu')) {
+      this.closeUserMenu();
+    }
   }
 }

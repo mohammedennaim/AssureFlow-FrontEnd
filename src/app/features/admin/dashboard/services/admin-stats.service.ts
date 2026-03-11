@@ -1,15 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GetDashboardStatsUseCase } from '../../../../core/application/use-cases/dashboard/get-dashboard-stats.use-case';
-import { DashboardStats } from '../../../../core/domain/models/dashboard-stats.model';
+import { AdminStatisticsService, DashboardKpiStats } from '../../../../core/application/services/admin-statistics.service';
 
-export type { DashboardStats };
+export type { DashboardKpiStats as DashboardStats };
 
 @Injectable({ providedIn: 'root' })
 export class AdminStatsService {
-  private getDashboardStatsUseCase = inject(GetDashboardStatsUseCase);
+  private adminStatisticsService = inject(AdminStatisticsService);
 
-  getDashboardStats(): Observable<DashboardStats> {
-    return this.getDashboardStatsUseCase.execute();
+  getDashboardStats(): Observable<DashboardKpiStats> {
+    return this.adminStatisticsService.getDashboardKpiStats();
   }
 }

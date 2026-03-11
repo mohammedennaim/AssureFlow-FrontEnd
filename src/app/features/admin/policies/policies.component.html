@@ -1,1 +1,134 @@
-<p>policies works!</p>
+<div class="policies-page">
+  <header class="page-header">
+    <div class="page-header__start">
+      <div class="page-header__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="page-header__content">
+        <h1 class="page-header__title">Policies</h1>
+        <p class="page-header__subtitle">Manage insurance policies</p>
+      </div>
+    </div>
+    <div class="page-header__actions">
+      <button class="btn btn--primary">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 3.75v10.5M3.75 9h10.5"/>
+        </svg>
+        New Policy
+      </button>
+    </div>
+  </header>
+
+  <section class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card__icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.5">
+          <path d="M10 17.5C14.14 17.5 17.5 14.14 17.5 10C17.5 5.86 14.14 2.5 10 2.5C5.86 2.5 2.5 5.86 2.5 10C2.5 14.14 5.86 17.5 10 17.5Z"/>
+          <path d="M6.5 10L9 12.5L13.5 7.5"/>
+        </svg>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Active Policies</span>
+        <span class="stat-card__value">{{ stats.active }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon" style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.5">
+          <path d="M12 6v6m0 0v4m0-4h4m-4 0H8"/>
+        </svg>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Monthly Revenue</span>
+        <span class="stat-card__value">{{ stats.revenue | currency:'EUR':'symbol':'1.0-0' }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="1.5">
+          <circle cx="10" cy="10" r="7"/>
+          <path d="M10 6.5v7"/>
+        </svg>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Expiring Soon</span>
+        <span class="stat-card__value">{{ stats.expiring }}</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="table-wrapper">
+    <div class="data-card">
+      <table class="policy-table">
+        <thead>
+          <tr>
+            <th>Policy</th>
+            <th>Client</th>
+            <th>Type</th>
+            <th>Premium</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (policy of filteredPolicies; track policy.id) {
+            <tr class="policy-table__row">
+              <td>
+                <div class="policy-cell">
+                  <span class="policy-cell__number">{{ policy.policyNumber }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="client-link" [routerLink]="['/admin/clients', policy.clientId]">{{ policy.clientName }}</span>
+              </td>
+              <td>
+                <span class="policy-type policy-type--{{ toLowerCase(policy.type) }}">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+                    @if (policy.type === 'AUTO') {
+                      <path d="M3 8h8M2 6h10v4H2z M4 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                    } @else if (policy.type === 'HOME') {
+                      <path d="M2 7l5-5 5 5M3 7v5h8V7"/>
+                    } @else {
+                      <circle cx="7" cy="7" r="5"/>
+                    }
+                  </svg>
+                  {{ policy.type }}
+                </span>
+              </td>
+              <td>
+                <span class="premium">{{ policy.premium | currency:'EUR':'symbol':'1.0-0' }}/mo</span>
+              </td>
+              <td>
+                <div class="duration-cell">
+                  <div class="progress-bar">
+                    <div class="progress-bar__fill" [style.width.%]="getProgress(policy.startDate, policy.endDate)"></div>
+                  </div>
+                  <span class="days-left" [class.days-left--warning]="getDaysLeft(policy.endDate) < 30">
+                    {{ getDaysLeft(policy.endDate) }} days left
+                  </span>
+                </div>
+              </td>
+              <td>
+                <span class="policy-status" [ngClass]="getStatusClass(policy.status)">
+                  <span class="policy-status__dot"></span>
+                  {{ policy.status }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="action-btn">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M8 11.5c1.93 0 3.5-1.57 3.5-3.5S9.93 4.5 8 4.5C6.07 4.5 4.5 6.07 4.5 8c0 1.93 1.57 3.5 3.5 3.5z"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
