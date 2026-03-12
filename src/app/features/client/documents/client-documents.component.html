@@ -1,0 +1,71 @@
+<div class="documents-page">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="page-header__content">
+      <div class="page-header__title">
+        <h1>My Documents</h1>
+        <p>Access your policy contracts and claim reports</p>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-btn" [class.active]="activeFilter === 'all'" (click)="activeFilter = 'all'">All</button>
+        <button class="filter-btn" [class.active]="activeFilter === 'POLICY'" (click)="activeFilter = 'POLICY'">Policies</button>
+        <button class="filter-btn" [class.active]="activeFilter === 'CLAIM'" (click)="activeFilter = 'CLAIM'">Claims</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Error Banner -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your documents...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && filteredDocuments.length === 0 && !errorMessage">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="6" width="28" height="36" rx="3" stroke="var(--border)" stroke-width="2"/><path d="M16 18H32M16 24H32M16 30H26" stroke="var(--border)" stroke-width="2" stroke-linecap="round"/></svg>
+    <h3>No documents found</h3>
+    <p>Your policy contracts and claim reports will appear here.</p>
+  </div>
+
+  <!-- Documents Grid -->
+  <div class="documents-grid" *ngIf="!isLoading && filteredDocuments.length > 0">
+    <div class="document-card" *ngFor="let doc of filteredDocuments">
+      <div class="document-card__icon" [class.policy-icon]="doc.type === 'POLICY'" [class.claim-icon]="doc.type === 'CLAIM'">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ng-container *ngIf="doc.type === 'POLICY'">
+            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2V8H20M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </ng-container>
+          <ng-container *ngIf="doc.type === 'CLAIM'">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </ng-container>
+        </svg>
+      </div>
+      <div class="document-card__content">
+        <div class="document-card__header">
+          <h4>{{ doc.title }}</h4>
+          <span [class]="getStatusClass(doc.status)">{{ doc.status }}</span>
+        </div>
+        <div class="document-card__meta">
+          <span class="doc-type">{{ doc.type === 'POLICY' ? 'Policy Contract' : 'Claim Report' }}</span>
+          <span class="doc-ref">Ref: {{ doc.reference }}</span>
+          <span class="doc-date">{{ doc.date | date:'mediumDate' }}</span>
+        </div>
+      </div>
+      <div class="document-card__actions">
+        <a [routerLink]="doc.type === 'POLICY' ? '/client/policies' : '/client/claims'" class="btn btn--outline btn--sm">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 7L7 13M1 7H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          View
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>

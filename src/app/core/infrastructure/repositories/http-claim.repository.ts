@@ -16,13 +16,14 @@ export class HttpClaimRepository implements IClaimRepository {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
         console.log('[ClaimRepository] getAll raw response:', res);
-        
+
         let data: ClaimDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
+
+        // Handle BaseResponse wrapper
+        if (res?.data && Array.isArray(res.data)) {
           data = res.data;
+        } else if (Array.isArray(res)) {
+          data = res;
         } else if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.claims && Array.isArray(res.claims)) {
@@ -30,7 +31,7 @@ export class HttpClaimRepository implements IClaimRepository {
         } else if (res?.items && Array.isArray(res.items)) {
           data = res.items;
         }
-        
+
         console.log('[ClaimRepository] extracted data:', data);
         return data.map(this.mapToClaim);
       }),
@@ -89,22 +90,27 @@ export class HttpClaimRepository implements IClaimRepository {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
         console.log('[ClaimRepository] getByClientId raw response:', res);
-        
+
         let data: ClaimDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
+
+        // Handle BaseResponse wrapper
+        if (res?.data && Array.isArray(res.data)) {
           data = res.data;
+        } else if (Array.isArray(res)) {
+          data = res;
         } else if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.claims && Array.isArray(res.claims)) {
           data = res.claims;
         }
-        
+
+        console.log('[ClaimRepository] getByClientId extracted data:', data);
         return data.map(this.mapToClaim);
       }),
-      catchError(() => of([]))
+      catchError((err) => {
+        console.error('[ClaimRepository] getByClientId error:', err);
+        return of([]);
+      })
     );
   }
 

@@ -7,7 +7,8 @@ export interface CreatePolicyData {
   type: string;
   startDate: string;
   endDate: string;
-  premium: number;
+  premiumAmount: number;
+  coverageAmount: number;
 }
 
 export interface IPolicyRepository {

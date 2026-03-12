@@ -70,6 +70,34 @@ export const routes: Routes = [
 				path: 'dashboard',
 				loadComponent: () => import('./features/client/dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent)
 			},
+			{
+				path: 'policies',
+				loadComponent: () => import('./features/client/policies/client-policies.component').then(m => m.ClientPoliciesComponent)
+			},
+			{
+				path: 'claims',
+				loadComponent: () => import('./features/client/claims/client-claims.component').then(m => m.ClientClaimsComponent)
+			},
+			{
+				path: 'billing',
+				loadComponent: () => import('./features/client/billing/client-billing.component').then(m => m.ClientBillingComponent)
+			},
+			{
+				path: 'profile',
+				loadComponent: () => import('./features/client/profile/client-profile.component').then(m => m.ClientProfileComponent)
+			},
+			{
+				path: 'documents',
+				loadComponent: () => import('./features/client/documents/client-documents.component').then(m => m.ClientDocumentsComponent).catch(() => import('./features/client/dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent))
+			},
+			{
+				path: 'support',
+				loadComponent: () => import('./features/client/support/client-support.component').then(m => m.ClientSupportComponent).catch(() => import('./features/client/dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent))
+			},
+			{
+				path: 'submit-claim',
+				loadComponent: () => import('./features/client/submit-claim/client-submit-claim.component').then(m => m.ClientSubmitClaimComponent).catch(() => import('./features/client/claims/client-claims.component').then(m => m.ClientClaimsComponent))
+			},
 			{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 		]
 	},

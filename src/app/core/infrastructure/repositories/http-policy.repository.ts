@@ -16,13 +16,14 @@ export class HttpPolicyRepository implements IPolicyRepository {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
         console.log('[PolicyRepository] getAll raw response:', res);
-        
+
         let data: PolicyDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
+
+        // Handle BaseResponse wrapper
+        if (res?.data && Array.isArray(res.data)) {
           data = res.data;
+        } else if (Array.isArray(res)) {
+          data = res;
         } else if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.policies && Array.isArray(res.policies)) {
@@ -30,7 +31,7 @@ export class HttpPolicyRepository implements IPolicyRepository {
         } else if (res?.items && Array.isArray(res.items)) {
           data = res.items;
         }
-        
+
         console.log('[PolicyRepository] extracted data:', data);
         return data.map(this.mapToPolicy);
       }),
@@ -66,28 +67,35 @@ export class HttpPolicyRepository implements IPolicyRepository {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
         console.log('[PolicyRepository] getByClientId raw response:', res);
-        
+
         let data: PolicyDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
+
+        // Handle BaseResponse wrapper
+        if (res?.data && Array.isArray(res.data)) {
           data = res.data;
+        } else if (Array.isArray(res)) {
+          data = res;
         } else if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.policies && Array.isArray(res.policies)) {
           data = res.policies;
         }
-        
+
+        console.log('[PolicyRepository] getByClientId extracted data:', data);
         return data.map(this.mapToPolicy);
       }),
-      catchError(() => of([]))
+      catchError((err) => {
+        console.error('[PolicyRepository] getByClientId error:', err);
+        return of([]);
+      })
     );
   }
 
   create(data: CreatePolicyData): Observable<Policy> {
+    console.log('[PolicyRepository] Creating policy with data:', data);
     return this.http.post<any>(this.apiUrl, data).pipe(
       map((res) => {
+        console.log('[PolicyRepository] Create response:', res);
         let dto: PolicyDto | null = null;
         
         if (res?.data) {
@@ -99,6 +107,10 @@ export class HttpPolicyRepository implements IPolicyRepository {
         }
         
         return this.mapToPolicy(dto as PolicyDto);
+      }),
+      catchError((err) => {
+        console.error('[PolicyRepository] Create error:', err);
+        throw err; // Re-throw to let component handle it
       })
     );
   }

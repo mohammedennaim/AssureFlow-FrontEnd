@@ -89,22 +89,27 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
         console.log('[InvoiceRepository] getByClientId raw response:', res);
-        
+
         let data: InvoiceDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
+
+        // Handle BaseResponse wrapper
+        if (res?.data && Array.isArray(res.data)) {
           data = res.data;
+        } else if (Array.isArray(res)) {
+          data = res;
         } else if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.invoices && Array.isArray(res.invoices)) {
           data = res.invoices;
         }
-        
+
+        console.log('[InvoiceRepository] getByClientId extracted data:', data);
         return data.map(this.mapToInvoice);
       }),
-      catchError(() => of([]))
+      catchError((err) => {
+        console.error('[InvoiceRepository] getByClientId error:', err);
+        return of([]);
+      })
     );
   }
 
@@ -168,7 +173,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
       clientId: dto.clientId,
       policyId: dto.policyId,
       amount: dto.totalAmount || dto.amount || 0,
-      status: dto.status,
+      status: dto.status as Invoice['status'],
       dueDate: dto.dueDate,
       createdAt: dto.createdAt || dto.dueDate,
     };

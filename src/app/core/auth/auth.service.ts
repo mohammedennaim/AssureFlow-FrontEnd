@@ -43,9 +43,36 @@ export class AuthService {
         role?: string | string[];
         roles?: string | string[];
         authorities?: { authority: string }[];
+        clientId?: string;
+        id?: string;
       };
       const role = payload.role ?? payload.roles ?? payload.authorities?.[0]?.authority;
       return Array.isArray(role) ? role[0] : (role ?? null);
+    } catch {
+      return null;
+    }
+  }
+
+  getCurrentUser(): { id: string; clientId?: string; role?: string } | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payload = JSON.parse(atob(payloadBase64)) as {
+        sub?: string;
+        id?: string;
+        clientId?: string;
+        role?: string;
+        roles?: string | string[];
+        authorities?: { authority: string }[];
+      };
+      const role = payload.role || (Array.isArray(payload.roles) ? payload.roles[0] : payload.roles) || '';
+      return {
+        id: payload.sub || payload.id || '',  // JWT uses 'sub' (subject) for the email
+        clientId: payload.clientId,
+        role
+      };
     } catch {
       return null;
     }

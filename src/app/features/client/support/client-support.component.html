@@ -1,0 +1,90 @@
+<div class="support-page">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="page-header__content">
+      <div class="page-header__title">
+        <h1>Support Center</h1>
+        <p>Get help from our team or browse the FAQ</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Success Banner -->
+  <div class="success-banner" *ngIf="submitSuccess">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Your request has been sent! Our team will contact you shortly.
+  </div>
+
+  <div class="support-layout">
+
+    <!-- FAQ Section -->
+    <div class="faq-section">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <div
+          class="faq-item"
+          *ngFor="let item of faqItems; let i = index"
+          [class.open]="openFaqIndex === i"
+          (click)="toggleFaq(i)">
+          <div class="faq-question">
+            <span>{{ item.q }}</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="faq-chevron"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="faq-answer" *ngIf="openFaqIndex === i">
+            <p>{{ item.a }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="contact-section">
+      <div class="contact-card">
+        <h2>Contact Support</h2>
+        <p class="contact-desc">Can't find what you're looking for? Send us a message.</p>
+
+        <!-- Error Banner -->
+        <div class="error-banner" *ngIf="errorMessage">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
+          {{ errorMessage }}
+        </div>
+
+        <form (ngSubmit)="submitTicket()" #supportForm="ngForm">
+          <div class="form-group">
+            <label>Category <span class="required">*</span></label>
+            <select name="category" [(ngModel)]="form.category" required>
+              <option value="" disabled selected>Select a category...</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Subject <span class="required">*</span></label>
+            <input type="text" name="subject" [(ngModel)]="form.subject" placeholder="Brief description of your issue" required>
+          </div>
+          <div class="form-group">
+            <label>Message <span class="required">*</span></label>
+            <textarea name="message" [(ngModel)]="form.message" rows="5" placeholder="Please describe your issue in detail..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full" [disabled]="isSubmitting || supportForm.invalid">
+            <svg *ngIf="isSubmitting" class="btn--spinning" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8C14 11.3 11.3 14 8 14C4.7 14 2 11.3 2 8C2 4.7 4.7 2 8 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+          </button>
+        </form>
+
+        <!-- Contact Info -->
+        <div class="contact-info">
+          <div class="contact-info__item">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3H14C14.5523 3 15 3.44772 15 4V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V4C1 3.44772 1.44772 3 2 3Z" stroke="currentColor" stroke-width="1.5"/><path d="M1 4L8 8.5L15 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            support&#64;assureflow.ma
+          </div>
+          <div class="contact-info__item">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2H6L7.5 5.5L5.5 6.5C6.33 8.17 7.83 9.67 9.5 10.5L10.5 8.5L14 10V13C14 13.5523 13.5523 14 13 14C7.47715 14 2 8.52285 2 3C2 2.44772 2.44772 2 3 2Z" stroke="currentColor" stroke-width="1.5"/></svg>
+            +212 5XX-XXXXXX
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -16,6 +16,8 @@ export interface IClientRepository {
   getById(id: string): Observable<Client>;
   getByEmail(email: string): Observable<Client>;
   getByCin(cin: string): Observable<Client>;
+  getMe(): Observable<Client>;
+  updateMe(data: Partial<Client>): Observable<Client>;
   create(data: CreateClientData): Observable<Client>;
   update(id: string, data: Partial<Client>): Observable<Client>;
   delete(id: string): Observable<void>;

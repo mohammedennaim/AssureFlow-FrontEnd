@@ -230,9 +230,9 @@ export class AdminStatisticsService {
 
     // Revenue stats
     const paidInvoicesThisMonth = data.invoices.filter(inv => {
-      const invDate = new Date(inv.createdAt);
-      return inv.status === 'PAID' && 
-             invDate.getMonth() === currentMonth && 
+      const invDate = new Date(inv.createdAt!);
+      return inv.status === 'PAID' &&
+             invDate.getMonth() === currentMonth &&
              invDate.getFullYear() === currentYear;
     });
     const monthlyRevenue = paidInvoicesThisMonth.reduce((sum, inv) => sum + inv.amount, 0);
@@ -344,7 +344,7 @@ export class AdminStatisticsService {
       }
 
       // New this month
-      const createdAt = new Date(client.createdAt);
+      const createdAt = new Date(client.createdAt!);
       if (createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear) {
         newThisMonth++;
       }
@@ -462,13 +462,13 @@ export class AdminStatisticsService {
         totalRevenue += amount;
 
         // Monthly revenue
-        const invDate = new Date(invoice.createdAt);
+        const invDate = new Date(invoice.createdAt!);
         if (invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear) {
           monthlyRevenue += amount;
         }
 
         // Weekly revenue
-        if (new Date(invoice.createdAt) >= weekAgo) {
+        if (new Date(invoice.createdAt!) >= weekAgo) {
           weeklyRevenue += amount;
         }
       } else if (invoice.status === 'PENDING') {

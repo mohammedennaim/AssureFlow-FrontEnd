@@ -88,6 +88,40 @@ export class HttpClientRepository implements IClientRepository {
     );
   }
 
+  getMe(): Observable<Client> {
+    return this.http.get<any>(`${this.apiUrl}/me`).pipe(
+      map((res) => {
+        let dto: ClientDto | null = null;
+        if (res?.data) {
+          dto = res.data;
+        } else if (res?.client) {
+          dto = res.client;
+        } else {
+          dto = res;
+        }
+        return this.mapToClient(dto as ClientDto);
+      }),
+      catchError(() => of({} as Client))
+    );
+  }
+
+  updateMe(data: Partial<Client>): Observable<Client> {
+    return this.http.patch<any>(`${this.apiUrl}/me`, data).pipe(
+      map((res) => {
+        let dto: ClientDto | null = null;
+        if (res?.data) {
+          dto = res.data;
+        } else if (res?.client) {
+          dto = res.client;
+        } else {
+          dto = res;
+        }
+        return this.mapToClient(dto as ClientDto);
+      }),
+      catchError(() => of({} as Client))
+    );
+  }
+
   getByCin(cin: string): Observable<Client> {
     return this.http.get<any>(`${this.apiUrl}/cin/${cin}`).pipe(
       map((res) => {
@@ -164,6 +198,7 @@ export class HttpClientRepository implements IClientRepository {
   private mapToClient(dto: ClientDto): Client {
     return {
       id: dto.id,
+      clientNumber: dto.clientNumber,
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
@@ -171,6 +206,12 @@ export class HttpClientRepository implements IClientRepository {
       address: dto.address,
       city: dto.city,
       zipCode: dto.zipCode,
+      dateOfBirth: dto.dateOfBirth,
+      cin: dto.cin,
+      addresses: dto.addresses,
+      status: dto.status,
+      type: dto.type,
+      userId: dto.userId,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
     };
@@ -179,6 +220,7 @@ export class HttpClientRepository implements IClientRepository {
 
 interface ClientDto {
   id: string;
+  clientNumber?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -186,7 +228,19 @@ interface ClientDto {
   address?: string;
   city?: string;
   zipCode?: string;
+  dateOfBirth?: string;
   cin?: string;
+  addresses?: Array<{
+    id: string;
+    street: string;
+    city: string;
+    postalCode?: string;
+    country: string;
+    isPrimary?: boolean;
+  }>;
+  status?: string;
+  type?: string;
+  userId?: string;
   createdAt: string;
   updatedAt: string;
 }

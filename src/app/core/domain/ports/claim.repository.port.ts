@@ -4,8 +4,11 @@ import { Claim } from '../models/claim.model';
 
 export interface CreateClaimData {
   policyId: string;
+  clientId: string;
+  incidentDate: string;
   description: string;
-  amount: number;
+  estimatedAmount: number;
+  submittedBy: string;
 }
 
 export interface IClaimRepository {

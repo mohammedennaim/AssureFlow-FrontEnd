@@ -7,9 +7,14 @@ export interface Invoice {
   clientId: string;
   policyId: string;
   amount: number;
-  status: string;
+  taxAmount?: number;
+  totalAmount?: number;
+  status: 'PENDING' | 'PAID' | 'CANCELLED' | 'OVERDUE';
   dueDate: string;
-  createdAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  overDue?: boolean;
+  paidDirect?: boolean;
 }
 
 export interface CreateInvoiceData {

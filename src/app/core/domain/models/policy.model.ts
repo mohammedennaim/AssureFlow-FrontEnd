@@ -7,7 +7,7 @@ export interface Policy {
   status: string;
   startDate: string;
   endDate: string;
-  premium: number;
+  premium: number; // premiumAmount from backend
   coverageAmount?: number;
-  createdAt: string;
+  createdAt?: string;
 }
