@@ -178,6 +178,7 @@ export class UsersComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    console.log('[UsersComponent] Opening create modal');
     this.isEditMode = false;
     this.modalTitle = 'Add New User';
     this.selectedUserId = null;
@@ -186,12 +187,15 @@ export class UsersComponent implements OnInit {
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.userForm.get('password')?.updateValueAndValidity();
     this.showBackdrop = true;
+    console.log('[UsersComponent] showBackdrop set to true');
     setTimeout(() => {
       this.showModal = true;
+      console.log('[UsersComponent] showModal set to true');
     }, 10);
   }
 
   openEditModal(user: User): void {
+    console.log('[UsersComponent] Opening edit modal for user:', user);
     this.isEditMode = true;
     this.modalTitle = 'Edit User';
     this.selectedUserId = user.id;
@@ -199,13 +203,16 @@ export class UsersComponent implements OnInit {
     this.userForm.patchValue({
       username: user.username,
       email: user.email,
+      role: user.role,
       active: user.active
     });
     this.userForm.get('password')?.clearValidators();
     this.userForm.get('password')?.updateValueAndValidity();
     this.showBackdrop = true;
+    console.log('[UsersComponent] showBackdrop set to true');
     setTimeout(() => {
       this.showModal = true;
+      console.log('[UsersComponent] showModal set to true');
     }, 10);
   }
 

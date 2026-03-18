@@ -1,7 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { catchError, of, forkJoin } from 'rxjs';
+import { catchError, of, forkJoin, interval, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { NotificationCenterComponent } from '../../../shared/components/notification-center/notification-center.component';
 import { ClientDashboardService, ClientDashboardStats, ClientPolicyStats, ClientClaimStats, ClientPaymentStats } from '../../../core/application/services/client-dashboard.service';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Claim } from '../../../core/domain/models/claim.model';
@@ -55,11 +57,11 @@ interface PaymentItem {
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NotificationCenterComponent],
   templateUrl: './client-dashboard.component.html',
   styleUrl: './client-dashboard.component.scss'
 })
-export class ClientDashboardComponent implements OnInit {
+export class ClientDashboardComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   today = new Date();
@@ -72,10 +74,54 @@ export class ClientDashboardComponent implements OnInit {
   upcomingPayments: PaymentItem[] = [];
   stats: ClientDashboardStats | null = null;
 
+  // Chart data
+  policyTypeChartData: any[] = [];
+  claimStatusChartData: any[] = [];
+  paymentTrendChartData: any[] = [];
+  
+  // Chart options
+  colorScheme: any = {
+    name: 'assureflow',
+    selectable: true,
+    group: 'Ordinal',
+    domain: ['#06b6d4', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6']
+  };
+  
+  // Real-time polling
+  private pollingSubscription?: Subscription;
+  private readonly POLLING_INTERVAL = 30000; // 30 seconds
+
   private clientDashboardService = inject(ClientDashboardService);
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.startRealTimePolling();
+  }
+
+  ngOnDestroy(): void {
+    this.stopRealTimePolling();
+  }
+
+  private startRealTimePolling(): void {
+    // Poll for claim status updates every 30 seconds
+    this.pollingSubscription = interval(this.POLLING_INTERVAL)
+      .pipe(
+        switchMap(() => this.clientDashboardService.getClientClaimStats())
+      )
+      .subscribe({
+        next: (claimStats) => {
+          console.log('[ClientDashboard] Real-time update: claims refreshed');
+          this.recentClaims = this.mapClaims(claimStats.myClaims);
+          this.updateClaimStatusChart(claimStats);
+        },
+        error: (err) => console.error('[ClientDashboard] Polling error:', err)
+      });
+  }
+
+  private stopRealTimePolling(): void {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
   }
 
   loadDashboard(): void {
@@ -126,14 +172,17 @@ export class ClientDashboardComponent implements OnInit {
       // Load real data from stats
       if (data.policyStats) {
         this.recentPolicies = this.mapPolicies(data.policyStats.myPolicies);
+        this.updatePolicyTypeChart(data.policyStats);
       }
       
       if (data.claimStats) {
         this.recentClaims = this.mapClaims(data.claimStats.myClaims);
+        this.updateClaimStatusChart(data.claimStats);
       }
       
       if (data.paymentStats) {
         this.upcomingPayments = this.mapPayments(data.paymentStats);
+        this.updatePaymentTrendChart(data.paymentStats);
       }
       
       this.loading = false;
@@ -313,5 +362,27 @@ export class ClientDashboardComponent implements OnInit {
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
+  }
+
+  private updatePolicyTypeChart(policyStats: ClientPolicyStats): void {
+    this.policyTypeChartData = Object.entries(policyStats.byType).map(([name, value]) => ({
+      name: name.replace('_', ' '),
+      value
+    }));
+  }
+
+  private updateClaimStatusChart(claimStats: ClientClaimStats): void {
+    this.claimStatusChartData = Object.entries(claimStats.byStatus).map(([name, value]) => ({
+      name: name.replace('_', ' '),
+      value
+    }));
+  }
+
+  private updatePaymentTrendChart(paymentStats: ClientPaymentStats): void {
+    this.paymentTrendChartData = [
+      { name: 'Paid', value: paymentStats.totalPaid },
+      { name: 'Pending', value: paymentStats.totalPending },
+      { name: 'Overdue', value: paymentStats.totalOverdue }
+    ];
   }
 }

@@ -16,6 +16,8 @@
       </div>
 
       <div class="dashboard__actions">
+        <app-notification-center></app-notification-center>
+        
         <button
           class="dashboard__btn dashboard__btn--icon"
           (click)="refreshData()"
@@ -121,6 +123,22 @@
       </div>
     }
   </section>
+
+  <!-- Charts Section - Temporarily disabled due to ngx-charts compatibility -->
+  <!--
+  <section class="dashboard__charts">
+    <div class="dashboard-card">
+      <div class="dashboard-card__header">
+        <div class="dashboard-card__title">
+          <h3>Policy Types Distribution</h3>
+        </div>
+      </div>
+      <div class="dashboard-card__body">
+        <p>Charts will be enabled once ngx-charts compatibility is resolved</p>
+      </div>
+    </div>
+  </section>
+  -->
 
   <!-- Main Content Grid -->
   <section class="dashboard__main-grid">

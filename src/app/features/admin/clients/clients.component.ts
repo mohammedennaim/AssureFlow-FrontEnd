@@ -66,7 +66,9 @@ export class ClientsComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      dateOfBirth: ['', [Validators.required]],
+      cin: ['', [Validators.required, Validators.minLength(5)]],
       address: [''],
       city: [''],
       zipCode: [''],
@@ -236,7 +238,30 @@ export class ClientsComponent implements OnInit {
         }
       });
     } else {
-      this.clientsService.create(formValue).subscribe({
+      // Préparer les données pour la création
+      const clientData: any = {
+        firstName: formValue.firstName,
+        lastName: formValue.lastName,
+        email: formValue.email,
+        phone: formValue.phone,
+        dateOfBirth: formValue.dateOfBirth,
+        cin: formValue.cin,
+        type: 'INDIVIDUAL'
+      };
+      
+      // N'ajouter l'adresse que si tous les champs requis sont remplis
+      if (formValue.address && formValue.city && formValue.zipCode) {
+        clientData.addresses = [{
+          street: formValue.address,
+          city: formValue.city,
+          postalCode: formValue.zipCode,
+          country: 'Morocco',
+          primary: true
+        }];
+      }
+      
+      console.log('[ClientsComponent] Creating client with data:', clientData);
+      this.clientsService.create(clientData).subscribe({
         next: () => {
           this.loadClients();
           this.closeModal();
@@ -244,6 +269,7 @@ export class ClientsComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error creating client:', err);
+          console.error('Error details:', err.error);
           this.isSaving = false;
         }
       });

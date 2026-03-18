@@ -11,8 +11,8 @@
         </svg>
       </div>
       <div class="page-header__content">
-        <h1 class="page-header__title">Users & Roles</h1>
-        <p class="page-header__subtitle">Manage system users, roles and permissions</p>
+        <h1 class="page-header__title">Users</h1>
+        <p class="page-header__subtitle">Manage system users</p>
       </div>
     </div>
     <div class="page-header__actions">
@@ -362,8 +362,8 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal-backdrop" [class.modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
-  <div class="modal-backdrop__content" (click)="$event.stopPropagation()">
+<div class="user-modal-backdrop" [class.user-modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="user-modal-backdrop__content" (click)="$event.stopPropagation()">
     <div class="confirm-modal">
       <div class="confirm-modal__icon confirm-modal__icon--danger">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -386,12 +386,12 @@
 </div>
 
 <!-- Add/Edit User Modal -->
-<div class="modal-backdrop" [class.modal-backdrop--visible]="showBackdrop" (click)="onBackdropClick($event)">
-  <div class="modal" [class.modal--visible]="showModal" (click)="onModalClick($event)">
-    <div class="modal__content">
-      <div class="modal__header">
-        <div class="modal__title-group">
-          <div class="modal__icon" [class.modal__icon--edit]="isEditMode">
+<div class="user-modal-backdrop" [class.user-modal-backdrop--visible]="showBackdrop" (click)="onBackdropClick($event)">
+  <div class="user-modal" [class.user-modal--visible]="showModal" (click)="onModalClick($event)">
+    <div class="user-modal__content">
+      <div class="user-modal__header">
+        <div class="user-modal__title-group">
+          <div class="user-modal__icon" [class.user-modal__icon--edit]="isEditMode">
             @if (isEditMode) {
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
@@ -404,12 +404,12 @@
               </svg>
             }
           </div>
-          <div class="modal__title-content">
-            <h2 class="modal__title">{{ modalTitle }}</h2>
-            <p class="modal__subtitle">{{ isEditMode ? 'Update user information' : 'Create a new user account' }}</p>
+          <div class="user-modal__title-content">
+            <h2 class="user-modal__title">{{ modalTitle }}</h2>
+            <p class="user-modal__subtitle">{{ isEditMode ? 'Update user information' : 'Create a new user account' }}</p>
           </div>
         </div>
-        <button class="modal__close" (click)="closeModal()" type="button" aria-label="Close modal">
+        <button class="user-modal__close" (click)="closeModal()" type="button" aria-label="Close modal">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -417,7 +417,7 @@
       </div>
 
       <form [formGroup]="userForm" (ngSubmit)="saveUser()">
-        <div class="modal__body">
+        <div class="user-modal__body">
           <div class="form-group">
             <label class="form-label" for="username">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -533,7 +533,7 @@
           }
         </div>
 
-        <div class="modal__footer">
+        <div class="user-modal__footer">
           <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
           <button type="submit" class="btn btn--primary" [disabled]="userForm.invalid || isSaving">
             @if (isSaving) {

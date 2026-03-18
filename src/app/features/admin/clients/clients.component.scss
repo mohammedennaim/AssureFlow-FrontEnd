@@ -1182,3 +1182,130 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================== Client Modal Backdrop ==================== */
+.client-modal-backdrop {
+  position: fixed !important;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &--visible {
+    opacity: 1 !important;
+    pointer-events: auto;
+    display: flex !important;
+  }
+
+  &__content {
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
+/* ==================== Client Modal ==================== */
+.client-modal {
+  width: 100%;
+  max-width: 600px;
+  transform: scale(0.9) translateY(20px);
+  opacity: 0;
+  transition: all var(--transition-base);
+  pointer-events: none;
+  position: relative;
+  z-index: 1001;
+
+  &--visible {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &__content {
+    background: var(--surface);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-2xl);
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem 1.5rem;
+    background: var(--gradient-primary);
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  &__title-content {
+    .client-modal__title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: white;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .client-modal__subtitle {
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0;
+    }
+  }
+
+  &__close {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: rotate(90deg);
+    }
+  }
+
+  &__body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    padding: 1rem 1.5rem;
+    background: var(--surface-alt);
+    border-top: 1px solid var(--border);
+  }
+}

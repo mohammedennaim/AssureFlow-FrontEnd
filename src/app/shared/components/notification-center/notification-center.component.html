@@ -1,0 +1,82 @@
+<div class="notification-center">
+  <button class="notification-bell" (click)="toggleNotifications()" type="button" aria-label="Notifications">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 6.66667C15 5.34058 14.4732 4.06881 13.5355 3.13113C12.5979 2.19345 11.3261 1.66667 10 1.66667C8.67392 1.66667 7.40215 2.19345 6.46447 3.13113C5.52678 4.06881 5 5.34058 5 6.66667C5 12.5 2.5 14.1667 2.5 14.1667H17.5C17.5 14.1667 15 12.5 15 6.66667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11.4417 17.5C11.2952 17.7526 11.0849 17.9622 10.8319 18.1079C10.5789 18.2537 10.292 18.3304 10 18.3304C9.70802 18.3304 9.42112 18.2537 9.16811 18.1079C8.9151 17.9622 8.70484 17.7526 8.55835 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    @if (unreadCount > 0) {
+      <span class="notification-badge">{{ unreadCount }}</span>
+    }
+  </button>
+
+  @if (isOpen) {
+    <div class="notification-dropdown">
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        @if (unreadCount > 0) {
+          <button class="mark-all-read" (click)="markAllAsRead()" type="button">
+            Mark all as read
+          </button>
+        }
+      </div>
+
+      <div class="notification-list">
+        @if (notifications.length === 0) {
+          <div class="empty-notifications">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+              <path d="M24 16V24M24 28H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>No notifications</p>
+          </div>
+        } @else {
+          @for (notification of notifications; track notification.id) {
+            <div 
+              class="notification-item" 
+              [class.notification-item--unread]="!notification.read"
+              [class.notification-item--success]="notification.type === 'success'"
+              [class.notification-item--warning]="notification.type === 'warning'"
+              [class.notification-item--error]="notification.type === 'error'"
+              (click)="markAsRead(notification)">
+              <div class="notification-icon">
+                @switch (notification.type) {
+                  @case ('success') {
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M6 10L9 13L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  }
+                  @case ('warning') {
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 6V11M10 14H10.01M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  }
+                  @case ('error') {
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M7 7L13 13M7 13L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  }
+                  @default {
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M10 6V10M10 13H10.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  }
+                }
+              </div>
+              <div class="notification-content">
+                <h4>{{ notification.title }}</h4>
+                <p>{{ notification.message }}</p>
+                <span class="notification-time">{{ getTimeAgo(notification.timestamp) }}</span>
+              </div>
+              @if (!notification.read) {
+                <span class="unread-dot"></span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>

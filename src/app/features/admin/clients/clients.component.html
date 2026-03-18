@@ -362,8 +362,8 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal-backdrop" [class.modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
-  <div class="modal-backdrop__content" (click)="$event.stopPropagation()">
+<div class="client-modal-backdrop" [class.client-modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="client-modal-backdrop__content" (click)="$event.stopPropagation()">
     <div class="confirm-modal">
       <div class="confirm-modal__icon confirm-modal__icon--danger">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -381,12 +381,12 @@
 </div>
 
 <!-- Add/Edit Client Modal -->
-<div class="modal-backdrop" [class.modal-backdrop--visible]="showBackdrop" (click)="onBackdropClick($event)">
-  <div class="modal" [class.modal--visible]="showModal" (click)="onModalClick($event)">
-    <div class="modal__content">
-      <div class="modal__header">
-        <div class="modal__title-group">
-          <div class="modal__icon">
+<div class="client-modal-backdrop" [class.client-modal-backdrop--visible]="showBackdrop" (click)="onBackdropClick($event)">
+  <div class="client-modal" [class.client-modal--visible]="showModal" (click)="onModalClick($event)">
+    <div class="client-modal__content">
+      <div class="client-modal__header">
+        <div class="client-modal__title-group">
+          <div class="client-modal__icon">
             @if (isEditMode) {
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
@@ -399,12 +399,12 @@
               </svg>
             }
           </div>
-          <div class="modal__title-content">
-            <h2 class="modal__title">{{ isEditMode ? 'Edit Client' : 'Add New Client' }}</h2>
-            <p class="modal__subtitle">{{ isEditMode ? 'Update client information' : 'Create a new client profile' }}</p>
+          <div class="client-modal__title-content">
+            <h2 class="client-modal__title">{{ isEditMode ? 'Edit Client' : 'Add New Client' }}</h2>
+            <p class="client-modal__subtitle">{{ isEditMode ? 'Update client information' : 'Create a new client profile' }}</p>
           </div>
         </div>
-        <button class="modal__close" (click)="closeModal()" type="button" aria-label="Close modal">
+        <button class="client-modal__close" (click)="closeModal()" type="button" aria-label="Close modal">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -412,7 +412,7 @@
       </div>
 
       <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
-        <div class="modal__body">
+        <div class="client-modal__body">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="firstName">First Name</label>
@@ -446,6 +446,23 @@
             }
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cin">CIN</label>
+              <input type="text" id="cin" class="form-input" formControlName="cin" placeholder="AB123456">
+              @if (clientForm.get('cin')?.invalid && clientForm.get('cin')?.touched) {
+                <p class="form-error">CIN is required</p>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateOfBirth">Date of Birth</label>
+              <input type="date" id="dateOfBirth" class="form-input" formControlName="dateOfBirth">
+              @if (clientForm.get('dateOfBirth')?.invalid && clientForm.get('dateOfBirth')?.touched) {
+                <p class="form-error">Date of birth is required</p>
+              }
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="address">Address</label>
             <input type="text" id="address" class="form-input" formControlName="address" placeholder="123 Rue de la Paix">
@@ -477,7 +494,7 @@
           </div>
         </div>
 
-        <div class="modal__footer">
+        <div class="client-modal__footer">
           <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
           <button type="submit" class="btn btn--primary" [disabled]="clientForm.invalid || isSaving">
             @if (isSaving) {
