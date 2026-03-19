@@ -57,6 +57,10 @@ export class ClaimsService {
     return this.claimRepository.requestInfo(id);
   }
 
+  markAsPaid(id: string): Observable<void> {
+    return this.claimRepository.markAsPaid(id);
+  }
+
   close(id: string): Observable<void> {
     return this.claimRepository.close(id);
   }

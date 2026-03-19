@@ -152,7 +152,7 @@
               </div>
               <div class="detail">
                 <span class="detail__label">Claim Amount</span>
-                <span class="detail__value">{{ formatCurrency(claim.amount) }}</span>
+                <span class="detail__value">{{ formatCurrency(claim.amount || 0) }}</span>
               </div>
               <div class="detail" *ngIf="claim.approvedAmount">
                 <span class="detail__label">Approved Amount</span>

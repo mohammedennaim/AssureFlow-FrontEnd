@@ -4,12 +4,15 @@ export interface Claim {
   policyId: string;
   clientId: string;
   status: string;
-  incidentDate?: string; // Added for backend compatibility
+  incidentDate?: string;
   description: string;
-  amount: number; // estimatedAmount from backend
-  approvedAmount?: number; // Added for backend compatibility
-  submittedAt?: string; // createdAt from backend
-  createdAt?: string; // Added for backend compatibility
+  estimatedAmount?: number;
+  approvedAmount?: number;
+  amount?: number;
+  submittedAt?: string;
+  createdAt?: string;
   resolvedAt?: string;
-  submittedBy?: string; // Added for backend compatibility
+  submittedBy?: string;
+  approvedBy?: string;
+  assignedTo?: string;
 }

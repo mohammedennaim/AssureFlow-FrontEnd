@@ -24,6 +24,7 @@ export interface IClaimRepository {
   approve(id: string, amount: number, approvedBy: string): Observable<void>;
   reject(id: string, reason: string): Observable<void>;
   requestInfo(id: string): Observable<void>;
+  markAsPaid(id: string): Observable<void>;
   close(id: string): Observable<void>;
 }
 

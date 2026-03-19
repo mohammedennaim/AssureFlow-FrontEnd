@@ -151,19 +151,23 @@ export class HttpClaimRepository implements IClaimRepository {
   }
 
   approve(id: string, amount: number, approvedBy: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${id}/approve`, null, {
+    return this.http.post<void>(`${this.apiUrl}/${id}/approve`, {}, {
       params: { amount: amount.toString(), approvedBy }
     });
   }
 
   reject(id: string, reason: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${id}/reject`, null, {
+    return this.http.post<void>(`${this.apiUrl}/${id}/reject`, {}, {
       params: { reason }
     });
   }
 
   requestInfo(id: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/request-info`, {});
+  }
+
+  markAsPaid(id: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/mark-as-paid`, {});
   }
 
   close(id: string): Observable<void> {
