@@ -2,7 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { ClientsService, Client } from '../../../core/application/services/admin-clients.service';
 import { AdminStatisticsService, ClientStats } from '../../../core/application/services/admin-statistics.service';
 import { catchError, of } from 'rxjs';
@@ -17,7 +16,7 @@ interface ClientStatsLocal {
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.scss'
 })

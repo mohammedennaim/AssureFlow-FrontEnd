@@ -174,7 +174,7 @@
   font-size: 0.75rem;
   font-weight: 600;
 
-  &--auto { background: rgba(99, 102, 241, 0.1); color: #4f46e5; }
+  &--vehicle { background: rgba(99, 102, 241, 0.1); color: #4f46e5; }
   &--home { background: rgba(16, 185, 129, 0.1); color: #059669; }
   &--life { background: rgba(244, 63, 94, 0.1); color: #e11d48; }
   &--health { background: rgba(6, 182, 212, 0.1); color: #0e7490; }
@@ -279,4 +279,335 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+// Modal Styles (unique classes to avoid Bootstrap conflicts)
+.policy-modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: all 0.3s ease !important;
+  padding: 1rem !important;
+
+  &--visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  &__content {
+    position: relative !important;
+    z-index: 10000 !important;
+  }
+}
+
+.policy-modal {
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+  max-width: 600px !important;
+  width: 100% !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  transform: scale(0.9) translateY(20px) !important;
+  opacity: 0 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  z-index: 10001 !important;
+
+  &--visible {
+    transform: scale(1) translateY(0) !important;
+    opacity: 1 !important;
+  }
+
+  &__content {
+    position: relative !important;
+  }
+
+  &__header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    padding: 1.5rem !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  &__title-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+
+  &__icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: var(--radius-lg) !important;
+    background: var(--gradient-primary) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  &__title-content {
+    .policy-modal__title {
+      font-size: 1.25rem !important;
+      font-weight: 700 !important;
+      color: var(--text-primary) !important;
+      margin: 0 !important;
+    }
+    .policy-modal__subtitle {
+      font-size: 0.875rem !important;
+      color: var(--text-secondary) !important;
+      margin: 0.25rem 0 0 !important;
+    }
+  }
+
+  &__close {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: var(--radius-md) !important;
+    border: none !important;
+    background: var(--surface-alt) !important;
+    color: var(--text-muted) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all var(--transition-fast) !important;
+
+    &:hover {
+      background: var(--danger-100) !important;
+      color: var(--danger-500) !important;
+    }
+  }
+
+  &__body {
+    padding: 1.5rem !important;
+    max-height: calc(90vh - 200px) !important;
+    overflow-y: auto !important;
+  }
+
+  &__footer {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+    padding: 1.5rem !important;
+    border-top: 1px solid var(--border) !important;
+  }
+}
+
+.confirm-modal {
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  padding: 2rem !important;
+  max-width: 400px !important;
+  text-align: center !important;
+
+  &__icon {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1rem !important;
+
+    &--danger {
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: var(--danger-500) !important;
+    }
+  }
+
+  &__title {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin: 0 0 0.5rem !important;
+  }
+
+  &__message {
+    font-size: 0.875rem !important;
+    color: var(--text-secondary) !important;
+    margin: 0 0 1.5rem !important;
+  }
+
+  &__actions {
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: center !important;
+  }
+}
+
+.form-group {
+  margin-bottom: 1.25rem !important;
+
+  &:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+.form-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.form-label {
+  display: block !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.form-input {
+  width: 100% !important;
+  padding: 0.625rem 0.875rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 0.875rem !important;
+  color: var(--text-primary) !important;
+  background: var(--surface) !important;
+  transition: all var(--transition-fast) !important;
+
+  &:focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+  }
+
+  &::placeholder {
+    color: var(--text-muted) !important;
+  }
+}
+
+.form-select-wrapper {
+  position: relative !important;
+}
+
+.form-select {
+  width: 100% !important;
+  padding: 0.625rem 2.5rem 0.625rem 0.875rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 0.875rem !important;
+  color: var(--text-primary) !important;
+  background: var(--surface) !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  transition: all var(--transition-fast) !important;
+
+  &:focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+  }
+}
+
+.form-select-chevron {
+  position: absolute !important;
+  right: 0.875rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+  color: var(--text-muted) !important;
+}
+
+.form-error {
+  font-size: 0.75rem !important;
+  color: var(--danger-500) !important;
+  margin-top: 0.375rem !important;
+}
+
+.btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  border: none !important;
+
+  &--primary {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+    box-shadow: var(--shadow-primary) !important;
+
+    &:hover:not(:disabled) {
+      box-shadow: var(--shadow-primary-lg) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    &:disabled {
+      opacity: 0.6 !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  &--secondary {
+    background: var(--surface-alt) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+
+    &:hover {
+      background: var(--gray-100) !important;
+    }
+  }
+
+  &--danger {
+    background: var(--danger-500) !important;
+    color: white !important;
+
+    &:hover {
+      background: var(--danger-600) !important;
+    }
+  }
+}
+
+.btn-spinner {
+  display: inline-flex !important;
+  gap: 0.25rem !important;
+
+  .spinner-dot {
+    width: 4px !important;
+    height: 4px !important;
+    border-radius: 50% !important;
+    background: currentColor !important;
+    animation: bounce 1.4s infinite ease-in-out both !important;
+
+    &:nth-child(1) { animation-delay: -0.32s !important; }
+    &:nth-child(2) { animation-delay: -0.16s !important; }
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0) !important; }
+  40% { transform: scale(1) !important; }
+}
+
+.action-menu {
+  display: flex !important;
+  gap: 0.5rem !important;
+}
+
+.action-btn {
+  &--danger {
+    &:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: var(--danger-500) !important;
+    }
+  }
 }

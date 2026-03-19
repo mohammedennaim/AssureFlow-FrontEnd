@@ -227,12 +227,6 @@
                 </td>
                 <td class="client-table__cell client-table__actions">
                   <div class="action-menu">
-                    <a [routerLink]="['/admin/clients', client.id]" class="action-menu__btn" title="View profile">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 11.5C9.933 11.5 11.5 9.933 11.5 8C11.5 6.067 9.933 4.5 8 4.5C6.067 4.5 4.5 6.067 4.5 8C4.5 9.933 6.067 11.5 8 11.5Z" stroke="currentColor" stroke-width="1.25"/>
-                        <path d="M8 2.5V3.5M8 12.5V13.5M2.5 8H3.5M12.5 8H13.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-                      </svg>
-                    </a>
                     <button class="action-menu__btn" (click)="openEditModal(client)" type="button" title="Edit">
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -338,13 +332,18 @@
           </div>
 
           <div class="client-card__footer">
-            <a [routerLink]="['/admin/clients', client.id]" class="client-card__btn client-card__btn--primary">
-              View Profile
-            </a>
-            <button class="client-card__btn" (click)="openEditModal(client)" type="button">
+            <button class="client-card__btn client-card__btn--primary" (click)="openEditModal(client)" type="button">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 13.25H5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
               </svg>
+              Edit
+            </button>
+            <button class="client-card__btn client-card__btn--danger" (click)="confirmDelete(client.id)" type="button">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Delete
             </button>
           </div>
         </div>

@@ -13,7 +13,7 @@
       </div>
     </div>
     <div class="page-header__actions">
-      <button class="btn btn--primary">
+      <button class="btn btn--primary" (click)="openCreateModal()" type="button">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M9 3.75v10.5M3.75 9h10.5"/>
         </svg>
@@ -88,7 +88,7 @@
               <td>
                 <span class="policy-type policy-type--{{ toLowerCase(policy.type) }}">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
-                    @if (policy.type === 'AUTO') {
+                    @if (policy.type === 'VEHICLE') {
                       <path d="M3 8h8M2 6h10v4H2z M4 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
                     } @else if (policy.type === 'HOME') {
                       <path d="M2 7l5-5 5 5M3 7v5h8V7"/>
@@ -119,16 +119,169 @@
                 </span>
               </td>
               <td class="actions">
-                <button class="action-btn">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
-                    <path d="M8 11.5c1.93 0 3.5-1.57 3.5-3.5S9.93 4.5 8 4.5C6.07 4.5 4.5 6.07 4.5 8c0 1.93 1.57 3.5 3.5 3.5z"/>
-                  </svg>
-                </button>
+                <div class="action-menu">
+                  <button class="action-btn" (click)="openEditModal(policy)" type="button" title="Edit">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M3 13.25H5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn action-btn--danger" (click)="confirmDelete(policy.id)" type="button" title="Delete">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
           }
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-modal__icon confirm-modal__icon--danger">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C19.5302 19 20.0182 18.512 20.0182 17.91L19.9969 5.91003C19.9962 5.30837 19.5077 4.82077 18.9058 4.82077H17.0527L15.5351 2.69909C15.3491 2.43953 15.0513 2.28003 14.733 2.28003H9.26704C8.94874 2.28003 8.65091 2.43953 8.46491 2.69909L6.94733 4.82077H5.0818C4.47981 4.82077 3.99132 5.30837 3.99132 5.91003L3.97005 17.91C3.97005 18.512 4.45805 19 5.06005 19H5.07183Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3 class="confirm-modal__title">Delete Policy</h3>
+      <p class="confirm-modal__message">Are you sure you want to delete this policy? This action cannot be undone.</p>
+      <div class="confirm-modal__actions">
+        <button class="btn btn--secondary" (click)="closeDeleteConfirm()" type="button">Cancel</button>
+        <button class="btn btn--danger" (click)="deletePolicy()" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Policy Modal -->
+<div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showBackdrop" (click)="onBackdropClick($event)">
+  <div class="policy-modal" [class.policy-modal--visible]="showModal" (click)="onModalClick($event)">
+    <div class="policy-modal__content">
+      <div class="policy-modal__header">
+        <div class="policy-modal__title-group">
+          <div class="policy-modal__icon">
+            @if (isEditMode) {
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
+                <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            } @else {
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
+                <path d="M10 7.5V12.5M7.5 10H12.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            }
+          </div>
+          <div class="policy-modal__title-content">
+            <h2 class="policy-modal__title">{{ isEditMode ? 'Edit Policy' : 'Create New Policy' }}</h2>
+            <p class="policy-modal__subtitle">{{ isEditMode ? 'Update policy information' : 'Add a new insurance policy' }}</p>
+          </div>
+        </div>
+        <button class="policy-modal__close" (click)="closeModal()" type="button" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="policyForm" (ngSubmit)="savePolicy()">
+        <div class="policy-modal__body">
+          <div class="form-group">
+            <label class="form-label" for="clientId">Client</label>
+            <div class="form-select-wrapper">
+              <select id="clientId" class="form-select" formControlName="clientId">
+                <option [value]="null">Select a client</option>
+                @for (client of clients; track client.id) {
+                  <option [value]="client.id">
+                    {{ client.firstName }} {{ client.lastName }}
+                  </option>
+                }
+              </select>
+              <svg class="form-select-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 6.5L7 9L9.5 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            @if (policyForm.get('clientId')?.invalid && policyForm.get('clientId')?.touched) {
+              <p class="form-error">Client is required</p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="type">Policy Type</label>
+            <div class="form-select-wrapper">
+              <select id="type" class="form-select" formControlName="type">
+                <option value="VEHICLE">Auto Insurance</option>
+                <option value="HOME">Home Insurance</option>
+                <option value="LIFE">Life Insurance</option>
+                <option value="HEALTH">Health Insurance</option>
+                <option value="BUSINESS">Business Insurance</option>
+              </select>
+              <svg class="form-select-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 6.5L7 9L9.5 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="startDate">Start Date</label>
+              <input type="date" id="startDate" class="form-input" formControlName="startDate">
+              @if (policyForm.get('startDate')?.invalid && policyForm.get('startDate')?.touched) {
+                <p class="form-error">Start date is required</p>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="endDate">End Date</label>
+              <input type="date" id="endDate" class="form-input" formControlName="endDate">
+              @if (policyForm.get('endDate')?.invalid && policyForm.get('endDate')?.touched) {
+                <p class="form-error">End date is required</p>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="premiumAmount">Premium Amount (€/month)</label>
+              <input type="number" id="premiumAmount" class="form-input" formControlName="premiumAmount" placeholder="150">
+              @if (policyForm.get('premiumAmount')?.invalid && policyForm.get('premiumAmount')?.touched) {
+                <p class="form-error">Premium amount is required</p>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="coverageAmount">Coverage Amount (€)</label>
+              <input type="number" id="coverageAmount" class="form-input" formControlName="coverageAmount" placeholder="50000">
+              @if (policyForm.get('coverageAmount')?.invalid && policyForm.get('coverageAmount')?.touched) {
+                <p class="form-error">Coverage amount is required</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="policy-modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="policyForm.invalid || isSaving">
+            @if (isSaving) {
+              <span class="btn-spinner">
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+              </span>
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.1667 4L6 11.1667L2.83337 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            }
+            <span>{{ isSaving ? 'Saving...' : 'Save Policy' }}</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
