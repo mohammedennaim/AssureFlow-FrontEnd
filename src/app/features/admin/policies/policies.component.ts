@@ -160,34 +160,23 @@ export class PoliciesComponent implements OnInit {
   openEditModal(policy: Policy): void {
     this.isEditMode = true;
     this.selectedPolicyId = policy.id;
-    
-    // Check if the policy's client exists in the loaded clients list
-    const clientExists = this.clients.some(c => c.id === policy.clientId);
-    if (!clientExists && policy.clientName) {
-      // Add a placeholder client so it can be displayed in the select
-      this.clients = [...this.clients, {
-        id: policy.clientId,
-        firstName: policy.clientName.split(' ')[0] || 'Unknown',
-        lastName: policy.clientName.split(' ').slice(1).join(' ') || 'Client',
-        email: '',
-        phone: ''
-      }];
-    }
-    
+
+    // Helper to format date string (YYYY-MM-DDTHH:mm:ss...) to YYYY-MM-DD
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return '';
+      return dateStr.split('T')[0];
+    };
+
     // Patch form values BEFORE showing modal
     this.policyForm.patchValue({
       clientId: policy.clientId,
       type: policy.type,
-      startDate: policy.startDate,
-      endDate: policy.endDate,
+      startDate: formatDate(policy.startDate),
+      endDate: formatDate(policy.endDate),
       premiumAmount: policy.premium,
       coverageAmount: policy.coverageAmount
     });
-    
-    // Disable fields that cannot be updated AFTER patching
-    this.policyForm.get('clientId')?.disable();
-    this.policyForm.get('startDate')?.disable();
-    
+
     this.showBackdrop = true;
     setTimeout(() => {
       this.showModal = true;
@@ -199,9 +188,8 @@ export class PoliciesComponent implements OnInit {
     setTimeout(() => {
       this.showBackdrop = false;
       this.policyForm.reset();
-      // Re-enable all fields
-      this.policyForm.get('clientId')?.enable();
-      this.policyForm.get('startDate')?.enable();
+      // Re-enable start date field
+      // this.policyForm.get('startDate')?.enable();
     }, 300);
   }
 
@@ -217,12 +205,14 @@ export class PoliciesComponent implements OnInit {
     if (this.isEditMode && this.selectedPolicyId) {
       // For update, only send allowed fields
       const updateData = {
+        clientId: formValue.clientId,
         type: formValue.type,
+        startDate: formValue.startDate,
         endDate: formValue.endDate,
         premiumAmount: formValue.premiumAmount,
         coverageAmount: formValue.coverageAmount
       };
-      
+
       this.policiesService.update(this.selectedPolicyId, updateData).subscribe({
         next: () => {
           this.loadPolicies();
@@ -232,6 +222,15 @@ export class PoliciesComponent implements OnInit {
         error: (err) => {
           console.error('Error updating policy:', err);
           console.error('Error details:', err.error);
+          
+          let errorMessage = 'Failed to update policy. ';
+          if (err.error?.message) {
+            errorMessage += err.error.message;
+          } else if (typeof err.error === 'string') {
+            errorMessage += err.error;
+          }
+          
+          alert(errorMessage);
           this.isSaving = false;
         }
       });
@@ -246,7 +245,7 @@ export class PoliciesComponent implements OnInit {
         error: (err) => {
           console.error('Error creating policy:', err);
           console.error('Error details:', err.error);
-          
+
           // Show user-friendly error message
           let errorMessage = 'Failed to create policy. ';
           if (err.status === 409) {
@@ -254,7 +253,7 @@ export class PoliciesComponent implements OnInit {
           } else if (err.error?.message) {
             errorMessage += err.error.message;
           }
-          
+
           alert(errorMessage);
           this.isSaving = false;
         }
