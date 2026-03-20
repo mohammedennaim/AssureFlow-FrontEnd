@@ -68,8 +68,11 @@ export class ClientBillingComponent implements OnInit {
     const statusMap: Record<string, string> = {
       PAID: 'status--paid',
       PENDING: 'status--pending',
-      OVERDUE: 'status--overdue',
-      CANCELLED: 'status--rejected'
+      ACTIVE: 'status--active',
+      DRAFT: 'status--draft',
+      EXPIRED: 'status--expired',
+      CANCELLED: 'status--rejected',
+      SUBMITTED: 'status--submitted'
     };
     return statusMap[status.toUpperCase()] || '';
   }
@@ -111,7 +114,7 @@ export class ClientBillingComponent implements OnInit {
 
   getTotalOverdue(): number {
     return this.invoices
-      .filter(i => i.status === 'OVERDUE')
+      .filter(i => i.overDue)
       .reduce((sum, i) => sum + (i.amount || 0), 0);
   }
 

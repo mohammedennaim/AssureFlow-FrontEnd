@@ -162,7 +162,7 @@
               </div>
             </div>
             <div class="invoice-card__actions">
-              @if (invoice.status === 'PENDING' || invoice.status === 'OVERDUE') {
+              @if (invoice.status === 'PENDING' || invoice.overDue) {
                 <button class="btn btn--primary">Pay Invoice</button>
               }
               <button class="btn btn--outline">

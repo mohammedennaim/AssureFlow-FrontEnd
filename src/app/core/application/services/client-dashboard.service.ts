@@ -321,7 +321,10 @@ export class ClientDashboardService {
         totalPaid += invoice.amount || 0;
       } else if (invoice.status === 'PENDING') {
         totalPending += invoice.amount || 0;
-      } else if (invoice.status === 'OVERDUE') {
+      }
+      
+      // Check if invoice is overdue (using overDue boolean field)
+      if (invoice.overDue) {
         totalOverdue += invoice.amount || 0;
       }
     });

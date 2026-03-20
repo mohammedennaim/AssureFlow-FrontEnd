@@ -1,4 +1,37 @@
 <div class="billing-page">
+  <!-- Notification Toast -->
+  @if (notification) {
+  <div class="notification notification--{{ notification.type }}" [@slideIn]>
+    <div class="notification__icon">
+      @if (notification.type === 'success') {
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16.667 5L7.5 14.167 3.333 10"/>
+        </svg>
+      } @else if (notification.type === 'error') {
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="8"/>
+          <path d="M10 6v4m0 4h.01"/>
+        </svg>
+      } @else if (notification.type === 'warning') {
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 6v4m0 4h.01M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+        </svg>
+      } @else {
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="10" cy="10" r="8"/>
+          <path d="M10 10h.01M10 6v4"/>
+        </svg>
+      }
+    </div>
+    <span class="notification__message">{{ notification.message }}</span>
+    <button class="notification__close" (click)="closeNotification()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 4L4 12M4 4l8 8"/>
+      </svg>
+    </button>
+  </div>
+  }
+
   <!-- Page Header -->
   <header class="page-header">
     <div class="page-header__start">
@@ -9,11 +42,11 @@
         </svg>
       </div>
       <div class="page-header__content">
-        <h1 class="page-header__title">Billing</h1>
+        <h1 class="page-header__title">Billing Management</h1>
         <p class="page-header__subtitle">Manage invoices and payments</p>
       </div>
     </div>
-    <button class="btn btn--primary" type="button">
+    <button class="btn btn--primary" type="button" (click)="openCreateInvoiceModal()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M9 3.75v10.5M3.75 9h10.5"/>
       </svg>
@@ -72,6 +105,70 @@
   </section>
   }
 
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="8" cy="8" r="6"/>
+        <path d="M12.5 12.5l3.5 3.5"/>
+      </svg>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (input)="onSearchChange()"
+        placeholder="Search by invoice #, client, or policy..."
+        class="search-input"
+      />
+      @if (searchTerm) {
+        <button class="clear-search" (click)="searchTerm = ''; onSearchChange()" title="Clear search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 4L4 12M4 4l8 8"/>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <div class="filters-group">
+      <select [(ngModel)]="filterStatus" (change)="onFilterChange()" class="filter-select">
+        @for (status of statusOptions; track status) {
+          <option [value]="status">{{ status === 'ALL' ? 'All Status' : status }}</option>
+        }
+      </select>
+
+      <select [(ngModel)]="filterOverdue" (change)="onFilterChange()" class="filter-select">
+        <option value="ALL">All Invoices</option>
+        <option value="OVERDUE">Overdue Only</option>
+        <option value="NOT_OVERDUE">Not Overdue</option>
+      </select>
+
+      @if (searchTerm || filterStatus !== 'ALL' || filterOverdue !== 'ALL') {
+        <button class="btn btn--secondary btn--sm" (click)="clearFilters()" title="Clear all filters">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 4L4 12M4 4l8 8"/>
+          </svg>
+          Clear
+        </button>
+      }
+    </div>
+
+    <div class="export-group">
+      <button class="btn btn--secondary btn--sm" (click)="exportToPDF()" title="Export to PDF">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
+          <path d="M6 6h4M6 9h4M6 12h2"/>
+        </svg>
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  @if (filteredInvoices.length !== invoices.length) {
+    <div class="results-info">
+      Showing {{ filteredInvoices.length }} of {{ invoices.length }} invoices
+    </div>
+  }
+
   <!-- Invoices Table -->
   <div class="table-wrapper">
     <div class="data-card">
@@ -82,9 +179,15 @@
         </div>
       } @else if (error) {
         <div class="error-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>Error</h3>
           <p>{{ error }}</p>
         </div>
-      } @else if (invoices.length === 0) {
+      } @else if (filteredInvoices.length === 0 && invoices.length === 0) {
         <div class="empty-state">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="10" y="8" width="28" height="32" rx="2"/>
@@ -92,6 +195,17 @@
           </svg>
           <h3>No invoices found</h3>
           <p>Create your first invoice to get started</p>
+          <button class="btn btn--primary" (click)="openCreateInvoiceModal()">Create Invoice</button>
+        </div>
+      } @else if (filteredInvoices.length === 0) {
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="24" cy="24" r="20"/>
+            <path d="M24 16v8M24 32h.01"/>
+          </svg>
+          <h3>No invoices match your filters</h3>
+          <p>Try adjusting your search or filter criteria</p>
+          <button class="btn btn--secondary" (click)="clearFilters()">Clear Filters</button>
         </div>
       } @else {
         <table class="billing-table">
@@ -101,54 +215,80 @@
               <th>Client</th>
               <th>Policy</th>
               <th>Amount</th>
-              <th>Issued</th>
+              <th>Tax</th>
+              <th>Total</th>
               <th>Due Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (invoice of invoices; track invoice.id) {
+            @for (invoice of filteredInvoices; track trackByInvoiceId($index, invoice)) {
               <tr class="billing-table__row">
                 <td>
                   <span class="invoice-number">{{ invoice.invoiceNumber || 'INV-' + (invoice.id | slice:0:8) }}</span>
                 </td>
                 <td>
-                  <span class="client-name">{{ invoice.clientId | slice:0:8 }}...</span>
+                  <span class="client-name">{{ getClientName(invoice.clientId) }}</span>
                 </td>
                 <td>
-                  <span class="policy-link">{{ invoice.policyId | slice:0:8 }}...</span>
+                  <span class="policy-link">{{ getPolicyNumber(invoice.policyId) }}</span>
                 </td>
                 <td>
                   <span class="amount">{{ invoice.amount | currency:'EUR':'symbol':'1.0-0' }}</span>
                 </td>
                 <td>
-                  <span class="date">{{ invoice.createdAt | date:'MMM d, y' }}</span>
+                  <span class="tax-amount">{{ invoice.taxAmount | currency:'EUR':'symbol':'1.0-0' }}</span>
                 </td>
                 <td>
-                  <span class="due-date" [class.overdue]="invoice.status === 'OVERDUE'">
+                  <span class="total-amount">{{ invoice.totalAmount | currency:'EUR':'symbol':'1.0-0' }}</span>
+                </td>
+                <td>
+                  <span class="due-date" [class.overdue]="invoice.overDue">
                     {{ invoice.dueDate | date:'MMM d, y' }}
                   </span>
                 </td>
                 <td>
-                  <span class="status-badge status-badge--{{ toLowerCase(invoice.status) }}">
-                    {{ invoice.status }}
+                  <span class="status-badge status-badge--{{ getStatusClass(invoice.status) }}">
+                    {{ invoice.status.replace('_', ' ') }}
                   </span>
                 </td>
                 <td class="actions">
-                  <button class="action-btn" type="button" title="View">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25">
-                      <path d="M8 11.5C9.933 11.5 11.5 9.933 11.5 8C11.5 6.067 9.933 4.5 8 4.5C6.067 4.5 4.5 6.067 4.5 8C4.5 9.933 6.067 11.5 8 11.5Z"/>
-                      <path d="M8 10.5C8.82843 10.5 9.5 9.82843 9.5 9C9.5 8.17157 8.82843 7.5 8 7.5C7.17157 7.5 6.5 8.17157 6.5 9C6.5 9.82843 7.17157 10.5 8 10.5Z"/>
+                  <button class="action-btn" type="button" title="View" (click)="openViewInvoiceModal(invoice)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
-                  @if (invoice.status === 'PENDING') {
-                    <button class="action-btn action-btn--success" type="button" title="Mark as Paid">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25">
-                        <path d="M13.5 4.5L6 12L2.5 8.5"/>
+                  <button class="action-btn action-btn--info" type="button" title="Print Invoice" (click)="printInvoice(invoice)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 6 2 18 2 18 9"/>
+                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                      <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                  </button>
+                  @if (invoice.status === 'PENDING' || invoice.status === 'ACTIVE') {
+                    <button class="action-btn action-btn--success" type="button" title="Create Payment" (click)="openCreatePaymentModal(invoice)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                       </svg>
                     </button>
                   }
+                  @if (invoice.status !== 'PAID' && invoice.status !== 'CANCELLED') {
+                    <button class="action-btn action-btn--warning" type="button" title="Cancel" (click)="confirmCancel(invoice.id)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                      </svg>
+                    </button>
+                  }
+                  <button class="action-btn action-btn--danger" type="button" title="Delete" (click)="confirmDelete(invoice.id)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
                 </td>
               </tr>
             }
@@ -157,4 +297,342 @@
       }
     </div>
   </div>
+
+  <!-- Create Invoice Modal -->
+  @if (showCreateInvoiceModal) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New Invoice</h2>
+        <button class="modal-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        @if (policies.length === 0 || clients.length === 0) {
+        <div class="alert alert--warning">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 6v4m0 4h.01M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+          </svg>
+          <div>
+            <strong>Missing Data</strong>
+            <p>
+              @if (policies.length === 0 && clients.length === 0) {
+                You need to create policies and clients before creating invoices.
+              } @else if (policies.length === 0) {
+                You need to create policies before creating invoices.
+              } @else {
+                You need to create clients before creating invoices.
+              }
+            </p>
+          </div>
+        </div>
+        }
+        <div class="form-group">
+          <label for="policyId">Policy *</label>
+          <select 
+            id="policyId" 
+            [(ngModel)]="newInvoice.policyId" 
+            (change)="onPolicyChange()"
+            class="form-input"
+          >
+            <option value="">-- Select a Policy --</option>
+            @if (policies.length === 0) {
+              <option value="" disabled>No policies available. Please create a policy first.</option>
+            }
+            @for (policy of policies; track trackByPolicyId($index, policy)) {
+              <option [value]="policy.id">
+                {{ policy.policyNumber }} - {{ policy.type }} ({{ getClientName(policy.clientId) }})
+              </option>
+            }
+          </select>
+          @if (policies.length === 0) {
+            <small class="form-hint form-hint--warning">⚠️ No policies found. Please create policies first.</small>
+          } @else {
+            <small class="form-hint">Select a policy to auto-fill client and amount</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="clientId">Client *</label>
+          <select 
+            id="clientId" 
+            [(ngModel)]="newInvoice.clientId" 
+            class="form-input"
+            [disabled]="!!newInvoice.policyId"
+          >
+            <option value="">-- Select a Client --</option>
+            @if (clients.length === 0) {
+              <option value="" disabled>No clients available. Please create a client first.</option>
+            }
+            @for (client of clients; track trackByClientId($index, client)) {
+              <option [value]="client.id">
+                {{ client.firstName }} {{ client.lastName }} - {{ client.email }}
+              </option>
+            }
+          </select>
+          @if (newInvoice.policyId) {
+            <small class="form-hint">Auto-filled from selected policy</small>
+          } @else if (clients.length === 0) {
+            <small class="form-hint form-hint--warning">⚠️ No clients found. Please create clients first.</small>
+          } @else {
+            <small class="form-hint">Select a client manually or choose a policy to auto-fill</small>
+          }
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount (EUR) *</label>
+          <input 
+            type="number" 
+            id="amount" 
+            [(ngModel)]="newInvoice.amount" 
+            class="form-input"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+          />
+        </div>
+        <div class="form-group">
+          <label for="taxAmount">Tax Amount (EUR)</label>
+          <input 
+            type="number" 
+            id="taxAmount" 
+            [(ngModel)]="newInvoice.taxAmount" 
+            class="form-input"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+          />
+          <small class="form-hint">Typically 20% of amount</small>
+        </div>
+        <div class="form-group">
+          <label>Total Amount</label>
+          <div class="total-display">{{ calculateTotalAmount() | currency:'EUR':'symbol':'1.2-2' }}</div>
+        </div>
+        <div class="form-group">
+          <label for="dueDate">Due Date *</label>
+          <input 
+            type="date" 
+            id="dueDate" 
+            [(ngModel)]="newInvoice.dueDate" 
+            class="form-input"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" (click)="closeModals()">Cancel</button>
+        <button 
+          class="btn btn--primary" 
+          (click)="createInvoice()"
+          [disabled]="policies.length === 0 || clients.length === 0"
+        >
+          Create Invoice
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- View Invoice Modal -->
+  @if (showViewInvoiceModal && selectedInvoice) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Invoice Details</h2>
+        <button class="modal-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Invoice Number</label>
+            <p>{{ selectedInvoice.invoiceNumber }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Status</label>
+            <p>
+              <span class="status-badge status-badge--{{ getStatusClass(selectedInvoice.status) }}">
+                {{ selectedInvoice.status.replace('_', ' ') }}
+              </span>
+            </p>
+          </div>
+          <div class="detail-item">
+            <label>Policy</label>
+            <p>{{ getPolicyNumber(selectedInvoice.policyId) }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Client</label>
+            <p>{{ getClientName(selectedInvoice.clientId) }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Amount</label>
+            <p class="amount">{{ selectedInvoice.amount | currency:'EUR':'symbol':'1.2-2' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Tax Amount</label>
+            <p>{{ selectedInvoice.taxAmount | currency:'EUR':'symbol':'1.2-2' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Total Amount</label>
+            <p class="amount">{{ selectedInvoice.totalAmount | currency:'EUR':'symbol':'1.2-2' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Due Date</label>
+            <p [class.overdue]="selectedInvoice.overDue">{{ selectedInvoice.dueDate | date:'MMM d, y' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Paid Direct</label>
+            <p>{{ selectedInvoice.paidDirect ? 'Yes' : 'No' }}</p>
+          </div>
+          <div class="detail-item">
+            <label>Overdue</label>
+            <p>{{ selectedInvoice.overDue ? 'Yes' : 'No' }}</p>
+          </div>
+        </div>
+        
+        @if (selectedInvoicePayments.length > 0) {
+        <div class="payments-section">
+          <h3>Payments</h3>
+          <div class="payments-list">
+            @for (payment of selectedInvoicePayments; track payment.id) {
+            <div class="payment-item">
+              <div class="payment-info">
+                <span class="payment-amount">{{ payment.amount | currency:'EUR':'symbol':'1.2-2' }}</span>
+                <span class="payment-method">{{ payment.method.replace('_', ' ') }}</span>
+              </div>
+              <span class="status-badge status-badge--{{ getStatusClass(payment.status) }}">
+                {{ payment.status }}
+              </span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" (click)="closeModals()">Close</button>
+        @if (selectedInvoice.status === 'PENDING' || selectedInvoice.status === 'ACTIVE') {
+          <button class="btn btn--primary" (click)="openCreatePaymentModal(selectedInvoice)">Create Payment</button>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Create Payment Modal -->
+  @if (showCreatePaymentModal && selectedInvoice) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Payment</h2>
+        <button class="modal-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">Create payment for invoice <strong>{{ selectedInvoice.invoiceNumber }}</strong></p>
+        <div class="form-group">
+          <label for="paymentAmount">Amount (EUR) *</label>
+          <input 
+            type="number" 
+            id="paymentAmount" 
+            [(ngModel)]="newPayment.amount" 
+            class="form-input"
+            min="0"
+            step="0.01"
+          />
+          <small class="form-hint">Invoice total: {{ selectedInvoice.totalAmount | currency:'EUR':'symbol':'1.2-2' }}</small>
+        </div>
+        <div class="form-group">
+          <label for="paymentMethod">Payment Method *</label>
+          <select 
+            id="paymentMethod" 
+            [(ngModel)]="newPayment.method" 
+            class="form-input"
+          >
+            @for (method of paymentMethods; track method) {
+              <option [value]="method">{{ method.replace('_', ' ') }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="transactionId">Transaction ID</label>
+          <input 
+            type="text" 
+            id="transactionId" 
+            [(ngModel)]="newPayment.transactionId" 
+            class="form-input"
+            placeholder="Optional"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn--success" (click)="createPayment()">Create Payment</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteConfirmModal) {
+  <div class="modal-overlay" (click)="cancelAction()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Delete</h2>
+        <button class="modal-close" (click)="cancelAction()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-icon confirm-icon--danger">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="24" cy="24" r="20"/>
+            <path d="M24 16v12m0 4h.01"/>
+          </svg>
+        </div>
+        <p class="confirm-message">Are you sure you want to delete this invoice? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" (click)="cancelAction()">Cancel</button>
+        <button class="btn btn--danger" (click)="executeDelete()">Delete Invoice</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Cancel Confirmation Modal -->
+  @if (showCancelConfirmModal) {
+  <div class="modal-overlay" (click)="cancelAction()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Cancel</h2>
+        <button class="modal-close" (click)="cancelAction()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-icon confirm-icon--warning">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M24 16v12m0 4h.01M24 44a20 20 0 100-40 20 20 0 000 40z"/>
+          </svg>
+        </div>
+        <p class="confirm-message">Are you sure you want to cancel this invoice?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" (click)="cancelAction()">No, Keep It</button>
+        <button class="btn btn--warning" (click)="executeCancel()">Yes, Cancel Invoice</button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

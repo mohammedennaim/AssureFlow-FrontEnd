@@ -473,14 +473,17 @@ export class AdminStatisticsService {
         }
       } else if (invoice.status === 'PENDING') {
         pendingRevenue += amount;
-      } else if (invoice.status === 'OVERDUE') {
+      }
+      
+      // Check if invoice is overdue (using overDue boolean field)
+      if (invoice.overDue) {
         overdueRevenue += amount;
       }
     });
 
     const paidInvoices = byStatus['PAID'] || 0;
     const pendingInvoices = byStatus['PENDING'] || 0;
-    const overdueInvoices = byStatus['OVERDUE'] || 0;
+    const overdueInvoices = invoices.filter(inv => inv.overDue).length;
     const cancelledInvoices = byStatus['CANCELLED'] || 0;
 
     const totalInvoicesAmount = paidRevenue + pendingRevenue + overdueRevenue;

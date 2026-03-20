@@ -2,7 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { IInvoiceRepository, CreateInvoiceData, Invoice } from '../../domain/ports/invoice.repository.port';
+import { 
+  IInvoiceRepository, 
+  IPaymentRepository,
+  CreateInvoiceData, 
+  CreatePaymentData,
+  Invoice,
+  Payment,
+  InvoiceStatus,
+  PaymentMethod,
+  PaymentStatus
+} from '../../domain/ports/invoice.repository.port';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -29,10 +39,6 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
           data = res.data;
         } else if (Array.isArray(res)) {
           data = res;
-        } else if (res?.invoices && Array.isArray(res.invoices)) {
-          data = res.invoices;
-        } else if (res?.items && Array.isArray(res.items)) {
-          data = res.items;
         }
         
         console.log('[InvoiceRepository] extracted data:', data);
@@ -49,17 +55,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map((res) => {
         console.log('[InvoiceRepository] getById raw response:', res);
-        
-        let dto: InvoiceDto | null = null;
-        
-        if (res?.data) {
-          dto = res.data;
-        } else if (res?.invoice) {
-          dto = res.invoice;
-        } else {
-          dto = res;
-        }
-        
+        const dto = res?.data || res;
         return this.mapToInvoice(dto as InvoiceDto);
       }),
       catchError(() => of({} as Invoice))
@@ -69,16 +65,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
   getByNumber(invoiceNumber: string): Observable<Invoice> {
     return this.http.get<any>(`${this.apiUrl}/number/${invoiceNumber}`).pipe(
       map((res) => {
-        let dto: InvoiceDto | null = null;
-        
-        if (res?.data) {
-          dto = res.data;
-        } else if (res?.invoice) {
-          dto = res.invoice;
-        } else {
-          dto = res;
-        }
-        
+        const dto = res?.data || res;
         return this.mapToInvoice(dto as InvoiceDto);
       }),
       catchError(() => of({} as Invoice))
@@ -89,20 +76,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
         console.log('[InvoiceRepository] getByClientId raw response:', res);
-
-        let data: InvoiceDto[] = [];
-
-        // Handle BaseResponse wrapper
-        if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.invoices && Array.isArray(res.invoices)) {
-          data = res.invoices;
-        }
-
+        const data: InvoiceDto[] = res?.data || res || [];
         console.log('[InvoiceRepository] getByClientId extracted data:', data);
         return data.map(this.mapToInvoice);
       }),
@@ -117,19 +91,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.get<any>(`${this.apiUrl}/policy/${policyId}`).pipe(
       map((res) => {
         console.log('[InvoiceRepository] getByPolicyId raw response:', res);
-        
-        let data: InvoiceDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.invoices && Array.isArray(res.invoices)) {
-          data = res.invoices;
-        }
-        
+        const data: InvoiceDto[] = res?.data || res || [];
         return data.map(this.mapToInvoice);
       }),
       catchError(() => of([]))
@@ -139,16 +101,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
   create(data: CreateInvoiceData): Observable<Invoice> {
     return this.http.post<any>(this.apiUrl, data).pipe(
       map((res) => {
-        let dto: InvoiceDto | null = null;
-        
-        if (res?.data) {
-          dto = res.data;
-        } else if (res?.invoice) {
-          dto = res.invoice;
-        } else {
-          dto = res;
-        }
-        
+        const dto = res?.data || res;
         return this.mapToInvoice(dto as InvoiceDto);
       })
     );
@@ -158,8 +111,8 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.patch<void>(`${this.apiUrl}/${id}/cancel`, {});
   }
 
-  markAsPaid(id: string, paymentId: string): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${id}/pay/${paymentId}`, {});
+  markAsPaid(invoiceId: string, paymentId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${invoiceId}/pay/${paymentId}`, {});
   }
 
   delete(id: string): Observable<void> {
@@ -172,10 +125,93 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
       invoiceNumber: dto.invoiceNumber,
       clientId: dto.clientId,
       policyId: dto.policyId,
-      amount: dto.totalAmount || dto.amount || 0,
-      status: dto.status as Invoice['status'],
+      amount: dto.amount || 0,
+      taxAmount: dto.taxAmount || 0,
+      totalAmount: dto.totalAmount || 0,
+      status: dto.status as InvoiceStatus,
       dueDate: dto.dueDate,
-      createdAt: dto.createdAt || dto.dueDate,
+      generatedBy: dto.generatedBy,
+      paidDirect: dto.paidDirect || false,
+      overDue: dto.overDue || false,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+    };
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class HttpPaymentRepository implements IPaymentRepository {
+  private readonly apiUrl = `${environment.apiUrl}/payments`;
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<Payment[]> {
+    return this.http.get<any>(this.apiUrl).pipe(
+      map((res) => {
+        console.log('[PaymentRepository] getAll raw response:', res);
+        const data: PaymentDto[] = res?.data || res || [];
+        return data.map(this.mapToPayment);
+      }),
+      catchError((err) => {
+        console.error('[PaymentRepository] getAll error:', err);
+        return of([]);
+      })
+    );
+  }
+
+  getById(id: string): Observable<Payment> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map((res) => {
+        const dto = res?.data || res;
+        return this.mapToPayment(dto as PaymentDto);
+      }),
+      catchError(() => of({} as Payment))
+    );
+  }
+
+  getByInvoiceId(invoiceId: string): Observable<Payment[]> {
+    return this.http.get<any>(`${this.apiUrl}/invoice/${invoiceId}`).pipe(
+      map((res) => {
+        const data: PaymentDto[] = res?.data || res || [];
+        return data.map(this.mapToPayment);
+      }),
+      catchError(() => of([]))
+    );
+  }
+
+  getByClientId(clientId: string): Observable<Payment[]> {
+    return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
+      map((res) => {
+        const data: PaymentDto[] = res?.data || res || [];
+        return data.map(this.mapToPayment);
+      }),
+      catchError(() => of([]))
+    );
+  }
+
+  create(data: CreatePaymentData): Observable<Payment> {
+    return this.http.post<any>(this.apiUrl, data).pipe(
+      map((res) => {
+        const dto = res?.data || res;
+        return this.mapToPayment(dto as PaymentDto);
+      })
+    );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  private mapToPayment(dto: PaymentDto): Payment {
+    return {
+      id: dto.id,
+      invoiceId: dto.invoiceId,
+      clientId: dto.clientId,
+      amount: dto.amount || 0,
+      method: dto.method as PaymentMethod,
+      status: dto.status as PaymentStatus,
+      transactionId: dto.transactionId,
+      processedBy: dto.processedBy,
     };
   }
 }
@@ -185,9 +221,25 @@ interface InvoiceDto {
   invoiceNumber: string;
   clientId: string;
   policyId: string;
-  amount?: number;
-  totalAmount?: number;
+  amount: number;
+  taxAmount: number;
+  totalAmount: number;
   status: string;
   dueDate: string;
+  generatedBy?: string;
+  paidDirect: boolean;
+  overDue: boolean;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+interface PaymentDto {
+  id: string;
+  invoiceId: string;
+  clientId: string;
+  amount: number;
+  method: string;
+  status: string;
+  transactionId?: string;
+  processedBy?: string;
 }

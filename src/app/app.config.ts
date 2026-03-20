@@ -19,8 +19,8 @@ import { CLIENT_REPOSITORY } from './core/domain/ports/client.repository.port';
 import { HttpClientRepository } from './core/infrastructure/repositories/http-client.repository';
 import { CLAIM_REPOSITORY } from './core/domain/ports/claim.repository.port';
 import { HttpClaimRepository } from './core/infrastructure/repositories/http-claim.repository';
-import { INVOICE_REPOSITORY } from './core/domain/ports/invoice.repository.port';
-import { HttpInvoiceRepository } from './core/infrastructure/repositories/http-invoice.repository';
+import { INVOICE_REPOSITORY, PAYMENT_REPOSITORY } from './core/domain/ports/invoice.repository.port';
+import { HttpInvoiceRepository, HttpPaymentRepository } from './core/infrastructure/repositories/http-invoice.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -36,5 +36,6 @@ export const appConfig: ApplicationConfig = {
     { provide: CLIENT_REPOSITORY, useClass: HttpClientRepository },
     { provide: CLAIM_REPOSITORY, useClass: HttpClaimRepository },
     { provide: INVOICE_REPOSITORY, useClass: HttpInvoiceRepository },
+    { provide: PAYMENT_REPOSITORY, useClass: HttpPaymentRepository },
   ]
 };

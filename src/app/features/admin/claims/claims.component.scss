@@ -493,9 +493,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: 1rem;
   backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 // Modal
@@ -509,6 +510,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
 
   &-header {
     display: flex;
@@ -673,5 +676,39 @@
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
       transform: translateY(-2px);
     }
+  }
+}
+
+// Modal Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive Modal
+@media (max-width: 768px) {
+  .modal {
+    max-width: 100%;
+    max-height: 95vh;
+    margin: 0.5rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 }
