@@ -31,6 +31,7 @@ export class UsersComponent implements OnInit {
   filterStatus = 'ALL';
   sortBy = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
+  viewMode: 'table' | 'cards' = 'table';
   selectedUsers = new Set<string>();
   showDeleteConfirm = false;
   userToDelete: string | null = null;
@@ -42,6 +43,23 @@ export class UsersComponent implements OnInit {
   selectedUserId: string | null = null;
   isSaving = false;
   saveError: string | null = null;
+
+  // New modals
+  showRolesModal = false;
+  showSessionsModal = false;
+  showAuditModal = false;
+  selectedUser: User | null = null;
+  userSessions: any[] = [];
+  userAuditLogs: any[] = [];
+  availableRoles = [
+    { id: '10000000-0000-0000-0000-000000000001', name: 'ADMIN' },
+    { id: '10000000-0000-0000-0000-000000000002', name: 'AGENT' },
+    { id: '10000000-0000-0000-0000-000000000003', name: 'CLIENT' },
+    { id: '10000000-0000-0000-0000-000000000004', name: 'FINANCE' }
+  ];
+
+  // Notification
+  notification: { message: string; type: 'success' | 'error' | 'warning' | 'info' } | null = null;
 
   currentPage = 1;
   pageSize = 10;
@@ -356,5 +374,128 @@ export class UsersComponent implements OnInit {
 
   trackByUserId(index: number, user: User): string {
     return user.id;
+  }
+
+  // New methods for advanced features
+  openRolesModal(user: User): void {
+    console.log('[UsersComponent] Opening roles modal for user:', user);
+    this.selectedUser = user;
+    this.showRolesModal = true;
+    console.log('[UsersComponent] showRolesModal:', this.showRolesModal);
+  }
+
+  closeRolesModal(): void {
+    console.log('[UsersComponent] Closing roles modal');
+    this.showRolesModal = false;
+    this.selectedUser = null;
+  }
+
+  assignRole(roleId: string): void {
+    if (!this.selectedUser) return;
+
+    this.usersService.assignRole(this.selectedUser.id, roleId).subscribe({
+      next: () => {
+        this.showNotification('Role assigned successfully', 'success');
+        this.fetchUsers();
+        this.closeRolesModal();
+      },
+      error: (err) => {
+        console.error('Error assigning role:', err);
+        this.showNotification('Failed to assign role', 'error');
+      }
+    });
+  }
+
+  removeRole(roleId: string): void {
+    if (!this.selectedUser) return;
+
+    this.usersService.removeRole(this.selectedUser.id, roleId).subscribe({
+      next: () => {
+        this.showNotification('Role removed successfully', 'success');
+        this.fetchUsers();
+        this.closeRolesModal();
+      },
+      error: (err) => {
+        console.error('Error removing role:', err);
+        this.showNotification('Failed to remove role', 'error');
+      }
+    });
+  }
+
+  hasRole(roleName: string): boolean {
+    if (!this.selectedUser || !this.selectedUser.roles) return false;
+    return this.selectedUser.roles.some(r => r.name === roleName);
+  }
+
+  openSessionsModal(user: User): void {
+    this.selectedUser = user;
+    this.usersService.getUserSessions(user.id).subscribe({
+      next: (sessions) => {
+        this.userSessions = sessions;
+        if (sessions.length === 0) {
+          this.showNotification('No active sessions found for this user', 'info');
+        }
+        this.showSessionsModal = true;
+      },
+      error: (err) => {
+        console.error('Error loading sessions:', err);
+        this.showNotification('Failed to load sessions', 'error');
+      }
+    });
+  }
+
+  closeSessionsModal(): void {
+    this.showSessionsModal = false;
+    this.selectedUser = null;
+    this.userSessions = [];
+  }
+
+  invalidateAllSessions(): void {
+    if (!this.selectedUser) return;
+
+    this.usersService.invalidateUserSessions(this.selectedUser.id).subscribe({
+      next: () => {
+        this.showNotification('All sessions invalidated successfully', 'success');
+        this.closeSessionsModal();
+      },
+      error: (err) => {
+        console.error('Error invalidating sessions:', err);
+        this.showNotification('Failed to invalidate sessions', 'error');
+      }
+    });
+  }
+
+  openAuditModal(user: User): void {
+    this.selectedUser = user;
+    this.usersService.getUserAuditLogs(user.id).subscribe({
+      next: (logs) => {
+        this.userAuditLogs = logs;
+        if (logs.length === 0) {
+          this.showNotification('No audit logs found for this user', 'info');
+        }
+        this.showAuditModal = true;
+      },
+      error: (err) => {
+        console.error('Error loading audit logs:', err);
+        this.showNotification('Failed to load audit logs', 'error');
+      }
+    });
+  }
+
+  closeAuditModal(): void {
+    this.showAuditModal = false;
+    this.selectedUser = null;
+    this.userAuditLogs = [];
+  }
+
+  showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info'): void {
+    this.notification = { message, type };
+    setTimeout(() => {
+      this.notification = null;
+    }, 5000);
+  }
+
+  closeNotification(): void {
+    this.notification = null;
   }
 }
