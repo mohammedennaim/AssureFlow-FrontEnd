@@ -215,6 +215,11 @@
     color: var(--warning-500);
     font-weight: 600;
   }
+
+  &--expired {
+    color: var(--danger-500);
+    font-weight: 700;
+  }
 }
 
 .policy-status {
@@ -270,9 +275,14 @@
   justify-content: center;
   transition: all var(--transition-fast);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--surface-alt);
     color: var(--primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 
@@ -424,6 +434,16 @@
     &--danger {
       background: rgba(239, 68, 68, 0.1) !important;
       color: var(--danger-500) !important;
+    }
+
+    &--warning {
+      background: rgba(245, 158, 11, 0.1) !important;
+      color: #f59e0b !important;
+    }
+
+    &--success {
+      background: rgba(16, 185, 129, 0.1) !important;
+      color: #10b981 !important;
     }
   }
 
@@ -605,9 +625,305 @@
 
 .action-btn {
   &--danger {
-    &:hover {
+    &:hover:not(:disabled) {
       background: rgba(239, 68, 68, 0.1) !important;
       color: var(--danger-500) !important;
     }
+  }
+
+  &--warning {
+    &:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.1) !important;
+      color: #f59e0b !important;
+    }
+  }
+
+  &--success {
+    &:hover:not(:disabled) {
+      background: rgba(16, 185, 129, 0.1) !important;
+      color: #10b981 !important;
+    }
+  }
+}
+
+
+/* ==================== Additional Button Styles ==================== */
+.btn--warning {
+  background: #f59e0b !important;
+  color: white !important;
+
+  &:hover:not(:disabled) {
+    background: #d97706 !important;
+    transform: translateY(-1px);
+  }
+}
+
+.btn--success {
+  background: #10b981 !important;
+  color: white !important;
+
+  &:hover:not(:disabled) {
+    background: #059669 !important;
+    transform: translateY(-1px);
+  }
+}
+
+/* ==================== Form Textarea ==================== */
+.form-input[rows] {
+  resize: vertical !important;
+  min-height: 80px !important;
+  font-family: inherit !important;
+}
+
+
+/* ==================== View Toggle ==================== */
+.view-toggle {
+  display: flex !important;
+  gap: 0.25rem !important;
+  background: var(--surface-alt) !important;
+  padding: 0.25rem !important;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border) !important;
+
+  &__btn {
+    padding: 0.5rem !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    border-radius: var(--radius-md) !important;
+    cursor: pointer !important;
+    transition: all var(--transition-fast) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    &:hover {
+      background: var(--surface) !important;
+      color: var(--text-primary) !important;
+    }
+
+    &.active {
+      background: var(--primary) !important;
+      color: white !important;
+      box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2) !important;
+    }
+  }
+}
+
+/* ==================== Cards View ==================== */
+.cards-wrapper {
+  animation: slideUp 0.5s ease-out;
+}
+
+.cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  gap: 1.5rem !important;
+}
+
+.policy-card {
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border) !important;
+  overflow: hidden !important;
+  transition: all var(--transition-base) !important;
+
+  &:hover {
+    box-shadow: var(--shadow-lg) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  &__header {
+    padding: 1.25rem !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+  }
+
+  &__type {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+
+  &__title {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin: 0 !important;
+    text-transform: capitalize !important;
+  }
+
+  &__number {
+    font-size: 0.75rem !important;
+    color: var(--text-muted) !important;
+    margin: 0.25rem 0 0 !important;
+  }
+
+  &__body {
+    padding: 1.25rem !important;
+  }
+
+  &__info {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  &__duration {
+    margin-top: 1rem !important;
+  }
+
+  &__footer {
+    padding: 1rem 1.25rem !important;
+    background: var(--surface-alt) !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+.policy-type-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: var(--radius-lg) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+
+  &--vehicle {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: #4f46e5 !important;
+  }
+
+  &--home {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #059669 !important;
+  }
+
+  &--life {
+    background: rgba(244, 63, 94, 0.1) !important;
+    color: #e11d48 !important;
+  }
+
+  &--health {
+    background: rgba(6, 182, 212, 0.1) !important;
+    color: #0e7490 !important;
+  }
+
+  &--business {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: #b45309 !important;
+  }
+}
+
+.info-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+
+  &__label {
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+  }
+
+  &__value {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+.duration-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.duration-label {
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+}
+
+.duration-dates {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-top: 0.5rem !important;
+  font-size: 0.75rem !important;
+  color: var(--text-muted) !important;
+}
+
+.card-action-btn {
+  flex: 1 !important;
+  min-width: fit-content !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+
+  &:hover:not(:disabled) {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  &:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+  }
+
+  &--success {
+    &:hover:not(:disabled) {
+      background: #10b981 !important;
+      border-color: #10b981 !important;
+    }
+  }
+
+  &--warning {
+    &:hover:not(:disabled) {
+      background: #f59e0b !important;
+      border-color: #f59e0b !important;
+    }
+  }
+
+  &--danger {
+    &:hover:not(:disabled) {
+      background: var(--danger-500) !important;
+      border-color: var(--danger-500) !important;
+    }
+  }
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .policy-card__info {
+    grid-template-columns: 1fr !important;
+  }
+
+  .card-action-btn {
+    flex: 1 1 calc(50% - 0.25rem) !important;
   }
 }

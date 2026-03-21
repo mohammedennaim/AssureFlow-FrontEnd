@@ -31,7 +31,6 @@ export class UsersComponent implements OnInit {
   filterStatus = 'ALL';
   sortBy = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
-  viewMode: 'table' | 'cards' = 'table';
   selectedUsers = new Set<string>();
   showDeleteConfirm = false;
   userToDelete: string | null = null;

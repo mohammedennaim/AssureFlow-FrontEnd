@@ -29,10 +29,6 @@ export class PoliciesService {
     return this.policyRepository.update(id, data);
   }
 
-  delete(id: string): Observable<void> {
-    return this.policyRepository.delete(id);
-  }
-
   submit(id: string): Observable<void> {
     return this.policyRepository.submit(id);
   }
@@ -47,5 +43,13 @@ export class PoliciesService {
 
   cancel(id: string, reason: string): Observable<void> {
     return this.policyRepository.cancel(id, reason);
+  }
+
+  expire(id: string, reason: string): Observable<void> {
+    return this.policyRepository.expire(id, reason);
+  }
+
+  renew(id: string): Observable<Policy> {
+    return this.policyRepository.renew(id);
   }
 }

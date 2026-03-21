@@ -32,7 +32,6 @@ export class ClientsComponent implements OnInit {
   searchQuery = '';
   filterStatus = 'ALL';
   filterPolicies = 'ALL';
-  viewMode: 'table' | 'cards' = 'table';
   selectedClient: Client | null = null;
   showDeleteConfirm = false;
   clientToDelete: string | null = null;
@@ -151,10 +150,6 @@ export class ClientsComponent implements OnInit {
 
       return matchesSearch && matchesStatus;
     });
-  }
-
-  toggleViewMode(): void {
-    this.viewMode = this.viewMode === 'table' ? 'cards' : 'table';
   }
 
   openCreateModal(): void {

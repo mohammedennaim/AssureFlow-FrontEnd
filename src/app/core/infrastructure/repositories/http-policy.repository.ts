@@ -133,10 +133,6 @@ export class HttpPolicyRepository implements IPolicyRepository {
     );
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
   submit(id: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/submit`, {});
   }
@@ -152,9 +148,45 @@ export class HttpPolicyRepository implements IPolicyRepository {
   }
 
   cancel(id: string, reason: string): Observable<void> {
+    console.log('[PolicyRepository] Cancelling policy:', id, 'with reason:', reason);
     return this.http.post<void>(`${this.apiUrl}/${id}/cancel`, null, {
       params: { reason }
-    });
+    }).pipe(
+      catchError((err) => {
+        console.error('[PolicyRepository] Cancel error:', err);
+        throw err;
+      })
+    );
+  }
+
+  expire(id: string, reason: string): Observable<void> {
+    console.log('[PolicyRepository] Expiring policy:', id, 'with reason:', reason);
+    return this.http.post<void>(`${this.apiUrl}/${id}/expire`, null, {
+      params: { reason }
+    }).pipe(
+      catchError((err) => {
+        console.error('[PolicyRepository] Expire error:', err);
+        throw err;
+      })
+    );
+  }
+
+  renew(id: string): Observable<Policy> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/renew`, {}).pipe(
+      map((res) => {
+        let dto: PolicyDto | null = null;
+        
+        if (res?.data) {
+          dto = res.data;
+        } else if (res?.policy) {
+          dto = res.policy;
+        } else {
+          dto = res;
+        }
+        
+        return this.mapToPolicy(dto as PolicyDto);
+      })
+    );
   }
 
   private mapToPolicy(dto: PolicyDto): Policy {

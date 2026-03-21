@@ -17,11 +17,12 @@ export interface IPolicyRepository {
   getByClientId(clientId: string): Observable<Policy[]>;
   create(data: CreatePolicyData): Observable<Policy>;
   update(id: string, data: Partial<Policy>): Observable<Policy>;
-  delete(id: string): Observable<void>;
   submit(id: string): Observable<void>;
   approve(id: string): Observable<void>;
   reject(id: string, reason: string): Observable<void>;
   cancel(id: string, reason: string): Observable<void>;
+  expire(id: string, reason: string): Observable<void>;
+  renew(id: string): Observable<Policy>;
 }
 
 export const POLICY_REPOSITORY = new InjectionToken<IPolicyRepository>('IPolicyRepository');

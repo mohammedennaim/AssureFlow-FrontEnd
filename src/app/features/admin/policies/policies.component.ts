@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PoliciesService, Policy } from '../../../core/application/services/admin-policies.service';
 import { AdminStatisticsService, PolicyStats } from '../../../core/application/services/admin-statistics.service';
 import { ClientsService } from '../../../core/application/services/admin-clients.service';
@@ -10,7 +10,7 @@ import { catchError, of } from 'rxjs';
 @Component({
   selector: 'app-policies',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './policies.component.html',
   styleUrl: './policies.component.scss'
 })
@@ -28,7 +28,6 @@ export class PoliciesComponent implements OnInit {
   searchQuery = '';
   filterType = 'ALL';
   filterStatus = 'ALL';
-  viewMode: 'table' | 'cards' = 'table';
   policyStats: PolicyStats | null = null;
 
   // Cache for progress calculations to avoid ExpressionChangedAfterItHasBeenCheckedError
@@ -42,9 +41,21 @@ export class PoliciesComponent implements OnInit {
   isSaving = false;
   policyForm!: FormGroup;
 
-  // Delete Confirmation
+  // Cancel Confirmation
   showDeleteConfirm = false;
   policyToDelete: string | null = null;
+
+  // Expire Modal
+  showExpireModal = false;
+  policyToExpire: string | null = null;
+
+  // Renew Confirmation
+  showRenewConfirm = false;
+  policyToRenew: string | null = null;
+
+  // Success Modal
+  showSuccessModal = false;
+  successMessage = '';
 
   constructor() {
     this.initForm();
@@ -271,16 +282,116 @@ export class PoliciesComponent implements OnInit {
     this.policyToDelete = null;
   }
 
-  deletePolicy(): void {
+  cancelPolicy(): void {
     if (this.policyToDelete) {
-      this.policiesService.delete(this.policyToDelete).subscribe({
+      this.policiesService.cancel(this.policyToDelete, 'Policy cancelled by administrator').subscribe({
         next: () => {
           this.loadPolicies();
           this.closeDeleteConfirm();
+          this.showSuccessMessage('Policy cancelled successfully');
         },
-        error: (err) => console.error('Error deleting policy:', err)
+        error: (err) => {
+          console.error('Error cancelling policy:', err);
+          console.error('Error details:', err.error);
+          
+          let errorMessage = 'Failed to cancel policy. ';
+          
+          if (err.error?.message) {
+            errorMessage += err.error.message;
+          } else if (typeof err.error === 'string') {
+            errorMessage += err.error;
+          } else if (err.message) {
+            errorMessage += err.message;
+          } else if (err.status) {
+            errorMessage += `Server returned status ${err.status}`;
+          } else {
+            errorMessage += 'Please check the console for more details.';
+          }
+          
+          alert(errorMessage);
+          this.closeDeleteConfirm();
+        }
       });
     }
+  }
+
+  openExpireModal(policyId: string): void {
+    this.policyToExpire = policyId;
+    this.showExpireModal = true;
+  }
+
+  closeExpireModal(): void {
+    this.showExpireModal = false;
+    this.policyToExpire = null;
+  }
+
+  expirePolicy(): void {
+    if (this.policyToExpire) {
+      this.policiesService.expire(this.policyToExpire, 'Policy expired by administrator').subscribe({
+        next: () => {
+          this.loadPolicies();
+          this.closeExpireModal();
+          this.showSuccessMessage('Policy expired successfully');
+        },
+        error: (err) => {
+          console.error('Error expiring policy:', err);
+          console.error('Error details:', err.error);
+          
+          let errorMessage = 'Failed to expire policy. ';
+          
+          if (err.error?.message) {
+            errorMessage += err.error.message;
+          } else if (typeof err.error === 'string') {
+            errorMessage += err.error;
+          } else if (err.message) {
+            errorMessage += err.message;
+          } else if (err.status) {
+            errorMessage += `Server returned status ${err.status}`;
+          } else {
+            errorMessage += 'Please check the console for more details.';
+          }
+          
+          alert(errorMessage);
+          this.closeExpireModal();
+        }
+      });
+    }
+  }
+
+  openRenewConfirm(policyId: string): void {
+    this.policyToRenew = policyId;
+    this.showRenewConfirm = true;
+  }
+
+  closeRenewConfirm(): void {
+    this.showRenewConfirm = false;
+    this.policyToRenew = null;
+  }
+
+  renewPolicy(): void {
+    if (this.policyToRenew) {
+      this.policiesService.renew(this.policyToRenew).subscribe({
+        next: (newPolicy) => {
+          this.loadPolicies();
+          this.closeRenewConfirm();
+          this.showSuccessMessage(`Policy renewed successfully! New policy number: ${newPolicy.policyNumber}`);
+        },
+        error: (err) => console.error('Error renewing policy:', err)
+      });
+    }
+  }
+
+  showSuccessMessage(message: string): void {
+    this.successMessage = message;
+    this.showSuccessModal = true;
+    setTimeout(() => {
+      this.showSuccessModal = false;
+    }, 3000);
+  }
+
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.successMessage = '';
   }
 
   onBackdropClick(event: Event): void {
@@ -307,8 +418,10 @@ export class PoliciesComponent implements OnInit {
     const classes: Record<string, string> = {
       'ACTIVE': 'policy-status--active',
       'EXPIRED': 'policy-status--expired',
+      'DRAFT': 'policy-status--pending',
       'PENDING': 'policy-status--pending',
-      'CANCELLED': 'policy-status--cancelled'
+      'CANCELLED': 'policy-status--cancelled',
+      'SUSPENDED': 'policy-status--cancelled'
     };
     return classes[status] || '';
   }
@@ -335,11 +448,29 @@ export class PoliciesComponent implements OnInit {
   }
 
   getDaysLeft(endDate: string): number {
-    const daysLeft = (new Date(endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return Math.ceil(daysLeft);
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+    const daysLeft = (end - now) / (1000 * 60 * 60 * 24);
+    // Return 0 for expired policies instead of negative values
+    return Math.max(0, Math.ceil(daysLeft));
   }
 
   toLowerCase(value: string): string {
     return value.toLowerCase();
+  }
+
+  canCancel(status: string): boolean {
+    // Can cancel if not already CANCELLED or EXPIRED
+    return status !== 'CANCELLED' && status !== 'EXPIRED';
+  }
+
+  canExpire(status: string): boolean {
+    // Can expire if not already EXPIRED or CANCELLED
+    return status !== 'EXPIRED' && status !== 'CANCELLED';
+  }
+
+  canRenew(status: string): boolean {
+    // Can renew if ACTIVE or EXPIRED
+    return status === 'ACTIVE' || status === 'EXPIRED';
   }
 }

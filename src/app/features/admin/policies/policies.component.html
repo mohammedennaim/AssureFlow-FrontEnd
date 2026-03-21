@@ -60,101 +60,203 @@
     </div>
   </section>
 
-  <div class="table-wrapper">
-    <div class="data-card">
-      <table class="policy-table">
-        <thead>
-          <tr>
-            <th>Policy</th>
-            <th>Client</th>
-            <th>Type</th>
-            <th>Premium</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (policy of filteredPolicies; track policy.id) {
-            <tr class="policy-table__row">
-              <td>
-                <div class="policy-cell">
-                  <span class="policy-cell__number">{{ policy.policyNumber }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="client-link" [routerLink]="['/admin/clients', policy.clientId]">{{ policy.clientName }}</span>
-              </td>
-              <td>
-                <span class="policy-type policy-type--{{ toLowerCase(policy.type) }}">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
-                    @if (policy.type === 'VEHICLE') {
-                      <path d="M3 8h8M2 6h10v4H2z M4 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
-                    } @else if (policy.type === 'HOME') {
-                      <path d="M2 7l5-5 5 5M3 7v5h8V7"/>
-                    } @else {
-                      <circle cx="7" cy="7" r="5"/>
-                    }
-                  </svg>
-                  {{ policy.type }}
-                </span>
-              </td>
-              <td>
-                <span class="premium">{{ policy.premium | currency:'EUR':'symbol':'1.0-0' }}/mo</span>
-              </td>
-              <td>
-                <div class="duration-cell">
-                  <div class="progress-bar">
-                    <div class="progress-bar__fill" [style.width.%]="getProgress(policy.startDate, policy.endDate)"></div>
-                  </div>
-                  <span class="days-left" [class.days-left--warning]="getDaysLeft(policy.endDate) < 30">
+  <!-- Cards View -->
+  <div class="cards-wrapper">
+    <div class="cards-grid">
+      @for (policy of filteredPolicies; track policy.id) {
+        <div class="policy-card">
+          <div class="policy-card__header">
+            <div class="policy-card__type">
+              <div class="policy-type-icon" [class]="'policy-type-icon--' + toLowerCase(policy.type)">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                  @if (policy.type === 'VEHICLE') {
+                    <path d="M3 8h14M2 6h16v6H2z M4 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
+                  } @else if (policy.type === 'HOME') {
+                    <path d="M2 7l8-5 8 5M3 7v8h14V7"/>
+                  } @else if (policy.type === 'LIFE') {
+                    <path d="M10 3c-3 0-5 2-5 5 0 4 5 9 5 9s5-5 5-9c0-3-2-5-5-5z"/>
+                  } @else if (policy.type === 'HEALTH') {
+                    <path d="M10 2v16M2 10h16M10 2a8 8 0 0 1 8 8M10 18a8 8 0 0 1-8-8"/>
+                  } @else {
+                    <circle cx="10" cy="10" r="7"/>
+                  }
+                </svg>
+              </div>
+              <div>
+                <h3 class="policy-card__title">{{ policy.type }}</h3>
+                <p class="policy-card__number">{{ policy.policyNumber }}</p>
+              </div>
+            </div>
+            <span class="policy-status" [ngClass]="getStatusClass(policy.status)">
+              <span class="policy-status__dot"></span>
+              {{ policy.status }}
+            </span>
+          </div>
+
+          <div class="policy-card__body">
+            <div class="policy-card__info">
+              <div class="info-item">
+                <span class="info-item__label">Client</span>
+                <span class="info-item__value">{{ policy.clientName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item__label">Premium</span>
+                <span class="info-item__value">{{ policy.premium | currency:'EUR':'symbol':'1.0-0' }}/mo</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item__label">Coverage</span>
+                <span class="info-item__value">{{ policy.coverageAmount | currency:'EUR':'symbol':'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <div class="policy-card__duration">
+              <div class="duration-header">
+                <span class="duration-label">Duration</span>
+                <span class="days-left" 
+                      [class.days-left--warning]="getDaysLeft(policy.endDate) < 30 && getDaysLeft(policy.endDate) > 0"
+                      [class.days-left--expired]="getDaysLeft(policy.endDate) === 0">
+                  @if (getDaysLeft(policy.endDate) === 0) {
+                    Expired
+                  } @else if (getDaysLeft(policy.endDate) === 1) {
+                    1 day left
+                  } @else {
                     {{ getDaysLeft(policy.endDate) }} days left
-                  </span>
-                </div>
-              </td>
-              <td>
-                <span class="policy-status" [ngClass]="getStatusClass(policy.status)">
-                  <span class="policy-status__dot"></span>
-                  {{ policy.status }}
+                  }
                 </span>
-              </td>
-              <td class="actions">
-                <div class="action-menu">
-                  <button class="action-btn" (click)="openEditModal(policy)" type="button" title="Edit">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M3 13.25H5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
-                  <button class="action-btn action-btn--danger" (click)="confirmDelete(policy.id)" type="button" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar__fill" [style.width.%]="getProgress(policy.startDate, policy.endDate)"></div>
+              </div>
+              <div class="duration-dates">
+                <span>{{ policy.startDate | date:'MMM d, y' }}</span>
+                <span>{{ policy.endDate | date:'MMM d, y' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="policy-card__footer">
+            <button class="card-action-btn" (click)="openEditModal(policy)" type="button" title="Edit">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button 
+              class="card-action-btn card-action-btn--success" 
+              (click)="openRenewConfirm(policy.id)" 
+              type="button" 
+              title="Renew"
+              [disabled]="!canRenew(policy.status)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 8C13 10.7614 10.7614 13 8 13C5.23858 13 3 10.7614 3 8C3 5.23858 5.23858 3 8 3C9.36 3 10.59 3.54 11.5 4.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Renew
+            </button>
+            <button 
+              class="card-action-btn card-action-btn--warning" 
+              (click)="openExpireModal(policy.id)" 
+              type="button" 
+              title="Expire"
+              [disabled]="!canExpire(policy.status)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M8 5V8L10 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Expire
+            </button>
+            <button 
+              class="card-action-btn card-action-btn--danger" 
+              (click)="confirmDelete(policy.id)" 
+              type="button" 
+              title="Cancel"
+              [disabled]="!canCancel(policy.status)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Cancel
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Cancel Policy Modal -->
 <div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showDeleteConfirm" (click)="closeDeleteConfirm()">
   <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
     <div class="confirm-modal">
       <div class="confirm-modal__icon confirm-modal__icon--danger">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C19.5302 19 20.0182 18.512 20.0182 17.91L19.9969 5.91003C19.9962 5.30837 19.5077 4.82077 18.9058 4.82077H17.0527L15.5351 2.69909C15.3491 2.43953 15.0513 2.28003 14.733 2.28003H9.26704C8.94874 2.28003 8.65091 2.43953 8.46491 2.69909L6.94733 4.82077H5.0818C4.47981 4.82077 3.99132 5.30837 3.99132 5.91003L3.97005 17.91C3.97005 18.512 4.45805 19 5.06005 19H5.07183Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
-      <h3 class="confirm-modal__title">Delete Policy</h3>
-      <p class="confirm-modal__message">Are you sure you want to delete this policy? This action cannot be undone.</p>
+      <h3 class="confirm-modal__title">Cancel Policy</h3>
+      <p class="confirm-modal__message">Are you sure you want to cancel this policy? This action cannot be undone.</p>
       <div class="confirm-modal__actions">
-        <button class="btn btn--secondary" (click)="closeDeleteConfirm()" type="button">Cancel</button>
-        <button class="btn btn--danger" (click)="deletePolicy()" type="button">Delete</button>
+        <button class="btn btn--secondary" (click)="closeDeleteConfirm()" type="button">No, Keep It</button>
+        <button class="btn btn--danger" (click)="cancelPolicy()" type="button">Yes, Cancel Policy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Expire Policy Modal -->
+<div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showExpireModal" (click)="closeExpireModal()">
+  <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-modal__icon confirm-modal__icon--warning">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 class="confirm-modal__title">Expire Policy</h3>
+      <p class="confirm-modal__message">Are you sure you want to mark this policy as expired?</p>
+      <div class="confirm-modal__actions">
+        <button class="btn btn--secondary" (click)="closeExpireModal()" type="button">No, Keep Active</button>
+        <button class="btn btn--warning" (click)="expirePolicy()" type="button">Yes, Expire Policy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Renew Policy Confirmation Modal -->
+<div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showRenewConfirm" (click)="closeRenewConfirm()">
+  <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-modal__icon confirm-modal__icon--success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C14.04 4 15.87 4.81 17.25 6.15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 3V6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3 class="confirm-modal__title">Renew Policy</h3>
+      <p class="confirm-modal__message">Are you sure you want to renew this policy? A new draft policy will be created based on the current one.</p>
+      <div class="confirm-modal__actions">
+        <button class="btn btn--secondary" (click)="closeRenewConfirm()" type="button">Cancel</button>
+        <button class="btn btn--success" (click)="renewPolicy()" type="button">Yes, Renew Policy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showSuccessModal" (click)="closeSuccessModal()">
+  <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-modal__icon confirm-modal__icon--success">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3 class="confirm-modal__title">Success!</h3>
+      <p class="confirm-modal__message">{{ successMessage }}</p>
+      <div class="confirm-modal__actions">
+        <button class="btn btn--primary" (click)="closeSuccessModal()" type="button">OK</button>
       </div>
     </div>
   </div>
