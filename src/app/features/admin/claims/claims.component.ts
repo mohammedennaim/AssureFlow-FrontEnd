@@ -3,12 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClaimsService, Claim } from '../../../core/application/services/admin-claims.service';
 import { AdminStatisticsService, ClaimStats } from '../../../core/application/services/admin-statistics.service';
+import { ClientsService, Client } from '../../../core/application/services/admin-clients.service';
+import { PoliciesService, Policy } from '../../../core/application/services/admin-policies.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { catchError, of } from 'rxjs';
+import { catchError, of, forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
 
 interface ClaimWithPriority extends Claim {
   priority: 'high' | 'medium' | 'low';
+  clientName?: string;
+  policyNumber?: string;
 }
 
 @Component({
@@ -21,6 +25,8 @@ interface ClaimWithPriority extends Claim {
 export class ClaimsComponent implements OnInit {
   private claimsService = inject(ClaimsService);
   private adminStatsService = inject(AdminStatisticsService);
+  private clientsService = inject(ClientsService);
+  private policiesService = inject(PoliciesService);
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -28,6 +34,10 @@ export class ClaimsComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   claimStats: ClaimStats | null = null;
+  
+  // Cache for clients and policies
+  private clientsCache = new Map<string, Client>();
+  private policiesCache = new Map<string, Policy>();
   
   // Modal states
   showApproveModal = false;
@@ -61,6 +71,9 @@ export class ClaimsComponent implements OnInit {
         priority: this.getPriority(claim.status, claim.estimatedAmount || claim.approvedAmount || 0)
       }));
 
+      // Load client and policy information
+      this.enrichClaimsWithDetails();
+
       // Calculate statistics
       this.adminStatsService.getClaimStats(this.claims).subscribe((stats) => {
         this.claimStats = stats;
@@ -68,6 +81,68 @@ export class ClaimsComponent implements OnInit {
 
       this.isLoading = false;
     });
+  }
+
+  private enrichClaimsWithDetails(): void {
+    // Get unique client and policy IDs
+    const clientIds = [...new Set(this.claims.map(c => c.clientId).filter(id => id))];
+    const policyIds = [...new Set(this.claims.map(c => c.policyId).filter(id => id))];
+
+    // Load clients
+    const clientRequests = clientIds.map(id => 
+      this.clientsService.getById(id).pipe(
+        catchError(() => of(null))
+      )
+    );
+
+    // Load policies
+    const policyRequests = policyIds.map(id => 
+      this.policiesService.getById(id).pipe(
+        catchError(() => of(null))
+      )
+    );
+
+    // Execute all requests
+    forkJoin([
+      forkJoin(clientRequests.length > 0 ? clientRequests : [of(null)]),
+      forkJoin(policyRequests.length > 0 ? policyRequests : [of(null)])
+    ]).subscribe(([clients, policies]) => {
+      // Build cache
+      clients.forEach((client, index) => {
+        if (client) {
+          this.clientsCache.set(clientIds[index], client);
+        }
+      });
+
+      policies.forEach((policy, index) => {
+        if (policy) {
+          this.policiesCache.set(policyIds[index], policy);
+        }
+      });
+
+      // Enrich claims with names
+      this.claims = this.claims.map(claim => ({
+        ...claim,
+        clientName: this.getClientName(claim.clientId),
+        policyNumber: this.getPolicyNumber(claim.policyId)
+      }));
+    });
+  }
+
+  private getClientName(clientId: string): string {
+    const client = this.clientsCache.get(clientId);
+    if (client) {
+      return `${client.firstName} ${client.lastName}`;
+    }
+    return 'Unknown Client';
+  }
+
+  private getPolicyNumber(policyId: string): string {
+    const policy = this.policiesCache.get(policyId);
+    if (policy && policy.policyNumber) {
+      return policy.policyNumber;
+    }
+    return (policyId?.slice(0, 8)?.toUpperCase() || 'N/A') + '...';
   }
 
   private getPriority(status: string, amount: number): 'high' | 'medium' | 'low' {
@@ -307,5 +382,57 @@ export class ClaimsComponent implements OnInit {
 
   getStatusClass(status: string): string {
     return 'status-badge--' + status.toLowerCase().replace('_', '-');
+  }
+
+  // Status tracker methods
+  isStepCompleted(step: string): boolean {
+    if (!this.selectedClaim) return false;
+    
+    const statusOrder = ['SUBMITTED', 'PENDING', 'UNDER_REVIEW', 'APPROVED', 'PAYOUT_INITIATED', 'PAID', 'CLOSED'];
+    const currentIndex = statusOrder.indexOf(this.selectedClaim.status);
+    const stepIndex = statusOrder.indexOf(step);
+    
+    // Special case: PENDING and SUBMITTED are equivalent
+    if (step === 'SUBMITTED' && (this.selectedClaim.status === 'PENDING' || this.selectedClaim.status === 'SUBMITTED')) {
+      return true;
+    }
+    
+    return currentIndex > stepIndex;
+  }
+
+  isStepActive(step: string): boolean {
+    if (!this.selectedClaim) return false;
+    
+    // Special case: PENDING and SUBMITTED are equivalent
+    if (step === 'SUBMITTED' && (this.selectedClaim.status === 'PENDING' || this.selectedClaim.status === 'SUBMITTED')) {
+      return true;
+    }
+    
+    return this.selectedClaim.status === step;
+  }
+
+  getStepDate(step: string): string {
+    if (!this.selectedClaim) return 'Pending';
+    
+    // For now, we'll show dates based on the current status
+    // In a real app, you'd have timestamps for each status change
+    if (this.isStepCompleted(step)) {
+      if (step === 'SUBMITTED') {
+        return this.formatDate(this.selectedClaim.createdAt || this.selectedClaim.submittedAt);
+      }
+      // For other completed steps, you'd need actual timestamps from the backend
+      return 'Completed';
+    } else if (this.isStepActive(step)) {
+      return this.formatDate(this.selectedClaim.createdAt || this.selectedClaim.submittedAt);
+    }
+    
+    return 'Pending';
+  }
+
+  private formatDate(date: any): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   }
 }

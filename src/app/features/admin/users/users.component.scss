@@ -810,53 +810,59 @@
 /* ==================== User Modal Backdrop ==================== */
 .user-modal-backdrop {
   position: fixed !important;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-base);
-  z-index: 1000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity var(--transition-base) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  visibility: hidden !important;
 
   &--visible {
     opacity: 1 !important;
-    pointer-events: auto;
-    display: flex !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
   }
 
   &__content {
-    width: 100%;
-    max-width: 420px;
+    width: 100% !important;
+    max-width: 420px !important;
+    position: relative !important;
+    z-index: 10000 !important;
   }
 }
 
 /* ==================== User Modal ==================== */
 .user-modal {
-  width: 100%;
-  max-width: 520px;
-  transform: scale(0.9) translateY(20px);
-  opacity: 0;
-  transition: all var(--transition-base);
-  pointer-events: none;
-  position: relative;
-  z-index: 1001;
+  width: 100% !important;
+  max-width: 520px !important;
+  transform: scale(0.9) translateY(20px) !important;
+  opacity: 0 !important;
+  transition: all var(--transition-base) !important;
+  pointer-events: none !important;
+  position: relative !important;
+  z-index: 10001 !important;
 
   &--visible {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-    pointer-events: auto;
+    transform: scale(1) translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 
   &__content {
-    background: var(--surface);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-2xl);
-    overflow: hidden;
-    position: relative;
+    background: var(--surface) !important;
+    border-radius: var(--radius-2xl) !important;
+    box-shadow: var(--shadow-2xl) !important;
+    overflow: hidden !important;
+    position: relative !important;
   }
 
   &__header {
@@ -938,45 +944,47 @@
 
 /* ==================== Confirm Modal ==================== */
 .confirm-modal {
-  background: var(--surface);
-  border-radius: var(--radius-2xl);
-  padding: 2rem;
-  text-align: center;
-  box-shadow: var(--shadow-2xl);
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  padding: 2rem !important;
+  text-align: center !important;
+  box-shadow: var(--shadow-2xl) !important;
+  max-width: 400px !important;
+  width: 100% !important;
 
   &__icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 1rem;
-    border-radius: var(--radius-xl);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 56px !important;
+    height: 56px !important;
+    margin: 0 auto 1rem !important;
+    border-radius: var(--radius-xl) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 
     &--danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger-500);
+      background: rgba(239, 68, 68, 0.1) !important;
+      color: var(--danger-500) !important;
     }
   }
 
   &__title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin: 0 0 0.5rem 0 !important;
   }
 
   &__message {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0 0 1.5rem 0;
-    line-height: 1.6;
+    font-size: 0.875rem !important;
+    color: var(--text-secondary) !important;
+    margin: 0 0 1.5rem 0 !important;
+    line-height: 1.6 !important;
   }
 
   &__actions {
-    display: flex;
-    justify-content: center;
-    gap: 0.625rem;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 0.625rem !important;
   }
 }
 
@@ -1913,4 +1921,296 @@
   .cards-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+// ========================================
+// Cards View (Similar to Policies)
+// ========================================
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.user-card {
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all var(--transition-base);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  &__header {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  &__action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: scale(1.1);
+    }
+  }
+
+  &__body {
+    padding: 1.25rem;
+  }
+
+  &__name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.375rem 0;
+  }
+
+  &__email {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-light);
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  &__footer {
+    padding: 1rem 1.25rem;
+    background: var(--surface-alt);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    flex: 1;
+    min-width: fit-content;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+
+    &:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.empty-state-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  border: 2px dashed var(--border);
+
+  svg {
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+}
+
+.pagination--cards {
+  margin-top: 2rem;
+  padding: 0;
+  border-top: none;
+}
+
+// ========================================
+// Responsive Cards
+// ========================================
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-card__footer {
+    flex-direction: column;
+  }
+
+  .user-card__btn {
+    width: 100%;
+  }
+}
+
+// ========================================
+// Modal Overlay (for additional modals)
+// ========================================
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 1rem !important;
+  animation: fadeIn 0.2s ease-out !important;
+}
+
+.modal {
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-2xl) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  animation: scaleIn 0.3s ease-out !important;
+  position: relative !important;
+  z-index: 10000 !important;
+
+  &--md {
+    width: 100% !important;
+    max-width: 500px !important;
+  }
+
+  &--lg {
+    width: 100% !important;
+    max-width: 700px !important;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--danger-100);
+    color: var(--danger-500);
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+
+.modal-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn--sm {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
 }

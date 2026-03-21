@@ -155,11 +155,11 @@
               <div class="claim-card__info">
                 <div class="info-item">
                   <span class="info-item__label">Policy</span>
-                  <span class="info-item__value">{{ (claim.policyId | slice:0:8)?.toUpperCase() }}...</span>
+                  <span class="info-item__value">{{ claim.policyNumber || ((claim.policyId | slice:0:8)?.toUpperCase() + '...') }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__label">Client</span>
-                  <span class="info-item__value">{{ (claim.clientId | slice:0:8)?.toUpperCase() }}...</span>
+                  <span class="info-item__value">{{ claim.clientName || 'Unknown' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__label">Amount</span>
@@ -252,9 +252,13 @@
   <!-- View Claim Modal -->
   @if (showViewModal && selectedClaim) {
   <div class="modal-overlay" (click)="closeModals()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal--large" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2 class="modal-title">Claim Details</h2>
+        <div class="modal-header__content">
+          <div class="modal-header__badge">AUTO INSURANCE</div>
+          <h2 class="modal-title">{{ selectedClaim.claimNumber || 'CLM-' + (selectedClaim.id | slice:0:8).toUpperCase() }}</h2>
+          <p class="modal-subtitle">{{ selectedClaim.description || 'Claim Details' }}</p>
+        </div>
         <button class="modal-close" (click)="closeModals()">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M15 5L5 15M5 5l10 10"/>
@@ -262,47 +266,247 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Claim Number</label>
-            <p>{{ selectedClaim.claimNumber || 'N/A' }}</p>
+        <!-- Status Tracker -->
+        <div class="status-tracker">
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('SUBMITTED')" [class.status-tracker__step--active]="isStepActive('SUBMITTED')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('SUBMITTED')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M16 6L7.5 14.5L4 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__line"></div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">STEP 1</div>
+              <div class="status-tracker__step-title">SUBMITTED</div>
+              <div class="status-tracker__step-date">{{ getStepDate('SUBMITTED') }}</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Status</label>
-            <p>
-              <span class="status-badge status-badge--{{ getStatusClass(selectedClaim.status) }}">
-                {{ selectedClaim.status.replace('_', ' ') }}
-              </span>
-            </p>
+
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('UNDER_REVIEW')" [class.status-tracker__step--active]="isStepActive('UNDER_REVIEW')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('UNDER_REVIEW')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M16 6L7.5 14.5L4 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__line"></div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">STEP 2</div>
+              <div class="status-tracker__step-title">UNDER REVIEW</div>
+              <div class="status-tracker__step-date">{{ getStepDate('UNDER_REVIEW') }}</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Policy ID</label>
-            <p>{{ (selectedClaim.policyId | slice:0:8)?.toUpperCase() }}...</p>
+
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('APPROVED')" [class.status-tracker__step--active]="isStepActive('APPROVED')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('APPROVED')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M16 6L7.5 14.5L4 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else if (isStepActive('APPROVED')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="3" fill="currentColor"/>
+                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__line"></div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">ACTIVE</div>
+              <div class="status-tracker__step-title">APPROVED</div>
+              <div class="status-tracker__step-date">{{ getStepDate('APPROVED') }}</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Client ID</label>
-            <p>{{ (selectedClaim.clientId | slice:0:8)?.toUpperCase() }}...</p>
+
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('PAYOUT_INITIATED')" [class.status-tracker__step--active]="isStepActive('PAYOUT_INITIATED')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('PAYOUT_INITIATED')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M16 6L7.5 14.5L4 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="4" y="6" width="12" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                  <line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__line"></div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">STEP 4</div>
+              <div class="status-tracker__step-title">PAYOUT INITIATED</div>
+              <div class="status-tracker__step-date">{{ getStepDate('PAYOUT_INITIATED') }}</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Incident Date</label>
-            <p>{{ selectedClaim.incidentDate || 'N/A' }}</p>
+
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('PAID')" [class.status-tracker__step--active]="isStepActive('PAID')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('PAID')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M16 6L7.5 14.5L4 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__line"></div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">STEP 5</div>
+              <div class="status-tracker__step-title">PAID</div>
+              <div class="status-tracker__step-date">{{ getStepDate('PAID') }}</div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Amount</label>
-            <p class="amount">{{ getAmount(selectedClaim) | currency:'EUR':'symbol':'1.0-0' }}</p>
+
+          <div class="status-tracker__step" [class.status-tracker__step--completed]="isStepCompleted('CLOSED')" [class.status-tracker__step--active]="isStepActive('CLOSED')">
+            <div class="status-tracker__icon">
+              @if (isStepCompleted('CLOSED')) {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="5" y="7" width="10" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                  <path d="M7 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="5" y="7" width="10" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                  <path d="M7 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </div>
+            <div class="status-tracker__label">
+              <div class="status-tracker__step-number">FINAL</div>
+              <div class="status-tracker__step-title">CLOSED</div>
+              <div class="status-tracker__step-date">{{ getStepDate('CLOSED') }}</div>
+            </div>
           </div>
-          <div class="detail-item full-width">
-            <label>Description</label>
-            <p>{{ selectedClaim.description || 'N/A' }}</p>
+        </div>
+
+        <!-- Claim Information Sections -->
+        <div class="claim-details">
+          <!-- Primary Information -->
+          <div class="claim-section">
+            <h3 class="claim-section__title">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="9" r="7"/>
+                <path d="M9 5v4l2 2"/>
+              </svg>
+              Claim Information
+            </h3>
+            <div class="claim-section__content">
+              <div class="info-row">
+                <div class="info-col">
+                  <label>Claim Number</label>
+                  <p class="value value--primary">{{ selectedClaim.claimNumber || 'CLM-' + (selectedClaim.id | slice:0:8).toUpperCase() }}</p>
+                </div>
+                <div class="info-col">
+                  <label>Current Status</label>
+                  <p>
+                    <span class="status-badge" [ngClass]="getStatusClass(selectedClaim.status)">
+                      {{ selectedClaim.status.replace('_', ' ') }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-col">
+                  <label>Incident Date</label>
+                  <p class="value">{{ selectedClaim.incidentDate ? (selectedClaim.incidentDate | date:'MMM d, y') : 'Not specified' }}</p>
+                </div>
+                <div class="info-col">
+                  <label>Submitted Date</label>
+                  <p class="value">{{ (selectedClaim.createdAt || selectedClaim.submittedAt) | date:'MMM d, y HH:mm' }}</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Created At</label>
-            <p>{{ (selectedClaim.createdAt || selectedClaim.submittedAt) | date:'MMM d, y HH:mm' }}</p>
+
+          <!-- Financial Information -->
+          <div class="claim-section claim-section--highlight">
+            <h3 class="claim-section__title">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="9" y1="1" x2="9" y2="17"/>
+                <path d="M13 4H7a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H5"/>
+              </svg>
+              Financial Details
+            </h3>
+            <div class="claim-section__content">
+              <div class="amount-display">
+                <div class="amount-display__label">Claim Amount</div>
+                <div class="amount-display__value">{{ getAmount(selectedClaim) | currency:'EUR':'symbol':'1.2-2' }}</div>
+                @if (selectedClaim.estimatedAmount && selectedClaim.approvedAmount && selectedClaim.estimatedAmount !== selectedClaim.approvedAmount) {
+                  <div class="amount-display__note">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="7" cy="7" r="6"/>
+                      <path d="M7 4v3M7 10h.01"/>
+                    </svg>
+                    Estimated: {{ selectedClaim.estimatedAmount | currency:'EUR':'symbol':'1.2-2' }}
+                  </div>
+                }
+              </div>
+            </div>
           </div>
-          <div class="detail-item">
-            <label>Submitted By</label>
-            <p>{{ (selectedClaim.submittedBy | slice:0:8)?.toUpperCase() || 'N/A' }}...</p>
+
+          <!-- Policy & Client Information -->
+          <div class="claim-section">
+            <h3 class="claim-section__title">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/>
+                <path d="M9 6v6M6 9h6"/>
+              </svg>
+              Policy & Client Information
+            </h3>
+            <div class="claim-section__content">
+              <div class="info-row">
+                <div class="info-col">
+                  <label>Policy Number</label>
+                  <p class="value value--primary">{{ selectedClaim.policyNumber || 'N/A' }}</p>
+                </div>
+                <div class="info-col">
+                  <label>Client Name</label>
+                  <p class="value value--primary">{{ selectedClaim.clientName || 'Unknown Client' }}</p>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-col info-col--full">
+                  <label>Submitted By</label>
+                  <p class="value value--mono">{{ selectedClaim.submittedBy ? ((selectedClaim.submittedBy | slice:0:8)?.toUpperCase() + '...') : 'System' }}</p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Description -->
+          @if (selectedClaim.description) {
+            <div class="claim-section">
+              <h3 class="claim-section__title">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/>
+                  <path d="M5 6h8M5 9h8M5 12h5"/>
+                </svg>
+                Claim Description
+              </h3>
+              <div class="claim-section__content">
+                <div class="description-box">
+                  <p>{{ selectedClaim.description }}</p>
+                </div>
+              </div>
+            </div>
+          }
         </div>
       </div>
       <div class="modal-footer">
@@ -322,9 +526,18 @@
   <!-- Approve Claim Modal -->
   @if (showApproveModal && selectedClaim) {
   <div class="modal-overlay" (click)="closeModals()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">Approve Claim</h2>
+    <div class="modal modal--approve" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--success">
+        <div class="modal-header__icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="modal-header__content">
+          <h2 class="modal-title">Approve Claim</h2>
+          <p class="modal-subtitle">Review and approve the claim amount</p>
+        </div>
         <button class="modal-close" (click)="closeModals()">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M15 5L5 15M5 5l10 10"/>
@@ -332,23 +545,87 @@
         </button>
       </div>
       <div class="modal-body">
-        <p class="modal-description">Approve claim <strong>{{ selectedClaim.claimNumber }}</strong></p>
-        <div class="form-group">
-          <label for="approveAmount">Approved Amount (EUR)</label>
-          <input 
-            type="number" 
-            id="approveAmount" 
-            [(ngModel)]="approveAmount" 
-            class="form-input"
-            min="0"
-            step="0.01"
-          />
-          <small class="form-hint">Estimated amount: {{ selectedClaim.estimatedAmount | currency:'EUR':'symbol':'1.0-0' }}</small>
+        <!-- Claim Summary -->
+        <div class="approval-summary">
+          <div class="approval-summary__item">
+            <label>Claim Number</label>
+            <p class="value">{{ selectedClaim.claimNumber || 'CLM-' + (selectedClaim.id | slice:0:8).toUpperCase() }}</p>
+          </div>
+          <div class="approval-summary__item">
+            <label>Client</label>
+            <p class="value">{{ selectedClaim.clientName || 'Unknown Client' }}</p>
+          </div>
+          <div class="approval-summary__item">
+            <label>Policy</label>
+            <p class="value">{{ selectedClaim.policyNumber || 'N/A' }}</p>
+          </div>
+        </div>
+
+        <!-- Amount Section -->
+        <div class="amount-section">
+          <div class="amount-section__header">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="10" y1="2" x2="10" y2="18"/>
+              <path d="M14 5H8a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H6"/>
+            </svg>
+            <span>Approved Amount</span>
+          </div>
+          <div class="amount-section__content">
+            <div class="form-group form-group--amount">
+              <label for="approveAmount">Enter Approved Amount (EUR)</label>
+              <div class="input-wrapper">
+                <span class="input-prefix">€</span>
+                <input 
+                  type="number" 
+                  id="approveAmount" 
+                  [(ngModel)]="approveAmount" 
+                  class="form-input form-input--amount"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              </div>
+              <div class="amount-info">
+                <div class="amount-info__item">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="8" cy="8" r="7"/>
+                    <path d="M8 4v4M8 11h.01"/>
+                  </svg>
+                  <span>Estimated amount: <strong>{{ selectedClaim.estimatedAmount | currency:'EUR':'symbol':'1.2-2' }}</strong></span>
+                </div>
+                @if (approveAmount && approveAmount !== selectedClaim.estimatedAmount) {
+                  <div class="amount-info__item amount-info__item--warning">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M8 1l7 12H1L8 1z"/>
+                      <path d="M8 6v3M8 11h.01"/>
+                    </svg>
+                    <span>Difference: <strong>{{ (approveAmount - (selectedClaim.estimatedAmount || 0)) | currency:'EUR':'symbol':'1.2-2' }}</strong></span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="approval-notice">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="10" cy="10" r="8"/>
+            <path d="M10 6v4M10 13h.01"/>
+          </svg>
+          <div class="approval-notice__content">
+            <strong>Important:</strong> Once approved, this action cannot be undone. Please verify the amount before confirming.
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn--secondary" (click)="closeModals()">Cancel</button>
-        <button class="btn btn--success" (click)="approveClaim()">Confirm Approval</button>
+        <button class="btn btn--success" (click)="approveClaim()" [disabled]="!approveAmount || approveAmount <= 0">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 5L7 13L3 9"/>
+          </svg>
+          Confirm Approval
+        </button>
       </div>
     </div>
   </div>
