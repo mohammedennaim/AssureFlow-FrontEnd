@@ -450,23 +450,21 @@ export class WorkflowsComponent implements OnInit {
         error: (err) => console.error('[Workflows] Error filtering by date range:', err)
       });
     } else if (this.filterAuditUser) {
-      this.workflowService.getAuditLogsByUser(this.filterAuditUser, this.auditPage, this.auditSize).subscribe({
-        next: (page) => {
-          this.auditLogs = page.content;
-          this.auditTotalPages = page.totalPages;
-          this.auditTotalElements = page.totalElements;
-        },
-        error: (err) => console.error('[Workflows] Error filtering by user:', err)
-      });
+      // Filter locally by username (case-insensitive)
+      const filteredLogs = this.auditLogs.filter(log => 
+        log.username.toLowerCase().includes(this.filterAuditUser.toLowerCase())
+      );
+      this.auditLogs = filteredLogs;
+      this.auditTotalElements = filteredLogs.length;
+      this.auditTotalPages = 1;
     } else if (this.filterAuditEntityType) {
-      this.workflowService.getAuditLogsByEntityType(this.filterAuditEntityType, this.auditPage, this.auditSize).subscribe({
-        next: (page) => {
-          this.auditLogs = page.content;
-          this.auditTotalPages = page.totalPages;
-          this.auditTotalElements = page.totalElements;
-        },
-        error: (err) => console.error('[Workflows] Error filtering by entity type:', err)
-      });
+      // Filter locally by entity type (case-insensitive)
+      const filteredLogs = this.auditLogs.filter(log => 
+        log.entityType.toLowerCase().includes(this.filterAuditEntityType.toLowerCase())
+      );
+      this.auditLogs = filteredLogs;
+      this.auditTotalElements = filteredLogs.length;
+      this.auditTotalPages = 1;
     } else {
       this.applyAuditFilter();
     }

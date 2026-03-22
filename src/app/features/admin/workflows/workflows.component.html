@@ -145,7 +145,7 @@
         </select>
       </label>
       <label>
-        User ID:
+        User:
         <input type="text" [(ngModel)]="filterAuditUser" placeholder="Filter by user">
       </label>
       <label>
@@ -173,7 +173,6 @@
             <th>Timestamp</th>
             <th>Action</th>
             <th>Entity Type</th>
-            <th>Entity ID</th>
             <th>User</th>
             <th>Reason</th>
             <th>Actions</th>
@@ -184,7 +183,6 @@
             <td>{{ log.timestamp | date:'short' }}</td>
             <td><span class="badge" [class]="getStatusClass(log.action)">{{ log.action }}</span></td>
             <td>{{ log.entityType }}</td>
-            <td>{{ log.entityId }}</td>
             <td>{{ log.username }}</td>
             <td>{{ log.reason || '-' }}</td>
             <td>
@@ -194,7 +192,7 @@
             </td>
           </tr>
           <tr *ngIf="auditLogs.length === 0">
-            <td colspan="7" class="no-data">No audit logs found</td>
+            <td colspan="6" class="no-data">No audit logs found</td>
           </tr>
         </tbody>
       </table>
@@ -421,7 +419,7 @@
             <td><span class="badge" [class]="getStatusClass(saga.status)">{{ saga.status }}</span></td>
             <td>{{ saga.initiatedBy }}</td>
             <td>{{ saga.createdAt | date:'short' }}</td>
-            <td>{{ saga.steps?.length || 0 }}</td>
+            <td>{{ saga.steps.length || 0 }}</td>
             <td>
               <button class="btn btn-sm btn-secondary" (click)="openSagaDetailModal(saga.id)">
                 Details
