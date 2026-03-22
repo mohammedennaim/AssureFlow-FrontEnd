@@ -1,1 +1,788 @@
-<p>workflows works!</p>
+<div class="workflows-container">
+  <div class="header">
+    <h1>Workflows & Audit</h1>
+    <div class="actions">
+      <button class="btn btn-primary" (click)="openCreateEscalationModal()">
+        Create Escalation
+      </button>
+      <button class="btn btn-primary" (click)="openCreateSLAModal()">
+        Create SLA Definition
+      </button>
+      <button class="btn btn-secondary" (click)="checkSLAViolations()">
+        Check SLA Violations
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.totalAuditLogs }}</div>
+      <div class="stat-label">Total Audit Logs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.totalEscalations }}</div>
+      <div class="stat-label">Total Escalations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.openEscalations }}</div>
+      <div class="stat-label">Open Escalations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.totalViolations }}</div>
+      <div class="stat-label">Total Violations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.activeViolations }}</div>
+      <div class="stat-label">Active Violations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.totalSLADefinitions }}</div>
+      <div class="stat-label">SLA Definitions</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'audit'"
+      (click)="switchTab('audit')">
+      Audit Logs
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'escalations'"
+      (click)="switchTab('escalations')">
+      Escalations
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'sla-definitions'"
+      (click)="switchTab('sla-definitions')">
+      SLA Definitions
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'sla-violations'"
+      (click)="switchTab('sla-violations')">
+      SLA Violations
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'saga-transactions'"
+      (click)="switchTab('saga-transactions')">
+      SAGA Transactions
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Audit Logs Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'audit' && !isLoading">
+    <div class="filters">
+      <label>
+        Action:
+        <select [(ngModel)]="filterAuditAction" (change)="applyAdvancedAuditFilters()">
+          <option value="ALL">All Actions</option>
+          <optgroup label="Client Actions">
+            <option [value]="AuditAction.CLIENT_CREATED">Client Created</option>
+            <option [value]="AuditAction.CLIENT_UPDATED">Client Updated</option>
+            <option [value]="AuditAction.CLIENT_DELETED">Client Deleted</option>
+            <option [value]="AuditAction.CLIENT_ACTIVATED">Client Activated</option>
+            <option [value]="AuditAction.CLIENT_DEACTIVATED">Client Deactivated</option>
+            <option [value]="AuditAction.CLIENT_REGISTERED">Client Registered</option>
+          </optgroup>
+          <optgroup label="Policy Actions">
+            <option [value]="AuditAction.POLICY_CREATED">Policy Created</option>
+            <option [value]="AuditAction.POLICY_UPDATED">Policy Updated</option>
+            <option [value]="AuditAction.POLICY_SUBMITTED">Policy Submitted</option>
+            <option [value]="AuditAction.POLICY_APPROVED">Policy Approved</option>
+            <option [value]="AuditAction.POLICY_REJECTED">Policy Rejected</option>
+            <option [value]="AuditAction.POLICY_CANCELLED">Policy Cancelled</option>
+            <option [value]="AuditAction.POLICY_EXPIRED">Policy Expired</option>
+            <option [value]="AuditAction.POLICY_RENEWED">Policy Renewed</option>
+          </optgroup>
+          <optgroup label="Claim Actions">
+            <option [value]="AuditAction.CLAIM_CREATED">Claim Created</option>
+            <option [value]="AuditAction.CLAIM_UPDATED">Claim Updated</option>
+            <option [value]="AuditAction.CLAIM_SUBMITTED">Claim Submitted</option>
+            <option [value]="AuditAction.CLAIM_REVIEWED">Claim Reviewed</option>
+            <option [value]="AuditAction.CLAIM_APPROVED">Claim Approved</option>
+            <option [value]="AuditAction.CLAIM_REJECTED">Claim Rejected</option>
+            <option [value]="AuditAction.CLAIM_PAID">Claim Paid</option>
+            <option [value]="AuditAction.CLAIM_CLOSED">Claim Closed</option>
+          </optgroup>
+          <optgroup label="Billing Actions">
+            <option [value]="AuditAction.INVOICE_GENERATED">Invoice Generated</option>
+            <option [value]="AuditAction.INVOICE_PAID">Invoice Paid</option>
+            <option [value]="AuditAction.INVOICE_CANCELLED">Invoice Cancelled</option>
+            <option [value]="AuditAction.INVOICE_OVERDUE">Invoice Overdue</option>
+            <option [value]="AuditAction.PAYMENT_RECEIVED">Payment Received</option>
+            <option [value]="AuditAction.PAYMENT_FAILED">Payment Failed</option>
+            <option [value]="AuditAction.PAYMENT_REFUNDED">Payment Refunded</option>
+          </optgroup>
+          <optgroup label="User Actions">
+            <option [value]="AuditAction.USER_CREATED">User Created</option>
+            <option [value]="AuditAction.USER_DEACTIVATED">User Deactivated</option>
+            <option [value]="AuditAction.USER_LOGIN">User Login</option>
+            <option [value]="AuditAction.USER_LOGOUT">User Logout</option>
+          </optgroup>
+          <optgroup label="System Actions">
+            <option [value]="AuditAction.SLA_VIOLATED">SLA Violated</option>
+            <option [value]="AuditAction.ESCALATION_CREATED">Escalation Created</option>
+            <option [value]="AuditAction.ESCALATION_RESOLVED">Escalation Resolved</option>
+            <option [value]="AuditAction.SAGA_STARTED">SAGA Started</option>
+            <option [value]="AuditAction.SAGA_COMPLETED">SAGA Completed</option>
+            <option [value]="AuditAction.SAGA_FAILED">SAGA Failed</option>
+            <option [value]="AuditAction.REPORT_GENERATED">Report Generated</option>
+          </optgroup>
+        </select>
+      </label>
+      <label>
+        User ID:
+        <input type="text" [(ngModel)]="filterAuditUser" placeholder="Filter by user">
+      </label>
+      <label>
+        Entity Type:
+        <input type="text" [(ngModel)]="filterAuditEntityType" placeholder="e.g., POLICY, CLAIM">
+      </label>
+      <label>
+        Date Start:
+        <input type="date" [(ngModel)]="filterAuditDateStart">
+      </label>
+      <label>
+        Date End:
+        <input type="date" [(ngModel)]="filterAuditDateEnd">
+      </label>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" (click)="applyAdvancedAuditFilters()">Apply Filters</button>
+        <button class="btn btn-secondary btn-sm" (click)="clearAuditFilters()">Clear</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>User</th>
+            <th>Reason</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of auditLogs; trackBy: trackById">
+            <td>{{ log.timestamp | date:'short' }}</td>
+            <td><span class="badge" [class]="getStatusClass(log.action)">{{ log.action }}</span></td>
+            <td>{{ log.entityType }}</td>
+            <td>{{ log.entityId }}</td>
+            <td>{{ log.username }}</td>
+            <td>{{ log.reason || '-' }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" (click)="openAuditDetailModal(log)">
+                Details
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="auditLogs.length === 0">
+            <td colspan="7" class="no-data">No audit logs found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button (click)="prevAuditPage()" [disabled]="auditPage === 0">Previous</button>
+      <span>Page {{ auditPage + 1 }} of {{ auditTotalPages }}</span>
+      <button (click)="nextAuditPage()" [disabled]="auditPage >= auditTotalPages - 1">Next</button>
+    </div>
+  </div>
+
+  <!-- Escalations Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'escalations' && !isLoading">
+    <div class="filters">
+      <label>
+        Status:
+        <select [(ngModel)]="filterEscalationStatus" (change)="applyEscalationFilter()">
+          <option value="ALL">All</option>
+          <option [value]="EscalationStatus.OPEN">Open</option>
+          <option [value]="EscalationStatus.IN_PROGRESS">In Progress</option>
+          <option [value]="EscalationStatus.RESOLVED">Resolved</option>
+          <option [value]="EscalationStatus.CANCELLED">Cancelled</option>
+        </select>
+      </label>
+      <label>
+        Assigned To:
+        <input type="text" [(ngModel)]="filterEscalationAssignedTo" placeholder="User ID">
+      </label>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" (click)="applyEscalationAssignmentFilter()">Apply</button>
+        <button class="btn btn-secondary btn-sm" (click)="clearEscalationFilters()">Clear</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Created</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Reason</th>
+            <th>Assigned To</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let escalation of escalations; trackBy: trackById">
+            <td>{{ escalation.createdAt | date:'short' }}</td>
+            <td>{{ escalation.entityType }}</td>
+            <td>{{ escalation.entityId }}</td>
+            <td><span class="badge">{{ escalation.level }}</span></td>
+            <td><span class="badge" [class]="getStatusClass(escalation.status)">{{ escalation.status }}</span></td>
+            <td>{{ escalation.reason }}</td>
+            <td>{{ escalation.assignedToName || escalation.assignedTo || '-' }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" (click)="openEscalationDetailModal(escalation)">
+                Details
+              </button>
+              <button 
+                class="btn btn-sm btn-success" 
+                *ngIf="escalation.status === EscalationStatus.OPEN"
+                (click)="openResolveEscalationModal(escalation)">
+                Resolve
+              </button>
+              <button 
+                class="btn btn-sm btn-danger" 
+                *ngIf="escalation.status === EscalationStatus.OPEN"
+                (click)="cancelEscalation(escalation.id)">
+                Cancel
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="escalations.length === 0">
+            <td colspan="8" class="no-data">No escalations found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button (click)="prevEscalationPage()" [disabled]="escalationPage === 0">Previous</button>
+      <span>Page {{ escalationPage + 1 }} of {{ escalationTotalPages }}</span>
+      <button (click)="nextEscalationPage()" [disabled]="escalationPage >= escalationTotalPages - 1">Next</button>
+    </div>
+  </div>
+
+  <!-- SLA Definitions Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'sla-definitions' && !isLoading">
+    <div class="filters">
+      <button class="btn btn-secondary btn-sm" (click)="loadActiveSLADefinitions()">
+        Show Active Only
+      </button>
+      <button class="btn btn-secondary btn-sm" (click)="loadData()">
+        Show All
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Entity Type</th>
+            <th>Description</th>
+            <th>Duration (hours)</th>
+            <th>Auto Escalate</th>
+            <th>Active</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let sla of slaDefinitions; trackBy: trackById">
+            <td>{{ sla.name }}</td>
+            <td>{{ sla.entityType }}</td>
+            <td>{{ sla.description }}</td>
+            <td>{{ sla.durationHours }}</td>
+            <td><span class="badge" [class.badge-success]="sla.autoEscalate">{{ sla.autoEscalate ? 'Yes' : 'No' }}</span></td>
+            <td><span class="badge" [class.badge-success]="sla.active">{{ sla.active ? 'Active' : 'Inactive' }}</span></td>
+            <td>{{ sla.createdAt | date:'short' }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" (click)="openSLADetailModal(sla)">
+                Details
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="slaDefinitions.length === 0">
+            <td colspan="8" class="no-data">No SLA definitions found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLA Violations Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'sla-violations' && !isLoading">
+    <div class="filters">
+      <label>
+        Filter by Status:
+        <select [(ngModel)]="filterViolationStatus" (change)="applyViolationFilter()">
+          <option value="ALL">All</option>
+          <option [value]="SLAStatus.ACTIVE">Active</option>
+          <option [value]="SLAStatus.VIOLATED">Violated</option>
+          <option [value]="SLAStatus.RESOLVED">Resolved</option>
+          <option [value]="SLAStatus.CANCELLED">Cancelled</option>
+        </select>
+      </label>
+      <button class="btn btn-secondary btn-sm" (click)="clearViolationFilters()">Clear</button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Violated At</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>SLA Name</th>
+            <th>Delay (min)</th>
+            <th>Status</th>
+            <th>Escalated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let violation of slaViolations; trackBy: trackById">
+            <td>{{ violation.violatedAt | date:'short' }}</td>
+            <td>{{ violation.entityType }}</td>
+            <td>{{ violation.entityId }}</td>
+            <td>{{ violation.slaDefinitionName }}</td>
+            <td>{{ violation.delayMinutes }}</td>
+            <td><span class="badge" [class]="getStatusClass(violation.status)">{{ violation.status }}</span></td>
+            <td><span class="badge" [class.badge-warning]="violation.escalated">{{ violation.escalated ? 'Yes' : 'No' }}</span></td>
+            <td>
+              <button 
+                class="btn btn-sm btn-success" 
+                *ngIf="violation.status === SLAStatus.VIOLATED"
+                (click)="resolveSLAViolation(violation.id)">
+                Resolve
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="slaViolations.length === 0">
+            <td colspan="8" class="no-data">No SLA violations found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button (click)="prevViolationPage()" [disabled]="violationPage === 0">Previous</button>
+      <span>Page {{ violationPage + 1 }} of {{ violationTotalPages }}</span>
+      <button (click)="nextViolationPage()" [disabled]="violationPage >= violationTotalPages - 1">Next</button>
+    </div>
+  </div>
+
+  <!-- SAGA Transactions Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'saga-transactions' && !isLoading">
+    <div class="info-message">
+      <p>SAGA Transactions require specific transaction IDs to view. Use the backend API to start and monitor SAGA transactions.</p>
+    </div>
+
+    <div class="table-container" *ngIf="sagaTransactions.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Initiated By</th>
+            <th>Created</th>
+            <th>Steps</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let saga of sagaTransactions; trackBy: trackById">
+            <td>{{ saga.id }}</td>
+            <td>{{ saga.sagaType }}</td>
+            <td><span class="badge" [class]="getStatusClass(saga.status)">{{ saga.status }}</span></td>
+            <td>{{ saga.initiatedBy }}</td>
+            <td>{{ saga.createdAt | date:'short' }}</td>
+            <td>{{ saga.steps?.length || 0 }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" (click)="openSagaDetailModal(saga.id)">
+                Details
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="no-data" *ngIf="sagaTransactions.length === 0">
+      <p>No SAGA transactions loaded. SAGA transactions are managed through the backend workflow service.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Create Escalation Modal -->
+<div class="modal" *ngIf="showCreateEscalationModal" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create Escalation</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form (ngSubmit)="createEscalation()">
+        <div class="form-group">
+          <label>Entity ID:</label>
+          <input type="text" [(ngModel)]="newEscalation.entityId" name="entityId" required>
+        </div>
+        <div class="form-group">
+          <label>Entity Type:</label>
+          <input type="text" [(ngModel)]="newEscalation.entityType" name="entityType" required>
+        </div>
+        <div class="form-group">
+          <label>Level:</label>
+          <select [(ngModel)]="newEscalation.level" name="level" required>
+            <option [value]="EscalationLevel.LEVEL_1">Level 1</option>
+            <option [value]="EscalationLevel.LEVEL_2">Level 2</option>
+            <option [value]="EscalationLevel.LEVEL_3">Level 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reason:</label>
+          <input type="text" [(ngModel)]="newEscalation.reason" name="reason" required>
+        </div>
+        <div class="form-group">
+          <label>Description:</label>
+          <textarea [(ngModel)]="newEscalation.description" name="description" rows="3"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Create SLA Modal -->
+<div class="modal" *ngIf="showCreateSLAModal" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create SLA Definition</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form (ngSubmit)="createSLADefinition()">
+        <div class="form-group">
+          <label>Name:</label>
+          <input type="text" [(ngModel)]="newSLA.name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label>Entity Type:</label>
+          <input type="text" [(ngModel)]="newSLA.entityType" name="entityType" required>
+        </div>
+        <div class="form-group">
+          <label>Description:</label>
+          <textarea [(ngModel)]="newSLA.description" name="description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Duration (hours):</label>
+          <input type="number" [(ngModel)]="newSLA.durationHours" name="durationHours" required min="1">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="newSLA.autoEscalate" name="autoEscalate">
+            Auto Escalate
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Resolve Escalation Modal -->
+<div class="modal" *ngIf="showResolveEscalationModal" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Resolve Escalation</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form (ngSubmit)="resolveEscalation()">
+        <div class="form-group">
+          <label>Resolution:</label>
+          <textarea [(ngModel)]="resolveForm.resolution" name="resolution" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Resolved By (User ID):</label>
+          <input type="text" [(ngModel)]="resolveForm.resolvedBy" name="resolvedBy" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Resolve</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- Audit Log Detail Modal -->
+<div class="modal" *ngIf="showAuditDetailModal" (click)="closeModals()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Audit Log Details</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedAuditLog">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>ID:</label>
+          <span>{{ selectedAuditLog.id }}</span>
+        </div>
+        <div class="detail-item">
+          <label>User:</label>
+          <span>{{ selectedAuditLog.username }} ({{ selectedAuditLog.userId }})</span>
+        </div>
+        <div class="detail-item">
+          <label>Action:</label>
+          <span class="badge" [class]="getStatusClass(selectedAuditLog.action)">{{ selectedAuditLog.action }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity Type:</label>
+          <span>{{ selectedAuditLog.entityType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity ID:</label>
+          <span>{{ selectedAuditLog.entityId }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Timestamp:</label>
+          <span>{{ selectedAuditLog.timestamp | date:'full' }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedAuditLog.reason">
+          <label>Reason:</label>
+          <span>{{ selectedAuditLog.reason }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedAuditLog.oldValue">
+          <label>Old Value:</label>
+          <pre>{{ selectedAuditLog.oldValue }}</pre>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedAuditLog.newValue">
+          <label>New Value:</label>
+          <pre>{{ selectedAuditLog.newValue }}</pre>
+        </div>
+        <div class="detail-item" *ngIf="selectedAuditLog.ipAddress">
+          <label>IP Address:</label>
+          <span>{{ selectedAuditLog.ipAddress }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedAuditLog.userAgent">
+          <label>User Agent:</label>
+          <span>{{ selectedAuditLog.userAgent }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Escalation Detail Modal -->
+<div class="modal" *ngIf="showEscalationDetailModal" (click)="closeModals()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Escalation Details</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedEscalation">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>ID:</label>
+          <span>{{ selectedEscalation.id }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="badge" [class]="getStatusClass(selectedEscalation.status)">{{ selectedEscalation.status }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Level:</label>
+          <span class="badge">{{ selectedEscalation.level }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity Type:</label>
+          <span>{{ selectedEscalation.entityType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity ID:</label>
+          <span>{{ selectedEscalation.entityId }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Created At:</label>
+          <span>{{ selectedEscalation.createdAt | date:'full' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedEscalation.assignedTo">
+          <label>Assigned To:</label>
+          <span>{{ selectedEscalation.assignedToName || selectedEscalation.assignedTo }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedEscalation.slaViolationId">
+          <label>SLA Violation ID:</label>
+          <span>{{ selectedEscalation.slaViolationId }}</span>
+        </div>
+        <div class="detail-item full-width">
+          <label>Reason:</label>
+          <span>{{ selectedEscalation.reason }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedEscalation.description">
+          <label>Description:</label>
+          <p>{{ selectedEscalation.description }}</p>
+        </div>
+        <div class="detail-item" *ngIf="selectedEscalation.resolvedAt">
+          <label>Resolved At:</label>
+          <span>{{ selectedEscalation.resolvedAt | date:'full' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedEscalation.resolvedBy">
+          <label>Resolved By:</label>
+          <span>{{ selectedEscalation.resolvedBy }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedEscalation.resolution">
+          <label>Resolution:</label>
+          <p>{{ selectedEscalation.resolution }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLA Definition Detail Modal -->
+<div class="modal" *ngIf="showSLADetailModal" (click)="closeModals()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>SLA Definition Details</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedSLADefinition">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>ID:</label>
+          <span>{{ selectedSLADefinition.id }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Name:</label>
+          <span>{{ selectedSLADefinition.name }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Entity Type:</label>
+          <span>{{ selectedSLADefinition.entityType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Duration:</label>
+          <span>{{ selectedSLADefinition.durationHours }} hours</span>
+        </div>
+        <div class="detail-item">
+          <label>Auto Escalate:</label>
+          <span class="badge" [class.badge-success]="selectedSLADefinition.autoEscalate">
+            {{ selectedSLADefinition.autoEscalate ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Active:</label>
+          <span class="badge" [class.badge-success]="selectedSLADefinition.active">
+            {{ selectedSLADefinition.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Created At:</label>
+          <span>{{ selectedSLADefinition.createdAt | date:'full' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedSLADefinition.updatedAt">
+          <label>Updated At:</label>
+          <span>{{ selectedSLADefinition.updatedAt | date:'full' }}</span>
+        </div>
+        <div class="detail-item full-width" *ngIf="selectedSLADefinition.description">
+          <label>Description:</label>
+          <p>{{ selectedSLADefinition.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SAGA Transaction Detail Modal -->
+<div class="modal" *ngIf="showSagaDetailModal" (click)="closeModals()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>SAGA Transaction Details</h2>
+      <button class="close-btn" (click)="closeModals()">&times;</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedSaga">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>ID:</label>
+          <span>{{ selectedSaga.id }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Type:</label>
+          <span>{{ selectedSaga.sagaType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="badge" [class]="getStatusClass(selectedSaga.status)">{{ selectedSaga.status }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Initiated By:</label>
+          <span>{{ selectedSaga.initiatedBy }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Created At:</label>
+          <span>{{ selectedSaga.createdAt | date:'full' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedSaga.updatedAt">
+          <label>Updated At:</label>
+          <span>{{ selectedSaga.updatedAt | date:'full' }}</span>
+        </div>
+      </div>
+
+      <div class="saga-steps" *ngIf="selectedSaga.steps && selectedSaga.steps.length > 0">
+        <h3>Transaction Steps</h3>
+        <div class="steps-list">
+          <div class="step-card" *ngFor="let step of selectedSaga.steps; let i = index">
+            <div class="step-header">
+              <span class="step-number">{{ i + 1 }}</span>
+              <span class="step-name">{{ step.stepName }}</span>
+              <span class="badge" [class]="getStatusClass(step.status)">{{ step.status }}</span>
+            </div>
+            <div class="step-details">
+              <div><strong>Action:</strong> {{ step.action }}</div>
+              <div *ngIf="step.compensationAction"><strong>Compensation:</strong> {{ step.compensationAction }}</div>
+              <div *ngIf="step.errorDetails" class="error-details">
+                <strong>Error:</strong> {{ step.errorDetails }}
+              </div>
+              <div class="step-timestamps">
+                <small>Created: {{ step.createdAt | date:'short' }}</small>
+                <small *ngIf="step.updatedAt">Updated: {{ step.updatedAt | date:'short' }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
