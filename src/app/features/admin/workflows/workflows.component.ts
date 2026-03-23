@@ -155,9 +155,15 @@ export class WorkflowsComponent implements OnInit {
           console.error('[Workflows] Error loading SLA violations:', err);
           return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
         })
+      ),
+      sagaTransactions: this.workflowService.getAllSagas(0, 50).pipe(
+        catchError(err => {
+          console.error('[Workflows] Error loading SAGA transactions:', err);
+          return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
+        })
       )
     }).subscribe({
-      next: ({ auditLogs, escalations, slaDefinitions, slaViolations }) => {
+      next: ({ auditLogs, escalations, slaDefinitions, slaViolations, sagaTransactions }) => {
         this.auditLogs = auditLogs.content;
         this.auditTotalPages = auditLogs.totalPages;
         this.auditTotalElements = auditLogs.totalElements;
@@ -171,6 +177,8 @@ export class WorkflowsComponent implements OnInit {
         this.slaViolations = slaViolations.content;
         this.violationTotalPages = slaViolations.totalPages;
         this.violationTotalElements = slaViolations.totalElements;
+
+        this.sagaTransactions = sagaTransactions.content;
 
         this.calculateStats();
         this.isLoading = false;

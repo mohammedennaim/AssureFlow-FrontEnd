@@ -395,10 +395,6 @@
 
   <!-- SAGA Transactions Tab -->
   <div class="tab-content" *ngIf="activeTab === 'saga-transactions' && !isLoading">
-    <div class="info-message">
-      <p>SAGA Transactions require specific transaction IDs to view. Use the backend API to start and monitor SAGA transactions.</p>
-    </div>
-
     <div class="table-container" *ngIf="sagaTransactions.length > 0">
       <table class="data-table">
         <thead>
@@ -414,7 +410,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let saga of sagaTransactions; trackBy: trackById">
-            <td>{{ saga.id }}</td>
+            <td class="text-truncate" style="max-width: 200px;">{{ saga.id }}</td>
             <td>{{ saga.sagaType }}</td>
             <td><span class="badge" [class]="getStatusClass(saga.status)">{{ saga.status }}</span></td>
             <td>{{ saga.initiatedBy }}</td>
@@ -431,7 +427,7 @@
     </div>
 
     <div class="no-data" *ngIf="sagaTransactions.length === 0">
-      <p>No SAGA transactions loaded. SAGA transactions are managed through the backend workflow service.</p>
+      <p>No SAGA transactions found. SAGA transactions are created when complex multi-service workflows are initiated.</p>
     </div>
   </div>
 </div>

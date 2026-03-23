@@ -166,6 +166,13 @@ export class HttpWorkflowRepository extends WorkflowRepositoryPort {
   }
 
   // ==================== SAGA Transactions ====================
+  getAllSagas(page: number = 0, size: number = 20): Observable<Page<SAGATransaction>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<Page<SAGATransaction>>(`${this.baseUrl}/sagas`, { params });
+  }
+
   getSagaStatus(id: string): Observable<SAGATransaction> {
     return this.http.get<SAGATransaction>(`${this.baseUrl}/sagas/${id}`);
   }

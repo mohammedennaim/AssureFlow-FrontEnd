@@ -1,0 +1,39 @@
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { NotificationRepositoryPort } from '../domain/ports/notification.repository.port';
+import { HttpNotificationRepository } from '../infrastructure/repositories/http-notification.repository';
+import { Notification, CreateNotificationRequest } from '../domain/models/notification.models';
+import { Page } from '../domain/models/workflow.models';
+
+@Injectable({ providedIn: 'root' })
+export class NotificationService {
+  private repository: NotificationRepositoryPort = inject(HttpNotificationRepository);
+
+  getAllNotifications(page: number = 0, size: number = 20): Observable<Page<Notification>> {
+    return this.repository.getAllNotifications(page, size);
+  }
+
+  getNotificationById(id: string): Observable<Notification> {
+    return this.repository.getNotificationById(id);
+  }
+
+  getNotificationsByPolicyId(policyId: string): Observable<Notification[]> {
+    return this.repository.getNotificationsByPolicyId(policyId);
+  }
+
+  getNotificationsByRecipient(recipient: string): Observable<Notification[]> {
+    return this.repository.getNotificationsByRecipient(recipient);
+  }
+
+  createNotification(request: CreateNotificationRequest): Observable<Notification> {
+    return this.repository.createNotification(request);
+  }
+
+  sendNotification(id: string): Observable<void> {
+    return this.repository.sendNotification(id);
+  }
+
+  deleteNotification(id: string): Observable<void> {
+    return this.repository.deleteNotification(id);
+  }
+}

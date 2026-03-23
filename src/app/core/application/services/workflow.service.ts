@@ -129,6 +129,10 @@ export class WorkflowService {
   }
 
   // ==================== SAGA Transactions ====================
+  getAllSagas(page: number = 0, size: number = 20): Observable<Page<SAGATransaction>> {
+    return this.repository.getAllSagas(page, size);
+  }
+
   getSagaStatus(id: string): Observable<SAGATransaction> {
     return this.repository.getSagaStatus(id);
   }

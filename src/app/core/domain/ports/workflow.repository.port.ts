@@ -50,6 +50,7 @@ export abstract class WorkflowRepositoryPort {
   abstract checkSLAViolations(): Observable<void>;
 
   // SAGA Transactions
+  abstract getAllSagas(page: number, size: number): Observable<Page<SAGATransaction>>;
   abstract getSagaStatus(id: string): Observable<SAGATransaction>;
   abstract startSaga(sagaType: string, initiatedBy: string): Observable<SAGATransaction>;
   abstract reportStepSuccess(sagaId: string, stepId: string): Observable<void>;
