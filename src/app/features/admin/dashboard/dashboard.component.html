@@ -81,6 +81,12 @@
                   <path d="M5.5 18.3333H16.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
               }
+              @case ('bell') {
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 2.75C8.25 2.75 6.41667 4.58333 6.41667 7.33333V11.9167C6.41667 13.75 5.5 14.6667 4.58333 14.6667H17.4167C16.5 14.6667 15.5833 13.75 15.5833 11.9167V7.33333C15.5833 4.58333 13.75 2.75 11 2.75Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M9.16667 16.5C9.16667 17.4167 10.0833 18.3333 11 18.3333C11.9167 18.3333 12.8333 17.4167 12.8333 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              }
               @default {
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="5.5" cy="6.41667" r="2.29167" stroke="white" stroke-width="1.5"/>
@@ -121,16 +127,16 @@
         <!-- Mini Sparkline -->
         <div class="stat-card__sparkline">
           <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path 
-              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8" 
-              stroke="currentColor" 
-              stroke-width="2" 
+            <path
+              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
+              stroke="currentColor"
+              stroke-width="2"
               fill="none"
               [attr.stroke]="stat.color"
             />
-            <path 
-              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z" 
-              fill="currentColor" 
+            <path
+              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
+              fill="currentColor"
               [attr.fill]="stat.color"
               opacity="0.1"
             />

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { NotificationRepositoryPort } from '../../domain/ports/notification.repository.port';
+import { NotificationRepositoryPort, NotificationStatistics } from '../../domain/ports/notification.repository.port';
 import { Notification, CreateNotificationRequest, NotificationType } from '../../domain/models/notification.models';
 import { Page } from '../../domain/models/workflow.models';
 import { environment } from '../../../../environments/environment';
@@ -130,6 +130,12 @@ export class HttpNotificationRepository implements NotificationRepositoryPort {
 
   deleteNotification(id: string): Observable<void> {
     return this.http.delete<BaseResponse<void>>(`${this.baseUrl}/${id}`).pipe(
+      map(response => response.data)
+    );
+  }
+
+  getStatistics(): Observable<NotificationStatistics> {
+    return this.http.get<BaseResponse<NotificationStatistics>>(`${this.baseUrl}/stats`).pipe(
       map(response => response.data)
     );
   }

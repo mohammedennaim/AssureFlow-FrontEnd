@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminStatisticsService, DashboardKpiStats } from '../../../core/application/services/admin-statistics.service';
-import { catchError, of } from 'rxjs';
+import { NotificationService } from '../../../core/application/services/notification.service';
+import { catchError, of, forkJoin } from 'rxjs';
 
 interface KpiStat {
   label: string;
@@ -33,6 +34,18 @@ interface Activity {
   type: 'primary' | 'success' | 'warning' | 'info';
 }
 
+interface NotificationStats {
+  totalNotifications: number;
+  deliveredCount: number;
+  pendingCount: number;
+  failedCount: number;
+  emailCount: number;
+  smsCount: number;
+  pushCount: number;
+  successRate: number;
+  recentNotifications: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -52,8 +65,10 @@ export class DashboardComponent implements OnInit {
   policyDistribution: ChartData[] = [];
   recentActivities: Activity[] = [];
   stats: DashboardKpiStats | null = null;
+  notificationStats: NotificationStats | null = null;
 
   private adminStatsService = inject(AdminStatisticsService);
+  private notificationService = inject(NotificationService);
 
   private periodLabels: Record<string, string> = {
     week: 'This Week',
@@ -71,33 +86,52 @@ export class DashboardComponent implements OnInit {
 
     console.log('[Dashboard] Loading dashboard data...');
 
-    this.adminStatsService.getDashboardKpiStats().pipe(
-      catchError((err) => {
-        this.error = 'Failed to load dashboard stats';
-        console.error('[Dashboard] Error loading stats:', err);
-        return of({
-          totalUsers: 0,
-          totalClients: 0,
-          totalPolicies: 0,
-          activePolicies: 0,
-          pendingPolicies: 0,
-          expiredPolicies: 0,
-          totalClaims: 0,
-          pendingClaims: 0,
-          approvedClaims: 0,
-          rejectedClaims: 0,
-          underReviewClaims: 0,
-          monthlyRevenue: 0,
-          pendingRevenue: 0,
-          totalRevenue: 0,
-          collectionRate: 0,
-          activeWorkflows: 0
-        });
-      })
-    ).subscribe((stats) => {
-      console.log('[Dashboard] Received stats:', stats);
-      this.stats = stats;
-      this.loadKpiStats(stats);
+    // Charger les stats admin et notifications en parallèle
+    forkJoin({
+      admin: this.adminStatsService.getDashboardKpiStats().pipe(
+        catchError((err) => {
+          console.error('[Dashboard] Error loading admin stats:', err);
+          return of({
+            totalUsers: 0,
+            totalClients: 0,
+            totalPolicies: 0,
+            activePolicies: 0,
+            pendingPolicies: 0,
+            expiredPolicies: 0,
+            totalClaims: 0,
+            pendingClaims: 0,
+            approvedClaims: 0,
+            rejectedClaims: 0,
+            underReviewClaims: 0,
+            monthlyRevenue: 0,
+            pendingRevenue: 0,
+            totalRevenue: 0,
+            collectionRate: 0,
+            activeWorkflows: 0
+          });
+        })
+      ),
+      notifications: this.notificationService.getStatistics().pipe(
+        catchError((err) => {
+          console.error('[Dashboard] Error loading notification stats:', err);
+          return of({
+            totalNotifications: 0,
+            deliveredCount: 0,
+            pendingCount: 0,
+            failedCount: 0,
+            emailCount: 0,
+            smsCount: 0,
+            pushCount: 0,
+            successRate: 0,
+            recentNotifications: 0
+          });
+        })
+      )
+    }).subscribe((result) => {
+      console.log('[Dashboard] Received stats:', result);
+      this.stats = result.admin;
+      this.notificationStats = result.notifications;
+      this.loadKpiStats(result.admin, result.notifications);
       this.loading = false;
     });
   }
@@ -108,14 +142,13 @@ export class DashboardComponent implements OnInit {
     this.isRefreshing = false;
   }
 
-  private loadKpiStats(stats: DashboardKpiStats): void {
+  private loadKpiStats(adminStats: DashboardKpiStats, notificationStats: NotificationStats): void {
     // Calcul des tendances basé sur les données réelles (simulé pour l'instant)
-    // Pour de vraies tendances, il faudrait stocker l'historique
     this.kpiStats = [
       {
         label: 'Total Users',
-        value: stats.totalUsers,
-        trend: this.calculateTrend(stats.totalUsers),
+        value: adminStats.totalUsers,
+        trend: this.calculateTrend(adminStats.totalUsers),
         trendLabel: 'vs last month',
         icon: 'users',
         color: '#6366f1',
@@ -124,8 +157,8 @@ export class DashboardComponent implements OnInit {
       },
       {
         label: 'Total Clients',
-        value: stats.totalClients,
-        trend: this.calculateTrend(stats.totalClients),
+        value: adminStats.totalClients,
+        trend: this.calculateTrend(adminStats.totalClients),
         trendLabel: 'vs last month',
         icon: 'users',
         color: '#10b981',
@@ -134,8 +167,8 @@ export class DashboardComponent implements OnInit {
       },
       {
         label: 'Active Policies',
-        value: stats.activePolicies,
-        trend: this.calculateTrend(stats.activePolicies),
+        value: adminStats.activePolicies,
+        trend: this.calculateTrend(adminStats.activePolicies),
         trendLabel: 'vs last month',
         icon: 'shield',
         color: '#06b6d4',
@@ -144,8 +177,8 @@ export class DashboardComponent implements OnInit {
       },
       {
         label: 'Pending Claims',
-        value: stats.pendingClaims,
-        trend: this.calculateTrend(stats.pendingClaims, true),
+        value: adminStats.pendingClaims,
+        trend: this.calculateTrend(adminStats.pendingClaims, true),
         trendLabel: 'vs last month',
         icon: 'clipboard',
         color: '#f59e0b',
@@ -154,8 +187,8 @@ export class DashboardComponent implements OnInit {
       },
       {
         label: 'Monthly Revenue',
-        value: Math.round(stats.monthlyRevenue),
-        trend: this.calculateTrend(stats.monthlyRevenue),
+        value: Math.round(adminStats.monthlyRevenue),
+        trend: this.calculateTrend(adminStats.monthlyRevenue),
         trendLabel: 'vs last month',
         icon: 'dollar',
         color: '#f43f5e',
@@ -163,14 +196,24 @@ export class DashboardComponent implements OnInit {
         shadow: '0 4px 14px rgba(244, 63, 94, 0.4)'
       },
       {
-        label: 'Collection Rate',
-        value: Math.round(stats.collectionRate),
-        trend: this.calculateTrend(stats.collectionRate),
+        label: 'Notifications',
+        value: notificationStats.totalNotifications,
+        trend: this.calculateTrend(notificationStats.totalNotifications),
         trendLabel: 'vs last month',
-        icon: 'percent',
+        icon: 'bell',
         color: '#8b5cf6',
         gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
         shadow: '0 4px 14px rgba(139, 92, 246, 0.4)'
+      },
+      {
+        label: 'Collection Rate',
+        value: Math.round(adminStats.collectionRate),
+        trend: this.calculateTrend(adminStats.collectionRate),
+        trendLabel: 'vs last month',
+        icon: 'percent',
+        color: '#ec4899',
+        gradient: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+        shadow: '0 4px 14px rgba(236, 72, 153, 0.4)'
       }
     ];
   }

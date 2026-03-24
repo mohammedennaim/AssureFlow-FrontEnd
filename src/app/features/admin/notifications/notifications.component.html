@@ -138,9 +138,9 @@
                 *ngIf="!notification.sent"
                 (click)="sendNotification(notification.id)"
                 title="Send notification">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
-            <path d="M1.333 8L8 1.333 14.667 8"/>
-            <path d="M8 1.333v13.334"/>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M12.333 1.667L6.333 7.667"/>
+            <path d="M12.333 1.667l-4 11.666-2-5.333-5.333-2 11.333-4z"/>
           </svg>
         </button>
         <button class="action-btn"
@@ -277,7 +277,7 @@
 
     <div class="modal__footer">
       <button class="btn btn--secondary" (click)="closeCreateModal()">Cancel</button>
-      <button class="btn btn--primary" (click)="createNotification()">Create & Send Email</button>
+      <button class="btn btn--primary" (click)="createNotification()">Create</button>
     </div>
   </div>
 </div>

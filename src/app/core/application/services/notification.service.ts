@@ -5,6 +5,18 @@ import { HttpNotificationRepository } from '../../infrastructure/repositories/ht
 import { Notification, CreateNotificationRequest } from '../../domain/models/notification.models';
 import { Page } from '../../domain/models/workflow.models';
 
+export interface NotificationStatistics {
+  totalNotifications: number;
+  deliveredCount: number;
+  pendingCount: number;
+  failedCount: number;
+  emailCount: number;
+  smsCount: number;
+  pushCount: number;
+  successRate: number;
+  recentNotifications: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private repository: NotificationRepositoryPort = inject(HttpNotificationRepository);
@@ -47,5 +59,9 @@ export class NotificationService {
 
   deleteNotification(id: string): Observable<void> {
     return this.repository.deleteNotification(id);
+  }
+
+  getStatistics(): Observable<NotificationStatistics> {
+    return this.repository.getStatistics();
   }
 }
