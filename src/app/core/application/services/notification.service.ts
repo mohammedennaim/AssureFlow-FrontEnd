@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { NotificationRepositoryPort } from '../domain/ports/notification.repository.port';
-import { HttpNotificationRepository } from '../infrastructure/repositories/http-notification.repository';
-import { Notification, CreateNotificationRequest } from '../domain/models/notification.models';
-import { Page } from '../domain/models/workflow.models';
+import { NotificationRepositoryPort } from '../../domain/ports/notification.repository.port';
+import { HttpNotificationRepository } from '../../infrastructure/repositories/http-notification.repository';
+import { Notification, CreateNotificationRequest } from '../../domain/models/notification.models';
+import { Page } from '../../domain/models/workflow.models';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -31,6 +31,18 @@ export class NotificationService {
 
   sendNotification(id: string): Observable<void> {
     return this.repository.sendNotification(id);
+  }
+
+  markAsRead(id: string): Observable<void> {
+    return this.repository.markAsRead(id);
+  }
+
+  markAllAsRead(recipient: string): Observable<void> {
+    return this.repository.markAllAsRead(recipient);
+  }
+
+  getUnreadCount(recipient: string): Observable<number> {
+    return this.repository.getUnreadCount(recipient);
   }
 
   deleteNotification(id: string): Observable<void> {

@@ -1,22 +1,43 @@
-import { Component, inject, HostListener } from '@angular/core';
+import { Component, inject, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { NotificationDropdownComponent } from './notification-dropdown/notification-dropdown.component';
+import { NotificationCountService } from '../../../../core/application/services/notification-count.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NotificationDropdownComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.scss'
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   isSidebarCollapsed = false;
   isUserMenuOpen = false;
   isDark = false;
+  unreadCount = 0;
+  private destroy$ = new Subject<void>();
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private notificationCountService = inject(NotificationCountService);
+
+  ngOnInit(): void {
+    // S'abonner aux mises à jour du compteur de notifications
+    this.notificationCountService.unreadCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+        this.unreadCount = count;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;

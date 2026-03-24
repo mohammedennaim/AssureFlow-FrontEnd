@@ -9,11 +9,17 @@
       </div>
       <div class="page-header__content">
         <h1 class="page-header__title">Notifications</h1>
-        <p class="page-header__subtitle">{{ unreadCount }} unread notifications</p>
+        <p class="page-header__subtitle">{{ totalElements }} total • {{ unreadCount }} unread</p>
       </div>
     </div>
     <div class="page-header__actions">
-      <button class="btn btn--secondary" (click)="markAllAsRead()">
+      <button class="btn btn--primary" (click)="openCreateModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 3v10M3 8h10"/>
+        </svg>
+        Create Notification
+      </button>
+      <button class="btn btn--secondary" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
           <path d="M13.1667 4L6 11.1667L2.83337 8"/>
         </svg>
@@ -22,6 +28,35 @@
     </div>
   </header>
 
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="5"/>
+        <path d="M13 13l3 3"/>
+      </svg>
+      <input type="text" 
+             placeholder="Search notifications..." 
+             [(ngModel)]="searchQuery"
+             class="search-input">
+      <button class="clear-btn" *ngIf="searchQuery" (click)="searchQuery = ''">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 2l10 10M12 2L2 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <select class="recipient-filter" [(ngModel)]="selectedRecipient">
+      <option value="">All Recipients</option>
+      <option *ngFor="let recipient of uniqueRecipients" [value]="recipient">{{ recipient }}</option>
+    </select>
+
+    <button class="btn btn--ghost" (click)="clearFilters()" *ngIf="searchQuery || selectedRecipient || filter !== 'ALL'">
+      Clear Filters
+    </button>
+  </div>
+
+  <!-- Type Filters -->
   <div class="notifications-filters">
     <button class="filter-chip" [class.active]="filter === 'ALL'" (click)="filter = 'ALL'">All</button>
     <button class="filter-chip" [class.active]="filter === 'UNREAD'" (click)="filter = 'UNREAD'">
@@ -42,25 +77,26 @@
     </button>
   </div>
 
+  <!-- Notifications List -->
   <div class="notifications-list" *ngIf="!isLoading">
-    <div class="notification-item" 
-         *ngFor="let notification of filteredNotifications; let first = $first"
+    <div class="notification-item"
+         *ngFor="let notification of filteredNotifications; let first = first"
          [class.notification-item--unread]="!notification.read"
          [class.notification-item--first]="first">
-      <div class="notification-item__icon" [class]="'notification-item__icon--' + toLowerCase(notification.type)">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="notification.type === 'INFO'">
+      <div class="notification-item__icon" [class]="'notification-item__icon--' + toLowerCase(getNotificationCategory(notification.type))">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'INFO'">
           <circle cx="9" cy="9" r="6"/>
           <path d="M9 9V6M9 12h.01"/>
         </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="notification.type === 'SUCCESS'">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'SUCCESS'">
           <circle cx="9" cy="9" r="6"/>
           <path d="M6.5 9L9 11.5L11.5 8.5"/>
         </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="notification.type === 'WARNING'">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'WARNING'">
           <path d="M9 2L2 15h14L9 2z"/>
           <path d="M9 8v4M9 15h.01"/>
         </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="notification.type === 'ALERT'">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'ALERT'">
           <circle cx="9" cy="9" r="6"/>
           <path d="M9 6v6M9 15h.01"/>
         </svg>
@@ -72,16 +108,57 @@
           <span class="notification-item__time">{{ timeAgo(notification.createdAt) }}</span>
         </div>
         <p class="notification-item__message">{{ notification.message }}</p>
+        <div class="notification-item__meta">
+          <span class="meta-item">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M11.667 2.333H2.333C1.597 2.333 1 2.93 1 3.667v6.666c0 .737.597 1.334 1.333 1.334h9.334c.736 0 1.333-.597 1.333-1.334V3.667c0-.737-.597-1.334-1.333-1.334z"/>
+              <path d="M1 3.667l6 4.166 6-4.166"/>
+            </svg>
+            {{ notification.recipient }}
+          </span>
+          <span class="meta-item" *ngIf="notification.sent">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M12.333 1.667L6.333 7.667"/>
+              <path d="M12.333 1.667l-4 11.666-2-5.333-5.333-2 11.333-4z"/>
+            </svg>
+            Sent
+          </span>
+          <span class="meta-item" *ngIf="!notification.sent">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+              <circle cx="7" cy="7" r="6"/>
+              <path d="M7 3.667V7l2.333 1.167"/>
+            </svg>
+            Pending
+          </span>
+        </div>
       </div>
 
-      <button class="notification-item__mark" 
-              *ngIf="!notification.read" 
-              (click)="markAsRead(notification.id)" 
-              title="Mark as read">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
-          <path d="M13.1667 4L6 11.1667L2.83337 8"/>
-        </svg>
-      </button>
+      <div class="notification-item__actions">
+        <button class="action-btn action-btn--send"
+                *ngIf="!notification.sent"
+                (click)="sendNotification(notification.id)"
+                title="Send notification">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1.333 8L8 1.333 14.667 8"/>
+            <path d="M8 1.333v13.334"/>
+          </svg>
+        </button>
+        <button class="action-btn"
+                *ngIf="!notification.read"
+                (click)="markAsRead(notification.id)"
+                title="Mark as read">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M13.1667 4L6 11.1667L2.83337 8"/>
+          </svg>
+        </button>
+        <button class="action-btn action-btn--danger"
+                (click)="deleteNotification(notification.id)"
+                title="Delete notification">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="empty-state" *ngIf="filteredNotifications.length === 0">
@@ -89,13 +166,118 @@
         <path d="M32 8a12 12 0 0 0-12 12v5c0 4-2 6-4 8h32c-2-2-4-4-4-8v-5A12 12 0 0 0 32 8z"/>
         <path d="M20 40c0 4 4 8 12 8s12-4 12-8"/>
       </svg>
-      <h3>No notifications</h3>
-      <p>You're all caught up!</p>
+      <h3>No notifications found</h3>
+      <p>Try adjusting your filters</p>
     </div>
   </div>
 
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
+    <button class="pagination__btn" (click)="previousPage()" [disabled]="currentPage === 0">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M10 12L6 8l4-4"/>
+      </svg>
+    </button>
+    
+    <div class="pagination__pages">
+      <button *ngFor="let page of [].constructor(totalPages); let i = index"
+              class="pagination__page"
+              [class.active]="i === currentPage"
+              (click)="goToPage(i)">
+        {{ i + 1 }}
+      </button>
+    </div>
+
+    <button class="pagination__btn" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6 12l4-4-4-4"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Loading notifications...</p>
+  </div>
+</div>
+
+<!-- Create Notification Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2>Create Notification</h2>
+      <button class="modal__close" (click)="closeCreateModal()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 4l12 12M16 4L4 16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal__body">
+      <div class="form-group">
+        <label>Type</label>
+        <select [(ngModel)]="newNotification.type" class="form-control">
+          <optgroup label="Policy Notifications">
+            <option value="POLICY_CREATED">Policy Created</option>
+            <option value="POLICY_APPROVED">Policy Approved</option>
+            <option value="POLICY_RENEWED">Policy Renewed</option>
+            <option value="POLICY_EXPIRING">Policy Expiring</option>
+            <option value="POLICY_CANCELLED">Policy Cancelled</option>
+          </optgroup>
+          <optgroup label="Claim Notifications">
+            <option value="CLAIM_SUBMITTED">Claim Submitted</option>
+            <option value="CLAIM_APPROVED">Claim Approved</option>
+            <option value="CLAIM_UNDER_REVIEW">Claim Under Review</option>
+            <option value="CLAIM_PAID">Claim Paid</option>
+            <option value="CLAIM_REJECTED">Claim Rejected</option>
+          </optgroup>
+          <optgroup label="Payment Notifications">
+            <option value="INVOICE_GENERATED">Invoice Generated</option>
+            <option value="INVOICE_OVERDUE">Invoice Overdue</option>
+            <option value="PAYMENT_REMINDER">Payment Reminder</option>
+            <option value="PAYMENT_RECEIVED">Payment Received</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Channel</label>
+        <select [(ngModel)]="newNotification.channel" class="form-control">
+          <option value="EMAIL">Email</option>
+          <option value="SMS">SMS</option>
+          <option value="PUSH">Push</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Recipient *</label>
+        <input type="text" 
+               [(ngModel)]="newNotification.recipient" 
+               placeholder="email@example.com or phone number"
+               class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Subject *</label>
+        <input type="text" 
+               [(ngModel)]="newNotification.subject" 
+               placeholder="Notification subject"
+               class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Content *</label>
+        <textarea [(ngModel)]="newNotification.content" 
+                  placeholder="Notification message"
+                  rows="4"
+                  class="form-control"></textarea>
+      </div>
+    </div>
+
+    <div class="modal__footer">
+      <button class="btn btn--secondary" (click)="closeCreateModal()">Cancel</button>
+      <button class="btn btn--primary" (click)="createNotification()">Create & Send Email</button>
+    </div>
   </div>
 </div>

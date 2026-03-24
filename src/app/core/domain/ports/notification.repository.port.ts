@@ -9,5 +9,8 @@ export abstract class NotificationRepositoryPort {
   abstract getNotificationsByRecipient(recipient: string): Observable<Notification[]>;
   abstract createNotification(request: CreateNotificationRequest): Observable<Notification>;
   abstract sendNotification(id: string): Observable<void>;
+  abstract markAsRead(id: string): Observable<void>;
+  abstract markAllAsRead(recipient: string): Observable<void>;
+  abstract getUnreadCount(recipient: string): Observable<number>;
   abstract deleteNotification(id: string): Observable<void>;
 }

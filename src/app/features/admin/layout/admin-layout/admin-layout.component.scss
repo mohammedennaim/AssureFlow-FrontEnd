@@ -288,14 +288,31 @@
 
 .sidebar__badge {
   margin-left: auto;
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: white;
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 700;
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-full);
-  transition: opacity var(--transition-base);
-  animation: pulse 2s ease-in-out infinite;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.2);
+  }
 }
 
 .sidebar__footer {

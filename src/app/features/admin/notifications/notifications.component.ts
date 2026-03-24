@@ -1,22 +1,52 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/application/services/notification.service';
-import { Notification, NotificationType } from '../../../core/domain/models/notification.models';
+import { NotificationCountService } from '../../../core/application/services/notification-count.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { Notification, NotificationType, CreateNotificationRequest } from '../../../core/domain/models/notification.models';
 import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss'
 })
 export class NotificationsComponent implements OnInit {
   private notificationService = inject(NotificationService);
+  private notificationCountService = inject(NotificationCountService);
+  private authService = inject(AuthService);
 
-  filter: 'ALL' | 'UNREAD' | NotificationType = 'ALL';
+  filter: 'ALL' | 'UNREAD' | 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT' = 'ALL';
   isLoading = false;
   notifications: Notification[] = [];
+  
+  // Pagination
+  currentPage = 0;
+  pageSize = 20;
+  totalPages = 0;
+  totalElements = 0;
+
+  // Create notification modal
+  showCreateModal = false;
+  newNotification: CreateNotificationRequest = {
+    type: NotificationType.POLICY_CREATED,
+    channel: 'EMAIL',
+    recipient: '',
+    subject: '',
+    content: ''
+  };
+
+  // Search & filter
+  searchQuery = '';
+  selectedRecipient = '';
+  filterByPolicyId = '';
+
+  // Detail modal
+  showDetailModal = false;
+  selectedNotification: Notification | null = null;
 
   ngOnInit(): void {
     this.loadNotifications();
@@ -24,7 +54,7 @@ export class NotificationsComponent implements OnInit {
 
   loadNotifications(): void {
     this.isLoading = true;
-    this.notificationService.getAllNotifications(0, 50).pipe(
+    this.notificationService.getAllNotifications(this.currentPage, this.pageSize).pipe(
       catchError(err => {
         console.error('[Notifications] Error loading notifications:', err);
         this.isLoading = false;
@@ -32,10 +62,10 @@ export class NotificationsComponent implements OnInit {
       })
     ).subscribe({
       next: (page) => {
-        this.notifications = page.content.map(n => ({
-          ...n,
-          read: false
-        }));
+        this.notifications = page.content;
+        this.totalPages = page.totalPages;
+        this.totalElements = page.totalElements;
+        this.currentPage = page.number;
         this.isLoading = false;
       },
       error: (err) => {
@@ -50,22 +80,215 @@ export class NotificationsComponent implements OnInit {
   }
 
   get filteredNotifications(): Notification[] {
-    if (this.filter === 'ALL') return this.notifications;
-    if (this.filter === 'UNREAD') return this.notifications.filter(n => !n.read);
-    return this.notifications.filter(n => n.type === this.filter);
+    let filtered = this.notifications;
+
+    // Filter by type
+    if (this.filter === 'UNREAD') {
+      filtered = filtered.filter(n => !n.read);
+    } else if (this.filter !== 'ALL') {
+      // Filter by category (INFO, SUCCESS, WARNING, ALERT)
+      filtered = filtered.filter(n => this.getNotificationCategory(n.type) === this.filter);
+    }
+
+    // Filter by search query
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(n => 
+        n.title.toLowerCase().includes(query) ||
+        n.message.toLowerCase().includes(query) ||
+        n.recipient.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by recipient
+    if (this.selectedRecipient) {
+      filtered = filtered.filter(n => n.recipient === this.selectedRecipient);
+    }
+
+    return filtered;
+  }
+
+  get uniqueRecipients(): string[] {
+    return [...new Set(this.notifications.map(n => n.recipient))].sort();
   }
 
   markAsRead(id: string): void {
-    const notification = this.notifications.find(n => n.id === id);
-    if (notification) notification.read = true;
+    this.notificationService.markAsRead(id).subscribe({
+      next: () => {
+        const notification = this.notifications.find(n => n.id === id);
+        if (notification) {
+          notification.read = true;
+        }
+        this.notificationCountService.refreshCount();
+      },
+      error: (err) => {
+        console.error('[Notifications] Error marking as read:', err);
+      }
+    });
   }
 
   markAllAsRead(): void {
-    this.notifications.forEach(n => n.read = true);
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) return;
+
+    this.notificationService.markAllAsRead(user.id).subscribe({
+      next: () => {
+        this.notifications.forEach(n => n.read = true);
+        this.notificationCountService.refreshCount();
+      },
+      error: (err) => {
+        console.error('[Notifications] Error marking all as read:', err);
+      }
+    });
+  }
+
+  deleteNotification(id: string): void {
+    if (!confirm('Are you sure you want to delete this notification?')) return;
+
+    this.notificationService.deleteNotification(id).subscribe({
+      next: () => {
+        this.notifications = this.notifications.filter(n => n.id !== id);
+        this.notificationCountService.refreshCount();
+      },
+      error: (err) => {
+        console.error('[Notifications] Error deleting notification:', err);
+      }
+    });
+  }
+
+  sendNotification(id: string): void {
+    console.log('[SEND NOTIFICATION] Attempting to send notification:', id);
+    this.notificationService.sendNotification(id).subscribe({
+      next: () => {
+        console.log('[SEND NOTIFICATION] Success, reloading notification details');
+        // Recharger la notification depuis le backend pour obtenir le statut à jour
+        this.notificationService.getNotificationById(id).subscribe({
+          next: (updatedNotification) => {
+            const index = this.notifications.findIndex(n => n.id === id);
+            if (index !== -1) {
+              this.notifications[index] = updatedNotification;
+              console.log('[SEND NOTIFICATION] Updated notification:', updatedNotification);
+            }
+          },
+          error: (err) => {
+            console.error('[SEND NOTIFICATION] Error reloading notification:', err);
+            // Fallback: mettre à jour localement
+            const notification = this.notifications.find(n => n.id === id);
+            if (notification) {
+              notification.sent = true;
+            }
+          }
+        });
+      },
+      error: (err) => {
+        console.error('[SEND NOTIFICATION] Error details:', err);
+        console.error('[SEND NOTIFICATION] Error status:', err.status);
+        console.error('[SEND NOTIFICATION] Error message:', err.error);
+        alert(`Error sending notification: ${err.error?.message || err.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  openCreateModal(): void {
+    this.showCreateModal = true;
+    this.resetNewNotification();
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+    this.resetNewNotification();
+  }
+
+  resetNewNotification(): void {
+    this.newNotification = {
+      type: NotificationType.POLICY_CREATED,
+      channel: 'EMAIL',
+      recipient: '',
+      subject: '',
+      content: ''
+    };
+  }
+
+  createNotification(): void {
+    if (!this.newNotification.recipient || !this.newNotification.subject || !this.newNotification.content) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Créer une copie propre sans les champs undefined
+    const payload: any = {
+      type: this.newNotification.type,
+      channel: this.newNotification.channel,
+      recipient: this.newNotification.recipient,
+      subject: this.newNotification.subject,
+      content: this.newNotification.content
+    };
+
+    // Ajouter les champs optionnels seulement s'ils sont définis
+    if (this.newNotification.linkName) {
+      payload.linkName = this.newNotification.linkName;
+    }
+    if (this.newNotification.policyId) {
+      payload.policyId = this.newNotification.policyId;
+    }
+
+    console.log('[CREATE NOTIFICATION] Sending request:', payload);
+
+    this.notificationService.createNotification(payload).subscribe({
+      next: (notification) => {
+        console.log('[CREATE NOTIFICATION] Success:', notification);
+        this.notifications.unshift(notification);
+        this.closeCreateModal();
+        this.notificationCountService.refreshCount();
+      },
+      error: (err) => {
+        console.error('[CREATE NOTIFICATION] Error details:', err);
+        console.error('[CREATE NOTIFICATION] Error status:', err.status);
+        console.error('[CREATE NOTIFICATION] Error message:', err.error);
+        alert(`Error creating notification: ${err.error?.message || err.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadNotifications();
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadNotifications();
+    }
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = page;
+    this.loadNotifications();
+  }
+
+  clearFilters(): void {
+    this.filter = 'ALL';
+    this.searchQuery = '';
+    this.selectedRecipient = '';
   }
 
   toLowerCase(value: string): string {
     return value.toLowerCase();
+  }
+
+  getNotificationCategory(type: NotificationType): 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT' {
+    const typeStr = type.toString();
+    if (typeStr.includes('APPROVED') || typeStr.includes('PAID') || typeStr.includes('RECEIVED')) {
+      return 'SUCCESS';
+    } else if (typeStr.includes('EXPIRING') || typeStr.includes('REMINDER') || typeStr.includes('OVERDUE')) {
+      return 'WARNING';
+    } else if (typeStr.includes('CANCELLED') || typeStr.includes('REJECTED')) {
+      return 'ALERT';
+    }
+    return 'INFO';
   }
 
   timeAgo(dateString: string): string {
@@ -77,5 +300,15 @@ export class NotificationsComponent implements OnInit {
     if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
     return `${Math.floor(seconds / 86400)} days ago`;
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }
