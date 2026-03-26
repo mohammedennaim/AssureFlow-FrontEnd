@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { NotificationRepositoryPort, NotificationStatistics } from '../../domain/ports/notification.repository.port';
 import { Notification, CreateNotificationRequest, NotificationType } from '../../domain/models/notification.models';
-import { Page } from '../../domain/models/workflow.models';
+import { Page } from '../../domain/models/page.model';
 import { environment } from '../../../../environments/environment';
 
 interface BaseResponse<T> {

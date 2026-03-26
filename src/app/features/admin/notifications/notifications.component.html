@@ -80,7 +80,7 @@
   <!-- Notifications List -->
   <div class="notifications-list" *ngIf="!isLoading">
     <div class="notification-item"
-         *ngFor="let notification of filteredNotifications; let first = first"
+         *ngFor="let notification of paginatedNotifications; let first = first"
          [class.notification-item--unread]="!notification.read"
          [class.notification-item--first]="first">
       <div class="notification-item__icon" [class]="'notification-item__icon--' + toLowerCase(getNotificationCategory(notification.type))">
@@ -173,22 +173,13 @@
 
   <!-- Pagination -->
   <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
-    <button class="pagination__btn" (click)="previousPage()" [disabled]="currentPage === 0">
+    <button class="pagination__btn" (click)="previousPage()" [disabled]="currentPage === 1">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M10 12L6 8l4-4"/>
       </svg>
     </button>
-    
-    <div class="pagination__pages">
-      <button *ngFor="let page of [].constructor(totalPages); let i = index"
-              class="pagination__page"
-              [class.active]="i === currentPage"
-              (click)="goToPage(i)">
-        {{ i + 1 }}
-      </button>
-    </div>
-
-    <button class="pagination__btn" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
+    <span class="pagination__info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button class="pagination__btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M6 12l4-4-4-4"/>
       </svg>

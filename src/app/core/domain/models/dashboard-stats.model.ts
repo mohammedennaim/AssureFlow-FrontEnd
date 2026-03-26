@@ -4,7 +4,6 @@ export interface DashboardStats {
   totalPolicies: number;
   totalClaims: number;
   totalInvoices: number;
-  totalWorkflows: number;
   activePolicies?: number;
   pendingClaims?: number;
   monthlyRevenue?: number;

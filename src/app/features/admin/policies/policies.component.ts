@@ -30,6 +30,10 @@ export class PoliciesComponent implements OnInit {
   filterStatus = 'ALL';
   policyStats: PolicyStats | null = null;
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+
   // Cache for progress calculations to avoid ExpressionChangedAfterItHasBeenCheckedError
   private progressCache = new Map<string, number>();
 
@@ -156,6 +160,32 @@ export class PoliciesComponent implements OnInit {
         return daysLeft > 0 && daysLeft < 60;
       }).length
     };
+  }
+
+  // Pagination
+  get paginatedPolicies(): Policy[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredPolicies.slice(start, end);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredPolicies.length / this.pageSize);
+  }
+
+  filterPolicies(): void {
+    this.filteredPolicies = this.policies.filter(policy => {
+      const matchesSearch = !this.searchQuery ||
+        (policy.policyNumber || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (policy.clientName || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        policy.type.toLowerCase().includes(this.searchQuery.toLowerCase());
+
+      const matchesType = this.filterType === 'ALL' || policy.type === this.filterType;
+      const matchesStatus = this.filterStatus === 'ALL' || policy.status === this.filterStatus;
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+    this.currentPage = 1;
   }
 
   openCreateModal(): void {

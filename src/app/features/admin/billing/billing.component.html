@@ -208,7 +208,7 @@
       </div>
     } @else {
       <div class="cards-grid">
-        @for (invoice of filteredInvoices; track trackByInvoiceId($index, invoice)) {
+        @for (invoice of paginatedInvoices; track trackByInvoiceId($index, invoice)) {
           <div class="invoice-card">
             <div class="invoice-card__header">
               <div class="invoice-card__type">
@@ -306,6 +306,33 @@
             </div>
           </div>
         }
+      </div>
+    }
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button 
+          class="pagination__btn" 
+          (click)="previousPage()" 
+          [disabled]="currentPage === 1"
+          type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <span class="pagination__info">
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalElements }} invoices)
+        </span>
+        <button 
+          class="pagination__btn" 
+          (click)="nextPage()" 
+          [disabled]="currentPage === totalPages"
+          type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 13L11 8L6 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     }
   </div>

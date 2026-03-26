@@ -51,6 +51,12 @@ export class ClaimsComponent implements OnInit {
   // Reject form
   rejectReason: string = '';
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+  totalElements = 0;
+  totalPages = 0;
+
   ngOnInit(): void {
     this.loadClaims();
   }
@@ -70,6 +76,9 @@ export class ClaimsComponent implements OnInit {
         ...claim,
         priority: this.getPriority(claim.status, claim.estimatedAmount || claim.approvedAmount || 0)
       }));
+      this.totalElements = data.length;
+      this.totalPages = Math.ceil(data.length / this.pageSize);
+      this.currentPage = 1;
 
       // Load client and policy information
       this.enrichClaimsWithDetails();
@@ -434,5 +443,23 @@ export class ClaimsComponent implements OnInit {
     const d = new Date(date);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[d.getMonth()]} ${d.getDate()}, ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  get paginatedClaims(): ClaimWithPriority[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.claims.slice(start, end);
   }
 }

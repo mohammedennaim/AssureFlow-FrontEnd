@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { NotificationRepositoryPort } from '../../domain/ports/notification.repository.port';
 import { HttpNotificationRepository } from '../../infrastructure/repositories/http-notification.repository';
 import { Notification, CreateNotificationRequest } from '../../domain/models/notification.models';
-import { Page } from '../../domain/models/workflow.models';
+import { Page } from '../../domain/models/page.model';
 
 export interface NotificationStatistics {
   totalNotifications: number;

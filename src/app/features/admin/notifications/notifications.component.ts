@@ -24,10 +24,8 @@ export class NotificationsComponent implements OnInit {
   notifications: Notification[] = [];
   
   // Pagination
-  currentPage = 0;
-  pageSize = 20;
-  totalPages = 0;
-  totalElements = 0;
+  currentPage = 1;
+  pageSize = 6;
 
   // Create notification modal
   showCreateModal = false;
@@ -54,7 +52,7 @@ export class NotificationsComponent implements OnInit {
 
   loadNotifications(): void {
     this.isLoading = true;
-    this.notificationService.getAllNotifications(this.currentPage, this.pageSize).pipe(
+    this.notificationService.getAllNotifications(0, 1000).pipe(
       catchError(err => {
         console.error('[Notifications] Error loading notifications:', err);
         this.isLoading = false;
@@ -63,9 +61,7 @@ export class NotificationsComponent implements OnInit {
     ).subscribe({
       next: (page) => {
         this.notifications = page.content;
-        this.totalPages = page.totalPages;
-        this.totalElements = page.totalElements;
-        this.currentPage = page.number;
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: (err) => {
@@ -106,6 +102,20 @@ export class NotificationsComponent implements OnInit {
     }
 
     return filtered;
+  }
+
+  get paginatedNotifications(): Notification[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredNotifications.slice(start, end);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredNotifications.length / this.pageSize);
+  }
+
+  get totalElements(): number {
+    return this.notifications.length;
   }
 
   get uniqueRecipients(): string[] {
@@ -251,28 +261,26 @@ export class NotificationsComponent implements OnInit {
   }
 
   nextPage(): void {
-    if (this.currentPage < this.totalPages - 1) {
+    if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.loadNotifications();
     }
   }
 
   previousPage(): void {
-    if (this.currentPage > 0) {
+    if (this.currentPage > 1) {
       this.currentPage--;
-      this.loadNotifications();
     }
   }
 
   goToPage(page: number): void {
     this.currentPage = page;
-    this.loadNotifications();
   }
 
   clearFilters(): void {
     this.filter = 'ALL';
     this.searchQuery = '';
     this.selectedRecipient = '';
+    this.currentPage = 1;
   }
 
   toLowerCase(value: string): string {

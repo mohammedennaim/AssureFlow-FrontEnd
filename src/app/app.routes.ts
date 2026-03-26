@@ -37,10 +37,6 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/admin/billing/billing.component').then(m => m.BillingComponent)
 			},
 			{
-				path: 'workflows',
-				loadComponent: () => import('./features/admin/workflows/workflows.component').then(m => m.WorkflowsComponent)
-			},
-			{
 				path: 'notifications',
 				loadComponent: () => import('./features/admin/notifications/notifications.component').then(m => m.NotificationsComponent)
 			},

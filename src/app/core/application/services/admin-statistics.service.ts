@@ -27,7 +27,6 @@ export interface DashboardKpiStats {
   pendingRevenue: number;
   totalRevenue: number;
   collectionRate: number;
-  activeWorkflows: number;
 }
 
 export interface PolicyStats {
@@ -263,8 +262,7 @@ export class AdminStatisticsService {
       monthlyRevenue,
       pendingRevenue,
       totalRevenue,
-      collectionRate,
-      activeWorkflows: 0 // À implémenter quand le workflow service sera disponible
+      collectionRate
     };
   }
 

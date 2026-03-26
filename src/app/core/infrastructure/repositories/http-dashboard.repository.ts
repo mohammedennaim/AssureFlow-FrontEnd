@@ -47,7 +47,6 @@ export class HttpDashboardRepository implements IDashboardRepository {
       totalPolicies: countFromEndpoint('policies'),
       totalClaims: countFromEndpoint('claims'),
       totalInvoices: getMonthlyRevenue(),
-      totalWorkflows: of(0),
     });
   }
 }

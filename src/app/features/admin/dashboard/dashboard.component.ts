@@ -106,8 +106,7 @@ export class DashboardComponent implements OnInit {
             monthlyRevenue: 0,
             pendingRevenue: 0,
             totalRevenue: 0,
-            collectionRate: 0,
-            activeWorkflows: 0
+            collectionRate: 0
           });
         })
       ),

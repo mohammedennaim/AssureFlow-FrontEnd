@@ -75,6 +75,12 @@ export class BillingComponent implements OnInit {
 
   paymentMethods: PaymentMethod[] = ['CREDIT_CARD', 'DEBIT_CARD', 'BANK_TRANSFER', 'CASH', 'CHECK'];
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+  totalElements = 0;
+  totalPages = 0;
+
   ngOnInit(): void {
     this.loadData();
   }
@@ -86,7 +92,7 @@ export class BillingComponent implements OnInit {
     console.log('[Billing] Loading data...');
 
     forkJoin({
-      invoices: this.billingService.getAllInvoices().pipe(
+      invoices: this.billingService.getAllInvoices(0, 10000).pipe(
         catchError((err) => {
           console.error('[Billing] Error loading invoices:', err);
           return of([]);
@@ -120,12 +126,14 @@ export class BillingComponent implements OnInit {
       next: ({ invoices, payments, stats, policies, clients }) => {
         this.invoices = invoices;
         this.filteredInvoices = invoices;
+        this.totalElements = invoices.length;
+        this.totalPages = Math.ceil(invoices.length / this.pageSize);
         this.payments = payments;
         this.billingStats = stats;
         this.policies = policies;
         this.clients = clients;
         this.isLoading = false;
-        
+
         console.log('[Billing] Data loaded successfully:', {
           invoices: invoices.length,
           payments: payments.length,
@@ -363,6 +371,12 @@ export class BillingComponent implements OnInit {
     return client.id;
   }
 
+  get paginatedInvoices(): Invoice[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredInvoices.slice(start, end);
+  }
+
   calculateTotalAmount(): number {
     const amount = this.newInvoice.amount || 0;
     const taxAmount = this.newInvoice.taxAmount || 0;
@@ -405,6 +419,9 @@ export class BillingComponent implements OnInit {
     }
 
     this.filteredInvoices = filtered;
+    this.totalElements = filtered.length;
+    this.totalPages = Math.ceil(filtered.length / this.pageSize);
+    this.currentPage = 1;
     console.log('[Billing] Filters applied:', {
       total: this.invoices.length,
       filtered: filtered.length,
@@ -665,5 +682,17 @@ export class BillingComponent implements OnInit {
     this.showDeleteConfirmModal = false;
     this.showCancelConfirmModal = false;
     this.pendingActionInvoiceId = null;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
   }
 }

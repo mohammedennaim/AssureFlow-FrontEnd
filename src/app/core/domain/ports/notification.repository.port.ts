@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Notification, CreateNotificationRequest } from '../models/notification.models';
-import { Page } from '../models/workflow.models';
+import { Page } from '../models/page.model';
 
 export interface NotificationStatistics {
   totalNotifications: number;

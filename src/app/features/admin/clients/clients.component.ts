@@ -49,7 +49,7 @@ export class ClientsComponent implements OnInit {
 
   // Pagination
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 6;
 
   constructor() {
     this.initForm();
