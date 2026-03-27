@@ -505,13 +505,6 @@
       font-size: 0.625rem;
       font-weight: 700;
     }
-
-    &--theme {
-      &:hover {
-        background: var(--surface-alt);
-        color: var(--primary);
-      }
-    }
   }
 
   &__user-menu {
