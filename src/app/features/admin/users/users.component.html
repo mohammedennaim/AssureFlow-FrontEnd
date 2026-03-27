@@ -192,79 +192,76 @@
     <!-- Cards View -->
     <div class="cards-grid">
       @for (user of paginatedUsers; track trackByUserId($index, user)) {
-        <div class="user-card">
+        <div class="user-card" [ngClass]="['user-card--' + user.role.toLowerCase(), !user.active ? 'user-card--inactive' : '']">
           <div class="user-card__header">
-            <div class="user-card__avatar" [style.background]="getUserAvatarColor(user.username)">
-              {{ getUserInitial(user.username) }}
-            </div>
-            <div class="user-card__actions">
-              <button class="user-card__action-btn" (click)="openEditModal(user)" type="button" title="Edit">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <button class="user-card__action-btn" (click)="confirmDelete(user.id)" type="button" title="Delete">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="user-card__body">
-            <h3 class="user-card__name">{{ user.username }}</h3>
-            <p class="user-card__email">{{ user.email }}</p>
-            <div class="user-card__meta">
-              <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="user-card__type">
+              <div class="user-type-icon" [ngClass]="'user-type-icon--' + user.role.toLowerCase()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
                   @if (user.role === 'ADMIN') {
-                    <path d="M6 1L7.5 4.5L11 5L7.5 5.5L6 9L4.5 5.5L1 5L4.5 4.5L6 1Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 2l2 5h5l-4 3 1.5 5L10 12l-4.5 3L7 10 3 7h5z"/>
                   } @else if (user.role === 'AGENT') {
-                    <path d="M3 3H9V5H3V3ZM3 7H9V9H3V7Z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="10" cy="7" r="4"/>
+                    <path d="M17 11l2 2 4-4"/>
                   } @else if (user.role === 'FINANCE') {
-                    <circle cx="6" cy="6" r="3.5" stroke="currentColor" stroke-width="1"/>
-                    <path d="M6 4V8M4.5 5H7.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    <circle cx="10" cy="10" r="8"/>
+                    <path d="M10 6v8M7 9h6M7 12h6"/>
                   } @else {
-                    <circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1"/>
-                    <path d="M3 10C3 8.5 4.5 7 6 7C7.5 7 9 8.5 9 10" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    <path d="M16 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="10" cy="7" r="4"/>
                   }
                 </svg>
-                <span>{{ user.role }}</span>
-              </span>
-              <span class="status-badge" [class.status-badge--active]="user.active" [class.status-badge--inactive]="!user.active">
-                <span class="status-badge__dot"></span>
-                <span>{{ user.active ? 'Active' : 'Inactive' }}</span>
-              </span>
+              </div>
+              <div>
+                <h3 class="user-card__title">{{ user.username }}</h3>
+                <p class="user-card__number">{{ user.email }}</p>
+              </div>
             </div>
-            <div class="user-card__date">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1"/>
-                <path d="M4.5 5V3.5M9.5 5V3.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-                <path d="M3 7H11" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-              </svg>
-              <span>{{ user.createdAt | date:'MMM d, y' }}</span>
+            <span class="user-status" [class.user-status--active]="user.active" [class.user-status--inactive]="!user.active">
+              <span class="user-status__dot"></span>
+              {{ user.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+
+          <div class="user-card__body">
+            <div class="user-card__info" style="grid-template-columns: repeat(2, 1fr) !important;">
+              <div class="info-item">
+                <span class="info-item__label">Role</span>
+                <span class="info-item__value" style="text-transform: capitalize;">{{ user.role.toLowerCase() }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item__label">Email</span>
+                <span class="info-item__value" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user.email }}</span>
+              </div>
             </div>
           </div>
+
           <div class="user-card__footer">
-            <button class="user-card__btn" (click)="openRolesModal(user)" type="button" title="Manage Roles">
+            <button class="card-action-btn" (click)="openEditModal(user)" type="button" title="Edit">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="card-action-btn card-action-btn--primary" (click)="openRolesModal(user)" type="button" title="Manage Roles">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 9C8.10457 9 9 8.10457 9 7C9 5.89543 8.10457 5 7 5C5.89543 5 5 5.89543 5 7C5 8.10457 5.89543 9 7 9Z" stroke="currentColor" stroke-width="1.2"/>
                 <path d="M11 7C11 7.5 10.8 8 10.5 8.4L11.5 9.4C11.7 9.6 11.7 9.9 11.5 10.1L10.1 11.5C9.9 11.7 9.6 11.7 9.4 11.5L8.4 10.5C8 10.8 7.5 11 7 11V12.5C7 12.8 6.8 13 6.5 13H4.5C4.2 13 4 12.8 4 12.5V11C3.5 11 3 10.8 2.6 10.5L1.6 11.5C1.4 11.7 1.1 11.7 0.9 11.5L-0.5 10.1C-0.7 9.9 -0.7 9.6 -0.5 9.4L0.5 8.4C0.2 8 0 7.5 0 7C0 6.5 0.2 6 0.5 5.6L-0.5 4.6C-0.7 4.4 -0.7 4.1 -0.5 3.9L0.9 2.5C1.1 2.3 1.4 2.3 1.6 2.5L2.6 3.5C3 3.2 3.5 3 4 3V1.5C4 1.2 4.2 1 4.5 1H6.5C6.8 1 7 1.2 7 1.5V3C7.5 3 8 3.2 8.4 3.5L9.4 2.5C9.6 2.3 9.9 2.3 10.1 2.5L11.5 3.9C11.7 4.1 11.7 4.4 11.5 4.6L10.5 5.6C10.8 6 11 6.5 11 7Z" stroke="currentColor" stroke-width="1.2" transform="translate(1.5, 0.5)"/>
               </svg>
               Roles
             </button>
-            <button class="user-card__btn" (click)="openSessionsModal(user)" type="button" title="View Sessions">
+            <button class="card-action-btn card-action-btn--secondary" (click)="openSessionsModal(user)" type="button" title="View Sessions">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="1.5" y="2.5" width="11" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/>
                 <path d="M1.5 5.5h11M4.5 2.5v9" stroke="currentColor" stroke-width="1.2"/>
               </svg>
               Sessions
             </button>
-            <button class="user-card__btn" (click)="openAuditModal(user)" type="button" title="View Audit Logs">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2.5 1.5h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <button class="card-action-btn card-action-btn--danger" (click)="confirmDelete(user.id)" type="button" title="Delete">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Audit
+              Delete
             </button>
           </div>
         </div>

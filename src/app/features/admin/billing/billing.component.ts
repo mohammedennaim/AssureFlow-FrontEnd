@@ -26,6 +26,8 @@ export class BillingComponent implements OnInit {
   payments: Payment[] = [];
   policies: Policy[] = [];
   clients: Client[] = [];
+  clientNamesMap: Map<string, string> = new Map();
+  policyNumbersMap: Map<string, string> = new Map();
   isLoading = true;
   error: string | null = null;
   billingStats: BillingStats | null = null;
@@ -141,6 +143,43 @@ export class BillingComponent implements OnInit {
           clients: clients.length,
           stats
         });
+
+        // Initialize maps with loaded data
+        this.clients.forEach(c => this.clientNamesMap.set(c.id, `${c.firstName} ${c.lastName}`));
+        this.policies.forEach(p => this.policyNumbersMap.set(p.id, p.policyNumber));
+
+        // Dynamically fetch missing entities to prevent 'Unknown Policy' bugs
+        const uniqueClientIds = Array.from(new Set(invoices.map(i => i.clientId)));
+        const uniquePolicyIds = Array.from(new Set(invoices.map(i => i.policyId)));
+
+        const missingClientIds = uniqueClientIds.filter(id => !this.clientNamesMap.has(id));
+        const missingPolicyIds = uniquePolicyIds.filter(id => !this.policyNumbersMap.has(id));
+
+        if (missingClientIds.length > 0) {
+          const clientObs = missingClientIds.map(id => this.clientsService.getById(id).pipe(catchError(() => of(null))));
+          forkJoin(clientObs).subscribe(results => {
+            results.forEach((client, index) => {
+              if (client && client.firstName) {
+                this.clientNamesMap.set(missingClientIds[index], `${client.firstName} ${client.lastName}`);
+              } else {
+                this.clientNamesMap.set(missingClientIds[index], missingClientIds[index].substring(0, 8)); // Graceful ID fallback if completely deleted
+              }
+            });
+          });
+        }
+
+        if (missingPolicyIds.length > 0) {
+          const policyObs = missingPolicyIds.map(id => this.policiesService.getById(id).pipe(catchError(() => of(null))));
+          forkJoin(policyObs).subscribe(results => {
+            results.forEach((policy, index) => {
+              if (policy && policy.policyNumber) {
+                this.policyNumbersMap.set(missingPolicyIds[index], policy.policyNumber);
+              } else {
+                this.policyNumbersMap.set(missingPolicyIds[index], missingPolicyIds[index].substring(0, 8)); // Graceful ID fallback if completely deleted
+              }
+            });
+          });
+        }
 
         // Apply filters after loading
         this.applyFilters();
@@ -337,13 +376,13 @@ export class BillingComponent implements OnInit {
   }
 
   getClientName(clientId: string): string {
-    const client = this.clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : clientId.substring(0, 8);
+    if (!clientId) return 'Unknown Client';
+    return this.clientNamesMap.get(clientId) || 'Unknown Client';
   }
 
   getPolicyNumber(policyId: string): string {
-    const policy = this.policies.find(p => p.id === policyId);
-    return policy?.policyNumber || policyId.substring(0, 8);
+    if (!policyId) return 'Unknown Policy';
+    return this.policyNumbersMap.get(policyId) || 'Unknown Policy';
   }
 
   // Utility methods

@@ -209,6 +209,8 @@ export class HttpClientRepository implements IClientRepository {
       dateOfBirth: dto.dateOfBirth,
       cin: dto.cin,
       addresses: dto.addresses,
+      policiesCount: dto.policiesCount,
+      totalPremium: dto.totalPremium,
       status: dto.status,
       type: dto.type,
       userId: dto.userId,
@@ -238,6 +240,8 @@ interface ClientDto {
     country: string;
     isPrimary?: boolean;
   }>;
+  policiesCount?: number;
+  totalPremium?: number;
   status?: string;
   type?: string;
   userId?: string;

@@ -125,28 +125,25 @@
 
   <!-- Claims Cards View -->
   @if (!isLoading && !error) {
-    @if (claims.length === 0) {
-      <div class="empty-state">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M28 4H12a4 4 0 0 0-4 4v48a4 4 0 0 0 4 4h40a4 4 0 0 0 4-4V20z" stroke="currentColor" stroke-width="2"/>
-          <polyline points="28 4 28 20 44 20" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <h3>No claims found</h3>
-        <p>Claims submitted by clients will appear here</p>
-      </div>
-    } @else {
-      <div class="cards-grid">
-        @for (claim of paginatedClaims; track claim.id) {
-          <div class="claim-card">
+    <div class="cards-grid">
+      @for (claim of paginatedClaims; track claim.id) {
+        <div class="claim-card">
             <div class="claim-card__header">
-              <div class="claim-card__number">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/>
-                  <polyline points="12 2 12 7 17 7"/>
-                </svg>
-                <span>{{ claim.claimNumber || 'CLM-' + (claim.id | slice:0:8).toUpperCase() }}</span>
+              <div class="claim-card__type">
+                <div class="claim-type-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="claim-card__title">{{ claim.claimNumber || 'CLM-' + (claim.id | slice:0:8).toUpperCase() }}</h3>
+                  <p class="claim-card__number">{{ (claim.createdAt || claim.submittedAt) | date:'MMM d, y, HH:mm' }}</p>
+                </div>
               </div>
               <span class="status-badge" [ngClass]="getStatusClass(claim.status)">
+                <span class="status-badge__dot"></span>
                 {{ claim.status.replace('_', ' ') }}
               </span>
             </div>
@@ -166,17 +163,9 @@
                   <span class="info-item__value info-item__value--amount">{{ getAmount(claim) | currency:'EUR':'symbol':'1.0-0' }}</span>
                 </div>
               </div>
-
-              <div class="claim-card__description">
-                <p>{{ (claim.description | slice:0:80) || 'No description provided' }}{{ claim.description && claim.description.length > 80 ? '...' : '' }}</p>
-              </div>
-
-              <div class="claim-card__date">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1"/>
-                  <path d="M7 3.5v3.5l2 2" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-                </svg>
-                <span>{{ (claim.createdAt || claim.submittedAt) | date:'MMM d, y HH:mm' }}</span>
+              <div class="info-item">
+                <span class="info-item__label">Description</span>
+                <span class="info-item__value" style="font-weight: 500;">{{ (claim.description | slice:0:90) || 'No description provided' }}{{ claim.description && claim.description.length > 90 ? '...' : '' }}</span>
               </div>
             </div>
 
@@ -244,19 +233,29 @@
               </button>
             </div>
           </div>
+        } @empty {
+          <div class="empty-state-card">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="1.5" color="#cbd5e1"/>
+              <path d="M28 14H12a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4V20z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" color="#cbd5e1"/>
+              <polyline points="28 14 28 20 36 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" color="#cbd5e1"/>
+            </svg>
+            <p>No claims found</p>
+            <span class="empty-state-card__subtext">Claims submitted by clients will appear here</span>
+          </div>
         }
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination for Cards -->
       @if (totalPages > 1) {
-        <div class="pagination">
+        <div class="pagination pagination--cards">
           <button
             class="pagination__btn"
             [disabled]="currentPage === 1"
             (click)="previousPage()"
             type="button">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <span class="pagination__info">Page {{ currentPage }} of {{ totalPages }}</span>
@@ -266,13 +265,12 @@
             (click)="nextPage()"
             type="button">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 13L11 8L6 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
       }
     }
-  }
 
   <!-- View Claim Modal -->
   @if (showViewModal && selectedClaim) {

@@ -76,65 +76,59 @@
       <span class="filter-chip__dot filter-chip__dot--alert"></span>Alert
     </button>
   </div>
-
-  <!-- Notifications List -->
-  <div class="notifications-list" *ngIf="!isLoading">
-    <div class="notification-item"
-         *ngFor="let notification of paginatedNotifications; let first = first"
-         [class.notification-item--unread]="!notification.read"
-         [class.notification-item--first]="first">
-      <div class="notification-item__icon" [class]="'notification-item__icon--' + toLowerCase(getNotificationCategory(notification.type))">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'INFO'">
-          <circle cx="9" cy="9" r="6"/>
-          <path d="M9 9V6M9 12h.01"/>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'SUCCESS'">
-          <circle cx="9" cy="9" r="6"/>
-          <path d="M6.5 9L9 11.5L11.5 8.5"/>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'WARNING'">
-          <path d="M9 2L2 15h14L9 2z"/>
-          <path d="M9 8v4M9 15h.01"/>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'ALERT'">
-          <circle cx="9" cy="9" r="6"/>
-          <path d="M9 6v6M9 15h.01"/>
-        </svg>
+  <!-- Notifications Grid -->
+  <div class="cards-grid" *ngIf="!isLoading">
+    <div class="notification-card"
+         *ngFor="let notification of paginatedNotifications"
+         [class.notification-card--unread]="!notification.read">
+         
+      <div class="notification-card__header">
+        <div class="notification-card__type">
+          <div class="notification-card__icon" [class]="'notification-card__icon--' + toLowerCase(getNotificationCategory(notification.type))">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'INFO'">
+              <circle cx="9" cy="9" r="6"/>
+              <path d="M9 9V6M9 12h.01"/>
+            </svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'SUCCESS'">
+              <circle cx="9" cy="9" r="6"/>
+              <path d="M6.5 9L9 11.5L11.5 8.5"/>
+            </svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'WARNING'">
+              <path d="M9 2L2 15h14L9 2z"/>
+              <path d="M9 8v4M9 15h.01"/>
+            </svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" *ngIf="getNotificationCategory(notification.type) === 'ALERT'">
+              <circle cx="9" cy="9" r="6"/>
+              <path d="M9 6v6M9 15h.01"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="notification-card__title">{{ notification.title }}</h3>
+            <p class="notification-card__number">{{ timeAgo(notification.createdAt) }}</p>
+          </div>
+        </div>
+        <span *ngIf="!notification.read" class="status-badge status-badge--active">
+          <span class="status-badge__dot"></span>
+          New
+        </span>
       </div>
 
-      <div class="notification-item__content">
-        <div class="notification-item__header">
-          <h4 class="notification-item__title">{{ notification.title }}</h4>
-          <span class="notification-item__time">{{ timeAgo(notification.createdAt) }}</span>
-        </div>
-        <p class="notification-item__message">{{ notification.message }}</p>
-        <div class="notification-item__meta">
-          <span class="meta-item">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
-              <path d="M11.667 2.333H2.333C1.597 2.333 1 2.93 1 3.667v6.666c0 .737.597 1.334 1.333 1.334h9.334c.736 0 1.333-.597 1.333-1.334V3.667c0-.737-.597-1.334-1.333-1.334z"/>
-              <path d="M1 3.667l6 4.166 6-4.166"/>
-            </svg>
-            {{ notification.recipient }}
-          </span>
-          <span class="meta-item" *ngIf="notification.sent">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
-              <path d="M12.333 1.667L6.333 7.667"/>
-              <path d="M12.333 1.667l-4 11.666-2-5.333-5.333-2 11.333-4z"/>
-            </svg>
-            Sent
-          </span>
-          <span class="meta-item" *ngIf="!notification.sent">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
-              <circle cx="7" cy="7" r="6"/>
-              <path d="M7 3.667V7l2.333 1.167"/>
-            </svg>
-            Pending
-          </span>
+      <div class="notification-card__body">
+        <p class="notification-card__message">{{ notification.message }}</p>
+        <div class="notification-card__info">
+          <div class="info-item">
+            <span class="info-item__label">Recipient</span>
+            <span class="info-item__value">{{ notification.recipient }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-item__label">Status</span>
+            <span class="info-item__value" [class.text-success]="notification.sent">{{ notification.sent ? 'Sent' : 'Pending' }}</span>
+          </div>
         </div>
       </div>
 
-      <div class="notification-item__actions">
-        <button class="action-btn action-btn--send"
+      <div class="notification-card__footer">
+        <button class="card-action-btn"
                 *ngIf="!notification.sent"
                 (click)="sendNotification(notification.id)"
                 title="Send notification">
@@ -142,21 +136,24 @@
             <path d="M12.333 1.667L6.333 7.667"/>
             <path d="M12.333 1.667l-4 11.666-2-5.333-5.333-2 11.333-4z"/>
           </svg>
+          Send
         </button>
-        <button class="action-btn"
+        <button class="card-action-btn card-action-btn--success"
                 *ngIf="!notification.read"
                 (click)="markAsRead(notification.id)"
                 title="Mark as read">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
             <path d="M13.1667 4L6 11.1667L2.83337 8"/>
           </svg>
+          Mark Read
         </button>
-        <button class="action-btn action-btn--danger"
+        <button class="card-action-btn card-action-btn--danger"
                 (click)="deleteNotification(notification.id)"
                 title="Delete notification">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
-            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334z"/>
+            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334-1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334z"/>
           </svg>
+          Delete
         </button>
       </div>
     </div>

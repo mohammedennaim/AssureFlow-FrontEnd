@@ -5,7 +5,9 @@ import { NotificationService } from '../../../core/application/services/notifica
 import { NotificationCountService } from '../../../core/application/services/notification-count.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Notification, NotificationType, CreateNotificationRequest } from '../../../core/domain/models/notification.models';
-import { catchError, of } from 'rxjs';
+import { ClientsService } from '../../../core/application/services/admin-clients.service';
+import { UsersService } from '../../../core/application/services/admin-users.service';
+import { forkJoin, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
@@ -17,6 +19,8 @@ import { catchError, of } from 'rxjs';
 export class NotificationsComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private notificationCountService = inject(NotificationCountService);
+  private clientsService = inject(ClientsService);
+  private usersService = inject(UsersService);
   private authService = inject(AuthService);
 
   filter: 'ALL' | 'UNREAD' | 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT' = 'ALL';
@@ -52,20 +56,46 @@ export class NotificationsComponent implements OnInit {
 
   loadNotifications(): void {
     this.isLoading = true;
-    this.notificationService.getAllNotifications(0, 1000).pipe(
-      catchError(err => {
-        console.error('[Notifications] Error loading notifications:', err);
-        this.isLoading = false;
-        return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
-      })
-    ).subscribe({
-      next: (page) => {
-        this.notifications = page.content;
+    
+    forkJoin({
+      notificationsPage: this.notificationService.getAllNotifications(0, 1000).pipe(
+        catchError(err => {
+          console.error('[Notifications] Error loading notifications:', err);
+          return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
+        })
+      ),
+      clients: this.clientsService.getAll().pipe(catchError(() => of([]))),
+      users: this.usersService.getUsers().pipe(catchError(() => of([])))
+    }).subscribe({
+      next: ({ notificationsPage, clients, users }) => {
+        // Build an ID -> Email lookup map to resolve UUIDs
+        const recipientMap = new Map<string, string>();
+        clients.forEach(c => {
+          if (c.id) recipientMap.set(c.id, c.email);
+        });
+        users.forEach(u => {
+          if (u.id) recipientMap.set(u.id, u.email);
+        });
+
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+        this.notifications = notificationsPage.content.map(n => {
+           const mappedEmail = recipientMap.get(n.recipient);
+           const finalRecipient = mappedEmail 
+             ? mappedEmail 
+             : (uuidRegex.test(n.recipient) ? 'ID: ' + n.recipient.substring(0, 8).toUpperCase() : n.recipient);
+             
+           return {
+              ...n,
+              recipient: finalRecipient
+           };
+        });
+
         this.currentPage = 1;
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('[Notifications] Error:', err);
+        console.error('[Notifications] Error fetching grouped data:', err);
         this.isLoading = false;
       }
     });

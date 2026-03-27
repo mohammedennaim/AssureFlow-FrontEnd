@@ -4,11 +4,16 @@
 .billing-page { padding: 0; }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem !important;
+  gap: 1rem !important;
+  background: var(--surface) !important;
+  padding: 1.5rem 2rem !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--border-light) !important;
 
   &__start {
     display: flex;
@@ -77,11 +82,16 @@
 
 // Search and Filters Section
 .filters-section {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+  display: flex !important;
+  gap: 1rem !important;
+  margin-bottom: 1.5rem !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  background: var(--surface) !important;
+  padding: 1.25rem 1.5rem !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--border-light) !important;
 }
 
 .search-box {
@@ -1244,22 +1254,22 @@
 }
 
 .cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  gap: 1.5rem !important;
 }
 
 .invoice-card {
-  background: var(--surface);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: all var(--transition-base);
+  background: var(--surface) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border) !important;
+  overflow: hidden !important;
+  transition: all var(--transition-base) !important;
 
   &:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg) !important;
+    transform: translateY(-2px) !important;
   }
 
   &__header {

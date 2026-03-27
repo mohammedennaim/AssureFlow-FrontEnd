@@ -61,7 +61,7 @@ export class UsersComponent implements OnInit {
   notification: { message: string; type: 'success' | 'error' | 'warning' | 'info' } | null = null;
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 6;
 
   readonly roles = ['ADMIN', 'AGENT', 'CLIENT', 'FINANCE'];
 
@@ -333,17 +333,17 @@ export class UsersComponent implements OnInit {
     return username ? username.charAt(0).toUpperCase() : '?';
   }
 
-  getUserAvatarColor(username: string): string {
-    const colors = [
-      'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-      'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-      'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)',
-      'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
-      'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
-      'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)'
+  getUserAvatarStyle(username: string): { bg: string, color: string } {
+    const styles = [
+      { bg: 'rgba(99, 102, 241, 0.1)', color: '#4f46e5' },
+      { bg: 'rgba(16, 185, 129, 0.1)', color: '#059669' },
+      { bg: 'rgba(244, 63, 94, 0.1)', color: '#e11d48' },
+      { bg: 'rgba(6, 182, 212, 0.1)', color: '#0e7490' },
+      { bg: 'rgba(245, 158, 11, 0.1)', color: '#b45309' },
+      { bg: 'rgba(139, 92, 246, 0.1)', color: '#7c3aed' }
     ];
-    const index = username.charCodeAt(0) % colors.length;
-    return colors[index];
+    const index = username.charCodeAt(0) % styles.length;
+    return styles[index];
   }
 
   getSortIcon(column: string): string {

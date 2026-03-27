@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { ClientsService, Client } from '../../../core/application/services/admin-clients.service';
+import { PoliciesService } from '../../../core/application/services/admin-policies.service';
 import { AdminStatisticsService, ClientStats } from '../../../core/application/services/admin-statistics.service';
-import { catchError, of } from 'rxjs';
+import { forkJoin, catchError, of } from 'rxjs';
 
 interface ClientStatsLocal {
   total: number;
@@ -22,6 +23,7 @@ interface ClientStatsLocal {
 })
 export class ClientsComponent implements OnInit {
   private clientsService = inject(ClientsService);
+  private policiesService = inject(PoliciesService);
   private adminStatsService = inject(AdminStatisticsService);
   private fb = inject(FormBuilder);
 
@@ -77,18 +79,40 @@ export class ClientsComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    this.clientsService.getAll().pipe(
-      catchError((err) => {
-        this.error = 'Failed to load clients';
-        console.error('Error fetching clients:', err);
-        return of([]);
-      })
-    ).subscribe((data) => {
-      this.clients = data;
-      this.filteredClients = data;
+    forkJoin({
+      clients: this.clientsService.getAll().pipe(
+        catchError((err) => {
+          console.error('Error fetching clients:', err);
+          return of([]);
+        })
+      ),
+      policies: this.policiesService.getAll().pipe(
+        catchError((err) => {
+          console.error('Error fetching policies:', err);
+          return of([]);
+        })
+      )
+    }).subscribe(({ clients, policies }) => {
+      // Calculate policies and premium per client
+      const policiesCountByClient: Record<string, number> = {};
+      const premiumByClient: Record<string, number> = {};
 
-      // Calcule les statistiques réelles
-      this.adminStatsService.getClientStats(data).subscribe((stats) => {
+      policies.forEach((policy) => {
+        const cId = policy.clientId;
+        policiesCountByClient[cId] = (policiesCountByClient[cId] || 0) + 1;
+        premiumByClient[cId] = (premiumByClient[cId] || 0) + (policy.premium || 0);
+      });
+
+      this.clients = clients.map((client) => ({
+        ...client,
+        policiesCount: policiesCountByClient[client.id] || 0,
+        totalPremium: premiumByClient[client.id] || 0
+      }));
+
+      this.filteredClients = this.clients;
+
+      // Calculate global real statistics
+      this.adminStatsService.getClientStats(clients as Client[]).subscribe((stats: ClientStats) => {
         this.clientStats = stats;
       });
 

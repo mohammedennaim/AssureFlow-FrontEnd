@@ -148,65 +148,56 @@
   @if (!isLoading) {
     <div class="cards-grid">
       @for (client of paginatedClients; track trackByClientId($index, client)) {
-        <div class="client-card">
+        <div class="client-card" [ngClass]="['client-card--' + (client.status || 'ACTIVE').toLowerCase()]">
           <div class="client-card__header">
-            <div class="client-card__avatar" [style.background]="getAvatarColor(client.firstName)">
-              {{ getInitials(client.firstName, client.lastName) }}
+            <div class="client-card__type">
+              <div class="client-type-icon" [style.background]="getAvatarColor(client.firstName)">
+                {{ getInitials(client.firstName, client.lastName) }}
+              </div>
+              <div>
+                <h3 class="client-card__title">{{ client.firstName }} {{ client.lastName }}</h3>
+              </div>
             </div>
-            <span class="client-card__status" [ngClass]="getStatusClass(client.status || 'ACTIVE')">
+            <span class="client-status" [ngClass]="getStatusClass(client.status || 'ACTIVE')">
+              <span class="client-status__dot"></span>
               {{ client.status || 'ACTIVE' }}
             </span>
           </div>
           
           <div class="client-card__body">
-            <h3 class="client-card__name">{{ client.firstName }} {{ client.lastName }}</h3>
-            <p class="client-card__id">Client #{{ client.id.padStart(4, '0') }}</p>
-            
-            <div class="client-card__info">
-              <div class="client-card__info-item">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 4.5C2.5 3.67157 3.17157 3 4 3H12C12.8284 3 13.5 3.67157 13.5 4.5V11.5C13.5 12.3284 12.8284 13 12 13H4C3.17157 13 2.5 12.3284 2.5 11.5V4.5Z" stroke="currentColor" stroke-width="1"/>
-                  <path d="M2.5 5L7 8L11.5 5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>{{ client.email }}</span>
+            <div class="client-card__info" style="grid-template-columns: repeat(3, 1fr) !important;">
+              <div class="info-item" style="grid-column: span 2;">
+                <span class="info-item__label">Email</span>
+                <span class="info-item__value" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ client.email }}</span>
               </div>
-              <div class="client-card__info-item">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.5 2.5C10.5 2.5 11.5 3.5 11.5 5C11.5 6.5 10.5 7.5 10.5 7.5C10.5 7.5 9.5 8.5 9.5 10C9.5 11.5 10.5 12.5 10.5 12.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-                  <path d="M3.5 2.5C3.5 2.5 2.5 3.5 2.5 5C2.5 6.5 3.5 7.5 3.5 7.5C3.5 7.5 4.5 8.5 4.5 10C4.5 11.5 3.5 12.5 3.5 12.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-                </svg>
-                <span>{{ client.phone }}</span>
+              <div class="info-item">
+                <span class="info-item__label">Phone</span>
+                <span class="info-item__value">{{ client.phone }}</span>
               </div>
-              <div class="client-card__info-item">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.5 5.5L7 2L3.5 5.5C2.67157 6.32843 2.67157 7.67157 3.5 8.5L6.29289 11.2929C6.68342 11.6834 7.31658 11.6834 7.70711 11.2929L10.5 8.5C11.3284 7.67157 11.3284 6.32843 10.5 5.5Z" stroke="currentColor" stroke-width="1"/>
-                  <circle cx="7" cy="6.5" r="1.5" fill="currentColor"/>
-                </svg>
-                <span>{{ client.city }}</span>
+              <div class="info-item">
+                <span class="info-item__label">City</span>
+                <span class="info-item__value">{{ client.city || (client.addresses && client.addresses.length > 0 ? client.addresses[0].city : 'N/A') }}</span>
               </div>
-            </div>
-
-            <div class="client-card__stats">
-              <div class="client-card__stat">
-                <span class="client-card__stat-value">{{ client.policiesCount }}</span>
-                <span class="client-card__stat-label">Policies</span>
+              <div class="info-item">
+                <span class="info-item__label">Policies</span>
+                <span class="info-item__value">{{ client.policiesCount || 0 }}</span>
               </div>
-              <div class="client-card__stat">
-                <span class="client-card__stat-value">{{ client.totalPremium | currency:'EUR':'symbol':'1.0-0' }}</span>
-                <span class="client-card__stat-label">/mo</span>
+              <div class="info-item">
+                <span class="info-item__label">Premium /mo</span>
+                <span class="info-item__value">{{ (client.totalPremium || 0) | currency:'EUR':'symbol':'1.0-0' }}</span>
               </div>
             </div>
           </div>
 
           <div class="client-card__footer">
-            <button class="client-card__btn client-card__btn--primary" (click)="openEditModal(client)" type="button">
+            <button class="card-action-btn" (click)="openEditModal(client)" type="button">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11.625 2.75L13.25 4.375C13.6667 4.79167 13.6667 5.45833 13.25 5.875L6.5 12.625L4 13.25L4.625 10.75L11.375 4C11.5803 3.79467 11.8997 3.79467 12.105 4L13.25 5.145L11.625 2.75Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M3 13.25H5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
               </svg>
               Edit
             </button>
-            <button class="client-card__btn client-card__btn--danger" (click)="confirmDelete(client.id)" type="button">
+            <button class="card-action-btn card-action-btn--danger" (click)="confirmDelete(client.id)" type="button">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3.25 4H12.75M6.5 4V2.75C6.5 2.40482 6.77982 2.125 7.125 2.125H8.875C9.22018 2.125 9.5 2.40482 9.5 2.75V4M5.125 4H10.875L10.2031 13.0391C10.1776 13.3843 9.88936 13.6562 9.54308 13.6562H6.45692C6.11064 13.6562 5.82244 13.3843 5.79688 13.0391L5.125 4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
