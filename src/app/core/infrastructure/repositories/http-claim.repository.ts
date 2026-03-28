@@ -15,11 +15,8 @@ export class HttpClaimRepository implements IClaimRepository {
   getAll(): Observable<Claim[]> {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
-        console.log('[ClaimRepository] getAll raw response:', res);
-
         let data: ClaimDto[] = [];
 
-        // Handle BaseResponse wrapper
         if (res?.data && Array.isArray(res.data)) {
           data = res.data;
         } else if (Array.isArray(res)) {
@@ -32,21 +29,15 @@ export class HttpClaimRepository implements IClaimRepository {
           data = res.items;
         }
 
-        console.log('[ClaimRepository] extracted data:', data);
         return data.map(this.mapToClaim);
       }),
-      catchError((err) => {
-        console.error('[ClaimRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Claim> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map((res) => {
-        console.log('[ClaimRepository] getById raw response:', res);
-        
         let dto: ClaimDto | null = null;
         
         if (res?.data) {
@@ -66,8 +57,6 @@ export class HttpClaimRepository implements IClaimRepository {
   getByPolicyId(policyId: string): Observable<Claim[]> {
     return this.http.get<any>(`${this.apiUrl}/policy/${policyId}`).pipe(
       map((res) => {
-        console.log('[ClaimRepository] getByPolicyId raw response:', res);
-        
         let data: ClaimDto[] = [];
         
         if (Array.isArray(res)) {
@@ -89,11 +78,8 @@ export class HttpClaimRepository implements IClaimRepository {
   getByClientId(clientId: string): Observable<Claim[]> {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
-        console.log('[ClaimRepository] getByClientId raw response:', res);
-
         let data: ClaimDto[] = [];
 
-        // Handle BaseResponse wrapper
         if (res?.data && Array.isArray(res.data)) {
           data = res.data;
         } else if (Array.isArray(res)) {
@@ -104,13 +90,9 @@ export class HttpClaimRepository implements IClaimRepository {
           data = res.claims;
         }
 
-        console.log('[ClaimRepository] getByClientId extracted data:', data);
         return data.map(this.mapToClaim);
       }),
-      catchError((err) => {
-        console.error('[ClaimRepository] getByClientId error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 

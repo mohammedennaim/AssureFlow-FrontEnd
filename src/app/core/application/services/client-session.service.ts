@@ -14,22 +14,18 @@ export class ClientSessionService {
 
   getCurrentClientId(): Observable<string | null> {
     if (this.cachedClientId) {
-      console.log('[ClientSession] Using cached clientId:', this.cachedClientId);
       return of(this.cachedClientId);
     }
 
     const user = this.authService.getCurrentUser();
-    console.log('[ClientSession] Current user from JWT:', user);
 
     if (user?.clientId) {
-      console.log('[ClientSession] Found clientId in JWT:', user.clientId);
       this.cachedClientId = user.clientId;
       return of(this.cachedClientId);
     }
 
     const email = user?.id;
     if (!email) {
-      console.warn('[ClientSession] No email found for current user');
       return of(null);
     }
 
@@ -38,23 +34,15 @@ export class ClientSessionService {
       this.cachedClientId = null;
     }
 
-    console.log('[ClientSession] Fetching clientId via /me endpoint');
-
     return this.clientRepository.getMe().pipe(
       map((client) => {
-        console.log('[ClientSession] getMe response:', client);
         if (client && client.id) {
-          console.log('[ClientSession] Found clientId:', client.id);
           this.cachedClientId = client.id;
           return this.cachedClientId;
         }
-        console.warn('[ClientSession] Client not found via /me - response:', client);
         return null;
       }),
-      catchError((err) => {
-        console.error('[ClientSession] ERROR fetching client via /me:', err);
-        return of(null);
-      })
+      catchError(() => of(null))
     );
   }
 

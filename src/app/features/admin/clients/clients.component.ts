@@ -81,19 +81,12 @@ export class ClientsComponent implements OnInit {
 
     forkJoin({
       clients: this.clientsService.getAll().pipe(
-        catchError((err) => {
-          console.error('Error fetching clients:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       ),
       policies: this.policiesService.getAll().pipe(
-        catchError((err) => {
-          console.error('Error fetching policies:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       )
     }).subscribe(({ clients, policies }) => {
-      // Calculate policies and premium per client
       const policiesCountByClient: Record<string, number> = {};
       const premiumByClient: Record<string, number> = {};
 
@@ -111,7 +104,6 @@ export class ClientsComponent implements OnInit {
 
       this.filteredClients = this.clients;
 
-      // Calculate global real statistics
       this.adminStatsService.getClientStats(clients as Client[]).subscribe((stats: ClientStats) => {
         this.clientStats = stats;
       });
@@ -229,7 +221,9 @@ export class ClientsComponent implements OnInit {
           this.loadClients();
           this.closeDeleteConfirm();
         },
-        error: (err) => console.error('Error deleting client:', err)
+        error: () => {
+          this.error = 'Failed to delete client. Please try again.';
+        }
       });
     }
   }
@@ -250,13 +244,12 @@ export class ClientsComponent implements OnInit {
           this.closeModal();
           this.isSaving = false;
         },
-        error: (err) => {
-          console.error('Error updating client:', err);
+        error: () => {
+          this.error = 'Failed to update client. Please try again.';
           this.isSaving = false;
         }
       });
     } else {
-      // Préparer les données pour la création
       const clientData: any = {
         firstName: formValue.firstName,
         lastName: formValue.lastName,
@@ -267,7 +260,6 @@ export class ClientsComponent implements OnInit {
         type: 'INDIVIDUAL'
       };
       
-      // N'ajouter l'adresse que si tous les champs requis sont remplis
       if (formValue.address && formValue.city && formValue.zipCode) {
         clientData.addresses = [{
           street: formValue.address,
@@ -278,16 +270,14 @@ export class ClientsComponent implements OnInit {
         }];
       }
       
-      console.log('[ClientsComponent] Creating client with data:', clientData);
       this.clientsService.create(clientData).subscribe({
         next: () => {
           this.loadClients();
           this.closeModal();
           this.isSaving = false;
         },
-        error: (err) => {
-          console.error('Error creating client:', err);
-          console.error('Error details:', err.error);
+        error: () => {
+          this.error = 'Failed to create client. Please try again.';
           this.isSaving = false;
         }
       });

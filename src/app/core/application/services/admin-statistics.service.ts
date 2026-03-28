@@ -104,50 +104,24 @@ export class AdminStatisticsService {
    * Calcule toutes les statistiques KPI pour le dashboard
    */
   getDashboardKpiStats(): Observable<DashboardKpiStats> {
-    console.log('[AdminStatistics] Fetching dashboard stats...');
-    
     return forkJoin({
       policies: this.policiesService.getAll().pipe(
-        catchError((err) => {
-          console.error('[AdminStatistics] Error fetching policies:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       ),
       claims: this.claimsService.getAll().pipe(
-        catchError((err) => {
-          console.error('[AdminStatistics] Error fetching claims:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       ),
       clients: this.clientsService.getAll().pipe(
-        catchError((err) => {
-          console.error('[AdminStatistics] Error fetching clients:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       ),
       invoices: this.getAllInvoices().pipe(
-        catchError((err) => {
-          console.error('[AdminStatistics] Error fetching invoices:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       ),
       users: this.usersService.getUsers().pipe(
-        catchError((err) => {
-          console.error('[AdminStatistics] Error fetching users:', err);
-          return of([]);
-        })
+        catchError(() => of([]))
       )
     }).pipe(
-      map((data) => {
-        console.log('[AdminStatistics] All data fetched:', {
-          policies: data.policies.length,
-          claims: data.claims.length,
-          clients: data.clients.length,
-          invoices: data.invoices.length,
-          users: data.users.length
-        });
-        return this.calculateKpiStats(data);
-      })
+      map((data) => this.calculateKpiStats(data))
     );
   }
 
@@ -204,14 +178,6 @@ export class AdminStatisticsService {
     invoices: Invoice[];
     users: User[];
   }): DashboardKpiStats {
-    console.log('[AdminStatistics] Calculating KPI stats with data:', {
-      policies: data.policies.length,
-      claims: data.claims.length,
-      clients: data.clients.length,
-      invoices: data.invoices.length,
-      users: data.users.length
-    });
-
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();

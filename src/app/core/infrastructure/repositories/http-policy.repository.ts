@@ -15,11 +15,8 @@ export class HttpPolicyRepository implements IPolicyRepository {
   getAll(): Observable<Policy[]> {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
-        console.log('[PolicyRepository] getAll raw response:', res);
-
         let data: PolicyDto[] = [];
 
-        // Handle BaseResponse wrapper
         if (res?.data && Array.isArray(res.data)) {
           data = res.data;
         } else if (Array.isArray(res)) {
@@ -32,21 +29,15 @@ export class HttpPolicyRepository implements IPolicyRepository {
           data = res.items;
         }
 
-        console.log('[PolicyRepository] extracted data:', data);
         return data.map(this.mapToPolicy);
       }),
-      catchError((err) => {
-        console.error('[PolicyRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Policy> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map((res) => {
-        console.log('[PolicyRepository] getById raw response:', res);
-        
         let dto: PolicyDto | null = null;
         
         if (res?.data) {
@@ -66,11 +57,8 @@ export class HttpPolicyRepository implements IPolicyRepository {
   getByClientId(clientId: string): Observable<Policy[]> {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
-        console.log('[PolicyRepository] getByClientId raw response:', res);
-
         let data: PolicyDto[] = [];
 
-        // Handle BaseResponse wrapper
         if (res?.data && Array.isArray(res.data)) {
           data = res.data;
         } else if (Array.isArray(res)) {
@@ -81,21 +69,15 @@ export class HttpPolicyRepository implements IPolicyRepository {
           data = res.policies;
         }
 
-        console.log('[PolicyRepository] getByClientId extracted data:', data);
         return data.map(this.mapToPolicy);
       }),
-      catchError((err) => {
-        console.error('[PolicyRepository] getByClientId error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   create(data: CreatePolicyData): Observable<Policy> {
-    console.log('[PolicyRepository] Creating policy with data:', data);
     return this.http.post<any>(this.apiUrl, data).pipe(
       map((res) => {
-        console.log('[PolicyRepository] Create response:', res);
         let dto: PolicyDto | null = null;
         
         if (res?.data) {
@@ -109,8 +91,7 @@ export class HttpPolicyRepository implements IPolicyRepository {
         return this.mapToPolicy(dto as PolicyDto);
       }),
       catchError((err) => {
-        console.error('[PolicyRepository] Create error:', err);
-        throw err; // Re-throw to let component handle it
+        throw err;
       })
     );
   }
@@ -148,24 +129,20 @@ export class HttpPolicyRepository implements IPolicyRepository {
   }
 
   cancel(id: string, reason: string): Observable<void> {
-    console.log('[PolicyRepository] Cancelling policy:', id, 'with reason:', reason);
     return this.http.post<void>(`${this.apiUrl}/${id}/cancel`, null, {
       params: { reason }
     }).pipe(
       catchError((err) => {
-        console.error('[PolicyRepository] Cancel error:', err);
         throw err;
       })
     );
   }
 
   expire(id: string, reason: string): Observable<void> {
-    console.log('[PolicyRepository] Expiring policy:', id, 'with reason:', reason);
     return this.http.post<void>(`${this.apiUrl}/${id}/expire`, null, {
       params: { reason }
     }).pipe(
       catchError((err) => {
-        console.error('[PolicyRepository] Expire error:', err);
         throw err;
       })
     );

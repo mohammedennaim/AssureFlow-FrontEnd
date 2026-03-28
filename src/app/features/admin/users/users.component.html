@@ -282,7 +282,7 @@
             <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <span class="pagination__info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <span class="pagination__info">Page {{ currentPage }} of {{ totalPages }} ({{ filteredUsers.length }} users)</span>
         <button 
           class="pagination__btn" 
           (click)="currentPage = currentPage + 1" 

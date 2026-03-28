@@ -26,11 +26,8 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
       params: { page: page.toString(), size: size.toString() }
     }).pipe(
       map((res) => {
-        console.log('[InvoiceRepository] getAll raw response:', res);
-        
         let data: InvoiceDto[] = [];
         
-        // Handle paginated response with content
         if (res?.content && Array.isArray(res.content)) {
           data = res.content;
         } else if (res?.data?.content && Array.isArray(res.data.content)) {
@@ -41,20 +38,15 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
           data = res;
         }
         
-        console.log('[InvoiceRepository] extracted data:', data);
         return data.map(this.mapToInvoice);
       }),
-      catchError((err) => {
-        console.error('[InvoiceRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Invoice> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map((res) => {
-        console.log('[InvoiceRepository] getById raw response:', res);
         const dto = res?.data || res;
         return this.mapToInvoice(dto as InvoiceDto);
       }),
@@ -75,22 +67,16 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
   getByClientId(clientId: string): Observable<Invoice[]> {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
       map((res) => {
-        console.log('[InvoiceRepository] getByClientId raw response:', res);
         const data: InvoiceDto[] = res?.data || res || [];
-        console.log('[InvoiceRepository] getByClientId extracted data:', data);
         return data.map(this.mapToInvoice);
       }),
-      catchError((err) => {
-        console.error('[InvoiceRepository] getByClientId error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   getByPolicyId(policyId: string): Observable<Invoice[]> {
     return this.http.get<any>(`${this.apiUrl}/policy/${policyId}`).pipe(
       map((res) => {
-        console.log('[InvoiceRepository] getByPolicyId raw response:', res);
         const data: InvoiceDto[] = res?.data || res || [];
         return data.map(this.mapToInvoice);
       }),
@@ -148,14 +134,10 @@ export class HttpPaymentRepository implements IPaymentRepository {
   getAll(): Observable<Payment[]> {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
-        console.log('[PaymentRepository] getAll raw response:', res);
         const data: PaymentDto[] = res?.data || res || [];
         return data.map(this.mapToPayment);
       }),
-      catchError((err) => {
-        console.error('[PaymentRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 

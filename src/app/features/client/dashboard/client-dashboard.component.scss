@@ -135,6 +135,9 @@
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
 
   &:hover {
     transform: translateY(-2px);
@@ -150,7 +153,8 @@
   &__content {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: auto;
+    flex: 1;
   }
 
   &__icon {
@@ -172,8 +176,9 @@
   &__info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
     flex: 1;
+    justify-content: center;
   }
 
   &__label {

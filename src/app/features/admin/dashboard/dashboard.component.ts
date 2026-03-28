@@ -15,8 +15,6 @@ import { Client } from '../../../core/domain/models/client.model';
 interface KpiStat {
   label: string;
   value: number;
-  trend: number;
-  trendLabel: string;
   icon: string;
   color: string;
   gradient: string;
@@ -64,7 +62,6 @@ export class DashboardComponent implements OnInit {
   loading = true;
   error: string | null = null;
   today = new Date();
-  isRefreshing = false;
 
   kpiStats: KpiStat[] = [];
   recentActivities: Activity[] = [];
@@ -90,13 +87,10 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    console.log('[Dashboard] Loading dashboard data...');
-
     // Charger toutes les données en parallèle
     forkJoin({
       admin: this.adminStatsService.getDashboardKpiStats().pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading admin stats:', err);
+        catchError(() => {
           return of({
             totalUsers: 0,
             totalClients: 0,
@@ -117,8 +111,7 @@ export class DashboardComponent implements OnInit {
         })
       ),
       notifications: this.notificationService.getStatistics().pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading notification stats:', err);
+        catchError(() => {
           return of({
             totalNotifications: 0,
             deliveredCount: 0,
@@ -133,31 +126,26 @@ export class DashboardComponent implements OnInit {
         })
       ),
       claims: this.claimsService.getAll().pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading claims:', err);
+        catchError(() => {
           return of([]);
         })
       ),
       policies: this.policiesService.getAll().pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading policies:', err);
+        catchError(() => {
           return of([]);
         })
       ),
       clients: this.clientsService.getAll().pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading clients:', err);
+        catchError(() => {
           return of([]);
         })
       ),
       invoices: this.billingService.getAllInvoices(0, 1000).pipe(
-        catchError((err) => {
-          console.error('[Dashboard] Error loading invoices:', err);
+        catchError(() => {
           return of([]);
         })
       )
     }).subscribe((result) => {
-      console.log('[Dashboard] Received stats:', result);
       this.stats = result.admin;
       this.notificationStats = result.notifications;
       this.loadKpiStats(result.admin, result.notifications);
@@ -170,20 +158,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  refreshData(): void {
-    this.isRefreshing = true;
-    this.loadDashboard();
-    this.isRefreshing = false;
-  }
-
   private loadKpiStats(adminStats: DashboardKpiStats, notificationStats: NotificationStats): void {
-    // Calcul des tendances basé sur les données réelles (simulé pour l'instant)
     this.kpiStats = [
       {
         label: 'Total Clients',
         value: adminStats.totalClients,
-        trend: this.calculateTrend(adminStats.totalClients),
-        trendLabel: 'vs last month',
         icon: 'users',
         color: '#10b981',
         gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
@@ -192,8 +171,6 @@ export class DashboardComponent implements OnInit {
       {
         label: 'Active Policies',
         value: adminStats.activePolicies,
-        trend: this.calculateTrend(adminStats.activePolicies),
-        trendLabel: 'vs last month',
         icon: 'shield',
         color: '#06b6d4',
         gradient: 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)',
@@ -202,8 +179,6 @@ export class DashboardComponent implements OnInit {
       {
         label: 'Pending Claims',
         value: adminStats.pendingClaims,
-        trend: this.calculateTrend(adminStats.pendingClaims, true),
-        trendLabel: 'vs last month',
         icon: 'clipboard',
         color: '#f59e0b',
         gradient: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
@@ -212,21 +187,12 @@ export class DashboardComponent implements OnInit {
       {
         label: 'Notifications',
         value: notificationStats.totalNotifications,
-        trend: this.calculateTrend(notificationStats.totalNotifications),
-        trendLabel: 'vs last month',
         icon: 'bell',
         color: '#8b5cf6',
         gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
         shadow: '0 4px 14px rgba(139, 92, 246, 0.4)'
       }
     ];
-  }
-
-  private calculateTrend(value: number, inverse: boolean = false): number {
-    // Génére une tendance réaliste basée sur la valeur
-    if (value === 0) return 0;
-    const base = Math.random() * 20 - 5; // Entre -5 et 15
-    return Math.round(base * 10) / 10;
   }
 
   private loadPolicyDistribution(policies: Policy[]): void {
@@ -423,8 +389,6 @@ export class DashboardComponent implements OnInit {
         strokeDashoffset
       };
     });
-
-    console.log('[Dashboard] Invoices by status:', this.invoicesByStatus);
   }
 
   getTotalInvoices(): number {

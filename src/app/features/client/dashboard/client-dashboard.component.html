@@ -87,19 +87,6 @@
                 <span class="stat-card__value">{{ stat.value }}</span>
               }
             </div>
-            <div class="stat-card__trend" [class.trend--positive]="stat.trend > 0" [class.trend--negative]="stat.trend < 0">
-              @if (stat.trend > 0) {
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 10.5V3.5M7 3.5L4 6.5M7 3.5L10 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              } @else {
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 3.5V10.5M7 10.5L4 7.5M7 10.5L10 7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              }
-              <span>{{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}%</span>
-              <span class="stat-card__trend-label">{{ stat.trendLabel }}</span>
-            </div>
           </div>
         </div>
 

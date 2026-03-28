@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { POLICY_REPOSITORY, IPolicyRepository, CreatePolicyData } from '../../domain/ports/policy.repository.port';
+import { POLICY_REPOSITORY, CreatePolicyData } from '../../domain/ports/policy.repository.port';
 import { Policy } from '../../domain/models/policy.model';
 
 export type { Policy };

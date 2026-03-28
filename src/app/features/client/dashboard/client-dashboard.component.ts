@@ -12,8 +12,6 @@ import { Invoice } from '../../../core/application/services/admin-billing.servic
 interface KpiStat {
   label: string;
   value: number | string;
-  trend: number;
-  trendLabel: string;
   icon: string;
   color: string;
   gradient: string;
@@ -200,8 +198,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       {
         label: 'Total Policies',
         value: stats.totalPolicies,
-        trend: this.calculateTrend(stats.totalPolicies),
-        trendLabel: 'vs last month',
         icon: 'shield',
         color: '#06b6d4',
         gradient: 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)',
@@ -210,8 +206,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       {
         label: 'Active Policies',
         value: stats.activePolicies,
-        trend: this.calculateTrend(stats.activePolicies),
-        trendLabel: 'vs last month',
         icon: 'check-circle',
         color: '#10b981',
         gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
@@ -220,8 +214,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       {
         label: 'Pending Claims',
         value: stats.pendingClaims,
-        trend: this.calculateTrend(stats.pendingClaims, true),
-        trendLabel: 'vs last month',
         icon: 'clipboard',
         color: '#f59e0b',
         gradient: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
@@ -230,8 +222,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       {
         label: 'Total Premium',
         value: '$' + Math.round(stats.totalPremium).toLocaleString(),
-        trend: this.calculateTrend(stats.totalPremium),
-        trendLabel: 'vs last month',
         icon: 'dollar',
         color: '#6366f1',
         gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -294,12 +284,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
     
     return payments;
-  }
-
-  private calculateTrend(value: number, inverse: boolean = false): number {
-    if (value === 0) return 0;
-    const base = Math.random() * 20 - 5;
-    return Math.round(base * 10) / 10;
   }
 
   getGreeting(): string {

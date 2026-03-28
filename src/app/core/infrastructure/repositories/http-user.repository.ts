@@ -15,8 +15,6 @@ export class HttpUserRepository implements IUserRepository {
   getAll(): Observable<User[]> {
     return this.http.get<any>(this.apiUrl).pipe(
       map((res) => {
-        console.log('[UserRepository] getAll raw response:', res);
-        
         let data: UserDto[] = [];
         
         if (Array.isArray(res)) {
@@ -31,13 +29,9 @@ export class HttpUserRepository implements IUserRepository {
           data = res.items;
         }
         
-        console.log('[UserRepository] extracted data:', data);
         return data.map(this.mapToUser);
       }),
-      catchError((err) => {
-        console.error('[UserRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
@@ -115,7 +109,6 @@ export class HttpUserRepository implements IUserRepository {
         return this.mapToUser(dto as UserDto);
       }),
       catchError((err) => {
-        console.error('[UserRepository] assignRole error:', err);
         throw err;
       })
     );
@@ -149,10 +142,7 @@ export class HttpUserRepository implements IUserRepository {
         }
         return [];
       }),
-      catchError((err) => {
-        console.error('[UserRepository] getUserSessions error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
@@ -170,10 +160,7 @@ export class HttpUserRepository implements IUserRepository {
         }
         return [];
       }),
-      catchError((err) => {
-        console.error('[UserRepository] getUserAuditLogs error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 

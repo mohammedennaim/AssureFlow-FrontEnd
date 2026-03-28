@@ -95,7 +95,6 @@ export class UsersComponent implements OnInit {
       },
       error: (err) => {
         this.error = 'Failed to load users. Please try again later.';
-        console.error('Error fetching users:', err);
         this.isLoading = false;
       }
     });
@@ -195,7 +194,6 @@ export class UsersComponent implements OnInit {
   }
 
   openCreateModal(): void {
-    console.log('[UsersComponent] Opening create modal');
     this.isEditMode = false;
     this.modalTitle = 'Add New User';
     this.selectedUserId = null;
@@ -204,15 +202,12 @@ export class UsersComponent implements OnInit {
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.userForm.get('password')?.updateValueAndValidity();
     this.showBackdrop = true;
-    console.log('[UsersComponent] showBackdrop set to true');
     setTimeout(() => {
       this.showModal = true;
-      console.log('[UsersComponent] showModal set to true');
     }, 10);
   }
 
   openEditModal(user: User): void {
-    console.log('[UsersComponent] Opening edit modal for user:', user);
     this.isEditMode = true;
     this.modalTitle = 'Edit User';
     this.selectedUserId = user.id;
@@ -226,10 +221,8 @@ export class UsersComponent implements OnInit {
     this.userForm.get('password')?.clearValidators();
     this.userForm.get('password')?.updateValueAndValidity();
     this.showBackdrop = true;
-    console.log('[UsersComponent] showBackdrop set to true');
     setTimeout(() => {
       this.showModal = true;
-      console.log('[UsersComponent] showModal set to true');
     }, 10);
   }
 
@@ -304,7 +297,9 @@ export class UsersComponent implements OnInit {
           this.fetchUsers();
           this.closeDeleteConfirm();
         },
-        error: (err) => console.error('Error deleting user:', err)
+        error: () => {
+          this.showNotification('Failed to delete user', 'error');
+        }
       });
     }
   }
@@ -377,14 +372,11 @@ export class UsersComponent implements OnInit {
 
   // New methods for advanced features
   openRolesModal(user: User): void {
-    console.log('[UsersComponent] Opening roles modal for user:', user);
     this.selectedUser = user;
     this.showRolesModal = true;
-    console.log('[UsersComponent] showRolesModal:', this.showRolesModal);
   }
 
   closeRolesModal(): void {
-    console.log('[UsersComponent] Closing roles modal');
     this.showRolesModal = false;
     this.selectedUser = null;
   }
@@ -398,8 +390,7 @@ export class UsersComponent implements OnInit {
         this.fetchUsers();
         this.closeRolesModal();
       },
-      error: (err) => {
-        console.error('Error assigning role:', err);
+      error: () => {
         this.showNotification('Failed to assign role', 'error');
       }
     });
@@ -414,8 +405,7 @@ export class UsersComponent implements OnInit {
         this.fetchUsers();
         this.closeRolesModal();
       },
-      error: (err) => {
-        console.error('Error removing role:', err);
+      error: () => {
         this.showNotification('Failed to remove role', 'error');
       }
     });
@@ -436,8 +426,7 @@ export class UsersComponent implements OnInit {
         }
         this.showSessionsModal = true;
       },
-      error: (err) => {
-        console.error('Error loading sessions:', err);
+      error: () => {
         this.showNotification('Failed to load sessions', 'error');
       }
     });
@@ -457,8 +446,7 @@ export class UsersComponent implements OnInit {
         this.showNotification('All sessions invalidated successfully', 'success');
         this.closeSessionsModal();
       },
-      error: (err) => {
-        console.error('Error invalidating sessions:', err);
+      error: () => {
         this.showNotification('Failed to invalidate sessions', 'error');
       }
     });
@@ -474,8 +462,7 @@ export class UsersComponent implements OnInit {
         }
         this.showAuditModal = true;
       },
-      error: (err) => {
-        console.error('Error loading audit logs:', err);
+      error: () => {
         this.showNotification('Failed to load audit logs', 'error');
       }
     });

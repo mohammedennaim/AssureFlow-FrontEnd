@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CLAIM_REPOSITORY, IClaimRepository, CreateClaimData } from '../../domain/ports/claim.repository.port';
+import { CLAIM_REPOSITORY, CreateClaimData } from '../../domain/ports/claim.repository.port';
 import { Claim } from '../../domain/models/claim.model';
 
 export type { Claim };

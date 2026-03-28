@@ -3,8 +3,6 @@ import { Observable } from 'rxjs';
 import { 
   INVOICE_REPOSITORY, 
   PAYMENT_REPOSITORY,
-  IInvoiceRepository,
-  IPaymentRepository,
   CreateInvoiceData,
   CreatePaymentData,
   Invoice,

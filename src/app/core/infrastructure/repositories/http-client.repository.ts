@@ -17,8 +17,6 @@ export class HttpClientRepository implements IClientRepository {
       params: { page: page.toString(), size: size.toString() }
     }).pipe(
       map((res) => {
-        console.log('[ClientRepository] getAll raw response:', res);
-        
         let data: ClientDto[] = [];
         
         if (Array.isArray(res)) {
@@ -33,21 +31,15 @@ export class HttpClientRepository implements IClientRepository {
           data = res.items;
         }
         
-        console.log('[ClientRepository] extracted data:', data);
         return data.map(this.mapToClient);
       }),
-      catchError((err) => {
-        console.error('[ClientRepository] getAll error:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 
   getById(id: string): Observable<Client> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map((res) => {
-        console.log('[ClientRepository] getById raw response:', res);
-        
         let dto: ClientDto | null = null;
         
         if (res?.data) {
@@ -60,7 +52,6 @@ export class HttpClientRepository implements IClientRepository {
           dto = res;
         }
         
-        console.log('[ClientRepository] extracted dto:', dto);
         return this.mapToClient(dto as ClientDto);
       }),
       catchError(() => of({} as Client))
@@ -70,8 +61,6 @@ export class HttpClientRepository implements IClientRepository {
   getByEmail(email: string): Observable<Client> {
     return this.http.get<any>(`${this.apiUrl}/email/${email}`).pipe(
       map((res) => {
-        console.log('[ClientRepository] getByEmail raw response:', res);
-        
         let dto: ClientDto | null = null;
         
         if (res?.data) {
@@ -125,8 +114,6 @@ export class HttpClientRepository implements IClientRepository {
   getByCin(cin: string): Observable<Client> {
     return this.http.get<any>(`${this.apiUrl}/cin/${cin}`).pipe(
       map((res) => {
-        console.log('[ClientRepository] getByCin raw response:', res);
-        
         let dto: ClientDto | null = null;
         
         if (res?.data) {
@@ -146,8 +133,6 @@ export class HttpClientRepository implements IClientRepository {
   create(data: CreateClientData): Observable<Client> {
     return this.http.post<any>(this.apiUrl, data).pipe(
       map((res) => {
-        console.log('[ClientRepository] create raw response:', res);
-        
         let dto: ClientDto | null = null;
         
         if (res?.data) {
@@ -166,8 +151,6 @@ export class HttpClientRepository implements IClientRepository {
   update(id: string, data: Partial<Client>): Observable<Client> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, data).pipe(
       map((res) => {
-        console.log('[ClientRepository] update raw response:', res);
-        
         let dto: ClientDto | null = null;
         
         if (res?.data) {

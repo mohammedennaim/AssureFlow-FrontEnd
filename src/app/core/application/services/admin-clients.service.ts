@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CLIENT_REPOSITORY, IClientRepository, CreateClientData } from '../../domain/ports/client.repository.port';
+import { CLIENT_REPOSITORY, CreateClientData } from '../../domain/ports/client.repository.port';
 import { Client } from '../../domain/models/client.model';
 
 export type { Client };

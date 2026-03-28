@@ -1,15 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, map, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { PoliciesService } from './admin-policies.service';
-import { ClaimsService } from './admin-claims.service';
-import { BillingService, Invoice } from './admin-billing.service';
-import { AuthService } from '../../../core/auth/auth.service';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Claim } from '../../../core/domain/models/claim.model';
 import { POLICY_REPOSITORY } from '../../../core/domain/ports/policy.repository.port';
 import { CLAIM_REPOSITORY } from '../../../core/domain/ports/claim.repository.port';
-import { INVOICE_REPOSITORY } from '../../../core/domain/ports/invoice.repository.port';
+import { INVOICE_REPOSITORY, Invoice } from '../../../core/domain/ports/invoice.repository.port';
 import { ClientSessionService } from './client-session.service';
 
 export interface ClientDashboardStats {

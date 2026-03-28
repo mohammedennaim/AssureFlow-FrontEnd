@@ -394,19 +394,19 @@ export class BillingComponent implements OnInit {
     return value.toLowerCase();
   }
 
-  trackByInvoiceId(index: number, invoice: Invoice): string {
+  trackByInvoiceId(_: number, invoice: Invoice): string {
     return invoice.id;
   }
 
-  trackByPaymentId(index: number, payment: Payment): string {
+  trackByPaymentId(_: number, payment: Payment): string {
     return payment.id;
   }
 
-  trackByPolicyId(index: number, policy: Policy): string {
+  trackByPolicyId(_: number, policy: Policy): string {
     return policy.id;
   }
 
-  trackByClientId(index: number, client: Client): string {
+  trackByClientId(_: number, client: Client): string {
     return client.id;
   }
 
