@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminStatisticsService, DashboardKpiStats } from '../../../core/application/services/admin-statistics.service';
@@ -7,10 +7,13 @@ import { ClaimsService } from '../../../core/application/services/admin-claims.s
 import { PoliciesService } from '../../../core/application/services/admin-policies.service';
 import { ClientsService } from '../../../core/application/services/admin-clients.service';
 import { BillingService } from '../../../core/application/services/admin-billing.service';
-import { catchError, of, forkJoin } from 'rxjs';
+import { catchError, of, forkJoin, Subscription } from 'rxjs';
 import { Claim } from '../../../core/domain/models/claim.model';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Client } from '../../../core/domain/models/client.model';
+
+const DONUT_CHART_RADIUS = 40;
+const DONUT_CHART_CIRCUMFERENCE = 2 * Math.PI * DONUT_CHART_RADIUS;
 
 interface KpiStat {
   label: string;
@@ -27,6 +30,14 @@ interface ChartData {
   color?: string;
   strokeDasharray?: string;
   strokeDashoffset?: number;
+}
+
+interface DonutChartData {
+  label: string;
+  value: number;
+  color: string;
+  strokeDasharray: string;
+  strokeDashoffset: number;
 }
 
 interface Activity {
@@ -58,10 +69,11 @@ interface NotificationStats {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   today = new Date();
+  private dashboardSubscription?: Subscription;
 
   kpiStats: KpiStat[] = [];
   recentActivities: Activity[] = [];
@@ -71,6 +83,7 @@ export class DashboardComponent implements OnInit {
   claimsByStatus: ChartData[] = [];
   clientByStatus: ChartData[] = [];
   invoicesByStatus: ChartData[] = [];
+  totalInvoicesCount = 0;
 
   private adminStatsService = inject(AdminStatisticsService);
   private notificationService = inject(NotificationService);
@@ -83,12 +96,18 @@ export class DashboardComponent implements OnInit {
     this.loadDashboard();
   }
 
+  ngOnDestroy(): void {
+    if (this.dashboardSubscription) {
+      this.dashboardSubscription.unsubscribe();
+    }
+  }
+
   loadDashboard(): void {
     this.loading = true;
     this.error = null;
 
     // Charger toutes les données en parallèle
-    forkJoin({
+    this.dashboardSubscription = forkJoin({
       admin: this.adminStatsService.getDashboardKpiStats().pipe(
         catchError(() => {
           return of({
@@ -196,42 +215,21 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadPolicyDistribution(policies: Policy[]): void {
-    // Grouper par type de police
     const byType: Record<string, number> = {};
     policies.forEach(policy => {
       byType[policy.type] = (byType[policy.type] || 0) + 1;
     });
 
-    const total = policies.length;
     const colors = ['#6366f1', '#10b981', '#06b6d4', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899'];
-
-    // Calculer les pourcentages et les propriétés SVG pour le donut chart
-    let cumulativePercent = 0;
-    this.policyByType = Object.entries(byType).map(([type, count], index) => {
-      const percentage = total > 0 ? (count / total) * 100 : 0;
-      const circumference = 2 * Math.PI * 40; // r=40
-      const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-      const strokeDashoffset = -cumulativePercent * circumference / 100;
-      cumulativePercent += percentage;
-
-      return {
-        label: type,
-        value: Math.round(percentage),
-        color: colors[index % colors.length],
-        strokeDasharray,
-        strokeDashoffset
-      };
-    });
+    this.policyByType = this.createDonutChartData(byType, colors);
   }
 
   private loadClaimsByStatus(claims: Claim[]): void {
-    // Grouper par statut
     const byStatus: Record<string, number> = {};
     claims.forEach(claim => {
       byStatus[claim.status] = (byStatus[claim.status] || 0) + 1;
     });
 
-    const total = claims.length;
     const statusColors: Record<string, string> = {
       'PENDING': '#f59e0b',
       'SUBMITTED': '#fbbf24',
@@ -242,59 +240,23 @@ export class DashboardComponent implements OnInit {
       'REJECTED': '#f43f5e',
       'CLOSED': '#6b7280'
     };
-
-    // Calculer les pourcentages et les propriétés SVG pour le donut chart
-    let cumulativePercent = 0;
-    this.claimsByStatus = Object.entries(byStatus).map(([status, count], index) => {
-      const percentage = total > 0 ? (count / total) * 100 : 0;
-      const circumference = 2 * Math.PI * 40; // r=40
-      const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-      const strokeDashoffset = -cumulativePercent * circumference / 100;
-      cumulativePercent += percentage;
-
-      return {
-        label: status.replace('_', ' '),
-        value: Math.round(percentage),
-        color: statusColors[status] || '#6366f1',
-        strokeDasharray,
-        strokeDashoffset
-      };
-    });
+    this.claimsByStatus = this.createDonutChartData(byStatus, statusColors, (status) => status.replace('_', ' '));
   }
 
   private loadClientByStatus(clients: Client[]): void {
-    // Grouper par statut
     const byStatus: Record<string, number> = {};
     clients.forEach(client => {
       const status = client.status || 'ACTIVE';
       byStatus[status] = (byStatus[status] || 0) + 1;
     });
 
-    const total = clients.length;
     const statusColors: Record<string, string> = {
       'ACTIVE': '#10b981',
       'INACTIVE': '#6b7280',
       'PROSPECT': '#6366f1',
       'LEAD': '#06b6d4'
     };
-
-    // Calculer les pourcentages et les propriétés SVG pour le donut chart
-    let cumulativePercent = 0;
-    this.clientByStatus = Object.entries(byStatus).map(([status, count], index) => {
-      const percentage = total > 0 ? (count / total) * 100 : 0;
-      const circumference = 2 * Math.PI * 40; // r=40
-      const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-      const strokeDashoffset = -cumulativePercent * circumference / 100;
-      cumulativePercent += percentage;
-
-      return {
-        label: status,
-        value: Math.round(percentage),
-        color: statusColors[status] || '#6366f1',
-        strokeDasharray,
-        strokeDashoffset
-      };
-    });
+    this.clientByStatus = this.createDonutChartData(byStatus, statusColors);
   }
 
   private loadRecentActivities(claims: Claim[], policies: Policy[], clients: Client[]): void {
@@ -359,40 +321,63 @@ export class DashboardComponent implements OnInit {
 
   private loadInvoicesByStatus(invoices: any[]): void {
     const byStatus: Record<string, number> = {};
-    
+
     invoices.forEach(invoice => {
       byStatus[invoice.status] = (byStatus[invoice.status] || 0) + 1;
     });
 
-    const total = invoices.length;
+    this.totalInvoicesCount = invoices.length;
+
     const statusColors: Record<string, string> = {
       'PAID': '#10b981',
       'PENDING': '#f59e0b',
       'OVERDUE': '#f43f5e',
-      'CANCELLED': '#6b7280'
+      'CANCELLED': '#6b7280',
+      'DRAFT': '#6366f1',
+      'PARTIALLY_PAID': '#06b6d4'
     };
+    this.invoicesByStatus = this.createDonutChartData(byStatus, statusColors);
+  }
 
-    // Calculer les pourcentages et les propriétés SVG pour le donut chart
+  /**
+   * Create donut chart data from a record of values
+   */
+  private createDonutChartData(
+    data: Record<string, number>,
+    colors: string[] | Record<string, string>,
+    labelTransform?: (label: string) => string
+  ): DonutChartData[] {
+    const total = Object.values(data).reduce((sum, value) => sum + value, 0);
+    const result: DonutChartData[] = [];
     let cumulativePercent = 0;
-    this.invoicesByStatus = Object.entries(byStatus).map(([status, count], index) => {
+    let index = 0;
+
+    for (const [label, count] of Object.entries(data)) {
       const percentage = total > 0 ? (count / total) * 100 : 0;
-      const circumference = 2 * Math.PI * 40; // r=40
+      const circumference = DONUT_CHART_CIRCUMFERENCE;
       const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
       const strokeDashoffset = -cumulativePercent * circumference / 100;
       cumulativePercent += percentage;
 
-      return {
-        label: status,
+      const color = Array.isArray(colors)
+        ? colors[index % colors.length]
+        : colors[label] || '#6366f1';
+
+      result.push({
+        label: labelTransform ? labelTransform(label) : label,
         value: Math.round(percentage),
-        color: statusColors[status] || '#6366f1',
+        color,
         strokeDasharray,
         strokeDashoffset
-      };
-    });
+      });
+      index++;
+    }
+
+    return result;
   }
 
   getTotalInvoices(): number {
-    return this.invoicesByStatus.reduce((sum, item) => sum + item.value, 0) || 0;
+    return this.totalInvoicesCount;
   }
 
   getGreeting(): string {

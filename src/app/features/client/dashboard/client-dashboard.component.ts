@@ -7,7 +7,9 @@ import { NotificationCenterComponent } from '../../../shared/components/notifica
 import { ClientDashboardService, ClientDashboardStats, ClientPolicyStats, ClientClaimStats, ClientPaymentStats } from '../../../core/application/services/client-dashboard.service';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Claim } from '../../../core/domain/models/claim.model';
-import { Invoice } from '../../../core/application/services/admin-billing.service';
+import { Invoice } from '../../../core/domain/ports/invoice.repository.port';
+
+const POLLING_INTERVAL_MS = 30000; // 30 seconds
 
 interface KpiStat {
   label: string;
@@ -84,10 +86,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     group: 'Ordinal',
     domain: ['#06b6d4', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6']
   };
-  
+
   // Real-time polling
   private pollingSubscription?: Subscription;
-  private readonly POLLING_INTERVAL = 30000; // 30 seconds
+  private readonly POLLING_INTERVAL = POLLING_INTERVAL_MS;
 
   private clientDashboardService = inject(ClientDashboardService);
 
@@ -235,7 +237,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       id: p.id,
       name: p.policyNumber || `${p.type} Policy`,
       type: p.type,
-      status: (p.status.toLowerCase() as any) || 'pending',
+      status: this.normalizePolicyStatus(p.status),
       premium: p.premium || 0,
       renewalDate: p.endDate,
       coverage: p.coverageAmount || 0
@@ -247,7 +249,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       id: c.id,
       policyName: c.policyId || 'Unknown Policy',
       date: c.submittedAt || c.createdAt || new Date().toISOString(),
-      status: (c.status.toLowerCase() as any) || 'pending',
+      status: this.normalizeClaimStatus(c.status),
       amount: c.amount || 0,
       description: c.description || 'No description'
     }));
@@ -311,17 +313,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       rejected: 'status--rejected',
       processing: 'status--processing',
       paid: 'status--paid',
-      overdue: 'status--overdue',
-      ACTIVE: 'status--active',
-      PENDING: 'status--pending',
-      EXPIRED: 'status--expired',
-      APPROVED: 'status--approved',
-      REJECTED: 'status--rejected',
-      UNDER_REVIEW: 'status--processing',
-      PAID: 'status--paid',
-      OVERDUE: 'status--overdue'
+      overdue: 'status--overdue'
     };
-    return statusMap[status] || '';
+    return statusMap[status.toLowerCase()] || '';
   }
 
   formatDate(dateString: string): string {
@@ -335,6 +329,29 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   trackById(index: number, item: any): string {
     return item.id;
+  }
+
+  /**
+   * Normalize policy status to lowercase UI-friendly format
+   */
+  private normalizePolicyStatus(status: string): PolicyItem['status'] {
+    const normalizedStatus = status.toUpperCase();
+    if (normalizedStatus === 'ACTIVE') return 'active';
+    if (normalizedStatus === 'PENDING' || normalizedStatus === 'DRAFT' || normalizedStatus === 'SUBMITTED') return 'pending';
+    if (normalizedStatus === 'EXPIRED' || normalizedStatus === 'CANCELLED') return 'expired';
+    return 'pending';
+  }
+
+  /**
+   * Normalize claim status to lowercase UI-friendly format
+   */
+  private normalizeClaimStatus(status: string): ClaimItem['status'] {
+    const normalizedStatus = status.toUpperCase();
+    if (normalizedStatus === 'PENDING' || normalizedStatus === 'SUBMITTED') return 'pending';
+    if (normalizedStatus === 'UNDER_REVIEW' || normalizedStatus === 'PROCESSING') return 'processing';
+    if (normalizedStatus === 'APPROVED' || normalizedStatus === 'PAID') return 'approved';
+    if (normalizedStatus === 'REJECTED' || normalizedStatus === 'DENIED') return 'rejected';
+    return 'pending';
   }
 
   getAvatarColor(name: string): string {
