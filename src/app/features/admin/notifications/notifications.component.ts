@@ -64,12 +64,19 @@ export class NotificationsComponent implements OnInit {
           return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
         })
       ),
+      adminNotifications: this.notificationService.getNotificationsByRecipient('ADMIN').pipe(
+        catchError(err => {
+          console.error('[Notifications] Error loading admin notifications:', err);
+          return of([]);
+        })
+      ),
       clients: this.clientsService.getAll().pipe(catchError(() => of([]))),
       users: this.usersService.getUsers().pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ notificationsPage, clients, users }) => {
+      next: ({ notificationsPage, adminNotifications, clients, users }) => {
         // Build an ID -> Email lookup map to resolve UUIDs
         const recipientMap = new Map<string, string>();
+        recipientMap.set('ADMIN', 'Admin'); // Map ADMIN to display name
         clients.forEach(c => {
           if (c.id) recipientMap.set(c.id, c.email);
         });
@@ -79,7 +86,15 @@ export class NotificationsComponent implements OnInit {
 
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-        this.notifications = notificationsPage.content.map(n => {
+        // Combine all notifications and admin-specific notifications
+        const allNotifications = [...notificationsPage.content, ...adminNotifications];
+        
+        // Remove duplicates based on ID
+        const uniqueNotifications = Array.from(
+          new Map(allNotifications.map(n => [n.id, n])).values()
+        );
+
+        this.notifications = uniqueNotifications.map(n => {
            const mappedEmail = recipientMap.get(n.recipient);
            const finalRecipient = mappedEmail 
              ? mappedEmail 
@@ -90,6 +105,11 @@ export class NotificationsComponent implements OnInit {
               recipient: finalRecipient
            };
         });
+
+        // Sort by creation date (newest first)
+        this.notifications.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
         this.currentPage = 1;
         this.isLoading = false;

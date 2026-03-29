@@ -128,8 +128,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    console.log('[ClientDashboard] Loading dashboard data...');
-
     // Load all data in parallel
     forkJoin({
       dashboardStats: this.clientDashboardService.getClientDashboardStats().pipe(
@@ -164,8 +162,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         })
       )
     }).subscribe((data) => {
-      console.log('[ClientDashboard] Received all data:', data);
-      
       this.stats = data.dashboardStats;
       this.loadKpiStats(data.dashboardStats);
       

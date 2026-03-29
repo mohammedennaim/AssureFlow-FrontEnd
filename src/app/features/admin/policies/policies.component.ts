@@ -255,7 +255,7 @@ export class PoliciesComponent implements OnInit {
       };
 
       this.policiesService.update(this.selectedPolicyId, updateData).subscribe({
-        next: () => {
+        next: (response) => {
           this.loadPolicies();
           this.closeModal();
           this.isSaving = false;
@@ -277,8 +277,9 @@ export class PoliciesComponent implements OnInit {
       });
     } else {
       // For create, send all fields
+      
       this.policiesService.create(formValue).subscribe({
-        next: () => {
+        next: (response) => {
           this.loadPolicies();
           this.closeModal();
           this.isSaving = false;

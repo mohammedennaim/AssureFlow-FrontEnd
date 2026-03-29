@@ -33,7 +33,7 @@ export class ClientSubmitClaimComponent implements OnInit {
 
   form = {
     policyId: '',
-    incidentDate: '',
+    incidentDate: new Date().toISOString().split('T')[0], // Default to today
     description: '',
     amount: null as number | null
   };
@@ -64,19 +64,40 @@ export class ClientSubmitClaimComponent implements OnInit {
       return;
     }
 
+    // Ensure incident date is set
+    const incidentDate = this.form.incidentDate || this.today;
+    
+    // Validate description length (backend requires 10-2000 characters)
+    if (this.form.description.length < 10) {
+      this.errorMessage = 'La description doit contenir au moins 10 caractères.';
+      return;
+    }
+
     this.isSubmitting = true;
     this.errorMessage = '';
 
     this.claimRepository.create({
       policyId: this.form.policyId,
       clientId: this.clientId!,
-      incidentDate: this.form.incidentDate || this.today,
+      incidentDate: incidentDate,
       description: this.form.description,
       estimatedAmount: this.form.amount!,
       submittedBy: this.clientId!
     }).pipe(
-      catchError(() => {
-        this.errorMessage = 'Erreur lors de la soumission. Veuillez réessayer.';
+      catchError((error) => {
+        console.error('Error submitting claim:', error);
+        
+        // Extract specific error message from backend
+        if (error.error?.details) {
+          const details = error.error.details;
+          const errorMessages = Object.values(details).join(', ');
+          this.errorMessage = `Validation error: ${errorMessages}`;
+        } else if (error.error?.error) {
+          this.errorMessage = `Error: ${error.error.error}`;
+        } else {
+          this.errorMessage = 'Erreur lors de la soumission. Veuillez réessayer.';
+        }
+        
         this.isSubmitting = false;
         return of(null);
       })
@@ -90,7 +111,12 @@ export class ClientSubmitClaimComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.form = { policyId: '', incidentDate: '', description: '', amount: null };
+    this.form = {
+      policyId: '',
+      incidentDate: new Date().toISOString().split('T')[0],
+      description: '',
+      amount: null
+    };
     this.submitSuccess = false;
     this.errorMessage = '';
   }

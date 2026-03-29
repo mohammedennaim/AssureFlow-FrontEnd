@@ -31,7 +31,7 @@ export class ClientPoliciesComponent implements OnInit {
     this.loading = true;
     
     // Get current user's client ID first
-    this.clientDashboardService['getCurrentClientId']().subscribe({
+    this.clientDashboardService.getCurrentClientId().subscribe({
       next: (clientId) => {
         if (!clientId) {
           console.warn('[ClientPolicies] No clientId found');

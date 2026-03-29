@@ -65,13 +65,14 @@
         </div>
 
         <div class="form-group">
-          <label for="incidentDate">Incident Date</label>
+          <label for="incidentDate">Incident Date <span class="required">*</span></label>
           <input
             id="incidentDate"
             type="date"
             name="incidentDate"
             [(ngModel)]="form.incidentDate"
-            [max]="today">
+            [max]="today"
+            required>
         </div>
 
         <div class="form-group">
@@ -93,8 +94,11 @@
             name="description"
             [(ngModel)]="form.description"
             rows="5"
-            placeholder="Describe the incident in detail..."
+            placeholder="Describe the incident in detail (minimum 10 characters)..."
+            minlength="10"
+            maxlength="2000"
             required></textarea>
+          <small class="form-hint">{{ form.description.length }}/2000 characters (minimum 10)</small>
         </div>
       </div>
 

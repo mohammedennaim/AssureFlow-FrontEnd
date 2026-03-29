@@ -70,7 +70,7 @@ export class ClientDashboardService {
   /**
    * Get current client ID from session service
    */
-  private getCurrentClientId(): Observable<string | null> {
+  getCurrentClientId(): Observable<string | null> {
     return this.clientSessionService.getCurrentClientId();
   }
 
@@ -92,8 +92,6 @@ export class ClientDashboardService {
             nextPaymentDate: null
           });
         }
-
-        console.log('[ClientDashboard] Fetching stats for clientId:', clientId);
 
         // Use getByClientId instead of getAll + filter
         return forkJoin({
@@ -120,11 +118,6 @@ export class ClientDashboardService {
           )
         }).pipe(
           map((data) => {
-            console.log('[ClientDashboard] Loaded data:', {
-              policies: data.policies.length,
-              claims: data.claims.length,
-              invoices: data.invoices.length
-            });
             return this.calculateClientStats(data.policies, data.claims, data.invoices);
           })
         );
@@ -148,7 +141,6 @@ export class ClientDashboardService {
             return of([]);
           }),
           map((policies) => {
-            console.log('[ClientDashboard] Policy stats loaded:', policies.length);
             return this.calculatePolicyStats(policies);
           })
         );
@@ -172,7 +164,6 @@ export class ClientDashboardService {
             return of([]);
           }),
           map((claims) => {
-            console.log('[ClientDashboard] Claim stats loaded:', claims.length);
             return this.calculateClaimStats(claims);
           })
         );
@@ -196,7 +187,6 @@ export class ClientDashboardService {
             return of([]);
           }),
           map((invoices) => {
-            console.log('[ClientDashboard] Payment stats loaded:', invoices.length);
             return this.calculatePaymentStats(invoices);
           })
         );
