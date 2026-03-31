@@ -2,11 +2,12 @@ import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { NotificationCenterComponent } from '../../../../shared/components/notification-center/notification-center.component';
 
 @Component({
   selector: 'app-client-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NotificationCenterComponent],
   templateUrl: './client-layout.component.html',
   styleUrl: './client-layout.component.scss'
 })

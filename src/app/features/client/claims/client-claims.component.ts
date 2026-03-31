@@ -5,11 +5,12 @@ import { ClientDashboardService } from '../../../core/application/services/clien
 import { Claim } from '../../../core/domain/models/claim.model';
 import { catchError, of } from 'rxjs';
 import { CLAIM_REPOSITORY } from '../../../core/domain/ports/claim.repository.port';
+import { ClaimStepsTrackerComponent } from '../../../shared/components/claim-steps-tracker/claim-steps-tracker.component';
 
 @Component({
   selector: 'app-client-claims',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ClaimStepsTrackerComponent],
   templateUrl: './client-claims.component.html',
   styleUrl: './client-claims.component.scss'
 })
@@ -86,6 +87,17 @@ export class ClientClaimsComponent implements OnInit {
       CLOSED: 'status--rejected'
     };
     return statusMap[status.toUpperCase()] || '';
+  }
+
+  isStatusPast(status: string, targetStatus: string): boolean {
+    const statusOrder = ['SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'PAID'];
+    const currentIndex = statusOrder.indexOf(status.toUpperCase());
+    const targetIndex = statusOrder.indexOf(targetStatus);
+    return currentIndex > targetIndex;
+  }
+
+  isRejectedStatus(status: string): boolean {
+    return ['REJECTED', 'CLOSED', 'INFO_REQUESTED'].includes(status.toUpperCase());
   }
 
   formatDate(dateString: string | Date): string {

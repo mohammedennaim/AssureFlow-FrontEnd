@@ -138,13 +138,24 @@ export class HttpClaimRepository implements IClaimRepository {
   }
 
   update(id: string, data: Partial<Claim>): Observable<Claim> {
-    return this.http.patch<{ data?: ClaimDto }>(`${this.apiUrl}/${id}`, data).pipe(
-      map((res) => this.mapToClaim(res.data!))
+    return this.http.patch<any>(`${this.apiUrl}/${id}`, data).pipe(
+      map((res) => {
+        let dto: ClaimDto | null = null;
+        if (res?.data) {
+          dto = res.data;
+        } else if (res?.claim) {
+          dto = res.claim;
+        } else {
+          dto = res;
+        }
+        return this.mapToClaim(dto as ClaimDto);
+      })
     );
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    // Soft-delete from admin perspective (archive + close) while keeping client visibility
+    return this.http.post<void>(`${this.apiUrl}/${id}/archive`, {});
   }
 
   submit(id: string): Observable<void> {
@@ -186,6 +197,7 @@ export class HttpClaimRepository implements IClaimRepository {
       policyId: dto.policyId,
       clientId: dto.clientId,
       status: dto.status,
+      incidentDate: dto.incidentDate,
       description: dto.description,
       amount: dto.estimatedAmount || dto.approvedAmount || dto.amount || 0,
       submittedAt: dto.createdAt || dto.submittedAt || new Date().toISOString(),
@@ -200,6 +212,7 @@ interface ClaimDto {
   policyId: string;
   clientId: string;
   status: string;
+  incidentDate?: string;
   description: string;
   amount?: number;
   estimatedAmount?: number;

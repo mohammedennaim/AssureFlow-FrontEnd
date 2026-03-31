@@ -144,6 +144,37 @@
               </div>
               <span class="status-badge" [class]="getStatusClass(claim.status)">{{ claim.status | titlecase }}</span>
             </div>
+            
+            <!-- Mini Steps Tracker -->
+            <div class="mini-steps-tracker">
+              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'SUBMITTED') || isRejectedStatus(claim.status)" [class.mini-step--active]="claim.status === 'SUBMITTED'">
+                <div class="mini-step__dot"></div>
+                <span class="mini-step__label">Submitted</span>
+              </div>
+              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'UNDER_REVIEW') || isRejectedStatus(claim.status)"></div>
+              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'UNDER_REVIEW') || isRejectedStatus(claim.status)" [class.mini-step--active]="claim.status === 'UNDER_REVIEW'">
+                <div class="mini-step__dot"></div>
+                <span class="mini-step__label">Review</span>
+              </div>
+              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'APPROVED')"></div>
+              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'APPROVED')" [class.mini-step--active]="claim.status === 'APPROVED'">
+                <div class="mini-step__dot"></div>
+                <span class="mini-step__label">Approved</span>
+              </div>
+              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'PAID')"></div>
+              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'PAID')" [class.mini-step--active]="claim.status === 'PAID'">
+                <div class="mini-step__dot"></div>
+                <span class="mini-step__label">Paid</span>
+              </div>
+              @if (isRejectedStatus(claim.status)) {
+                <div class="mini-step__line mini-step__line--rejected"></div>
+                <div class="mini-step mini-step--rejected">
+                  <div class="mini-step__dot mini-step__dot--rejected"></div>
+                  <span class="mini-step__label mini-step__label--rejected">{{ claim.status === 'CLOSED' ? 'Closed' : 'Rejected' }}</span>
+                </div>
+              }
+            </div>
+            
             <p class="claim-card__description">{{ claim.description || 'No description provided' }}</p>
             <div class="claim-card__details">
               <div class="detail">

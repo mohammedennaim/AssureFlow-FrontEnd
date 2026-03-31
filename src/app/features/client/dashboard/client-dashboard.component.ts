@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { catchError, of, forkJoin, interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { NotificationCenterComponent } from '../../../shared/components/notification-center/notification-center.component';
 import { ClientDashboardService, ClientDashboardStats, ClientPolicyStats, ClientClaimStats, ClientPaymentStats } from '../../../core/application/services/client-dashboard.service';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Claim } from '../../../core/domain/models/claim.model';
@@ -57,7 +56,7 @@ interface PaymentItem {
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationCenterComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './client-dashboard.component.html',
   styleUrl: './client-dashboard.component.scss'
 })
