@@ -72,7 +72,14 @@ export class ClaimsComponent implements OnInit {
         return of([]);
       })
     ).subscribe((data) => {
-      this.claims = data.map(claim => ({
+      // Trier les claims par date (plus récent en premier)
+      const sortedClaims = data.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.submittedAt || 0).getTime();
+        const dateB = new Date(b.createdAt || b.submittedAt || 0).getTime();
+        return dateB - dateA; // Ordre décroissant
+      });
+
+      this.claims = sortedClaims.map(claim => ({
         ...claim,
         priority: this.getPriority(claim.status, claim.estimatedAmount || claim.approvedAmount || 0)
       }));

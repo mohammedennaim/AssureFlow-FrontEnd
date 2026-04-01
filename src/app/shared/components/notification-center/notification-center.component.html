@@ -13,69 +13,101 @@
     <div class="notification-dropdown">
       <div class="notification-header">
         <h3>Notifications</h3>
-        @if (unreadCount > 0) {
-          <button class="mark-all-read" (click)="markAllAsRead()" type="button">
+        <div class="notification-actions">
+          <button class="notification-refresh" (click)="refreshNotifications()" title="Rafraîchir" *ngIf="!isLoading">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 8C14 11.3137 11.3137 14 8 14C5.52285 14 3.39894 12.5017 2.48223 10.3571"/>
+              <path d="M2 8C2 4.68629 4.68629 2 8 2C10.4772 2 12.6011 3.49826 13.5178 5.64289"/>
+              <path d="M2 4V8H6"/>
+              <path d="M14 12V8H10"/>
+            </svg>
+          </button>
+          <button class="mark-all-read" (click)="markAllAsRead()" *ngIf="unreadCount > 0 && !isRefreshing">
             Mark all as read
           </button>
+        </div>
+      </div>
+
+      <div class="notification-refreshing" *ngIf="isRefreshing">
+        <div class="spinner--small"></div>
+        <span>Actualisation...</span>
+      </div>
+
+      <div class="notification-loading" *ngIf="isLoading && notifications.length === 0">
+        <div class="spinner"></div>
+        <span>Loading notifications...</span>
+      </div>
+
+      <div class="notification-list" *ngIf="!isLoading && notifications.length > 0">
+        @for (notification of notifications | slice:0:5; track notification.id) {
+          <div
+            class="notification-item"
+            [class.notification-item--unread]="!notification.read"
+            [class.notification-item--success]="notification.type === 'SUCCESS'"
+            [class.notification-item--info]="notification.type === 'INFO'"
+            [class.notification-item--warning]="notification.type === 'WARNING'"
+            [class.notification-item--alert]="notification.type === 'ALERT'"
+            (click)="onNotificationClick(notification)">
+            <div class="notification-icon" [class]="'notification-icon--' + getNotificationTypeClass(notification.type)">
+              @switch (notification.type) {
+                @case ('SUCCESS') {
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M6 10L9 13L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+                @case ('INFO') {
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M10 6V10M10 13H10.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                }
+                @case ('WARNING') {
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 6V11M10 14H10.01M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                }
+                @case ('ALERT') {
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M7 7L13 13M7 13L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                }
+                @default {
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M10 6V10M10 13H10.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                }
+              }
+            </div>
+            <div class="notification-content">
+              <h4>{{ notification.title }}</h4>
+              <p>{{ notification.message | slice:0:60 }}{{ notification.message.length > 60 ? '...' : '' }}</p>
+              <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
+            </div>
+            @if (!notification.read) {
+              <span class="unread-dot"></span>
+            }
+          </div>
         }
       </div>
 
-      <div class="notification-list">
-        @if (notifications.length === 0) {
-          <div class="empty-notifications">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
-              <path d="M24 16V24M24 28H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <p>No notifications</p>
-          </div>
-        } @else {
-          @for (notification of notifications; track notification.id) {
-            <div 
-              class="notification-item" 
-              [class.notification-item--unread]="!notification.read"
-              [class.notification-item--success]="notification.type === 'success'"
-              [class.notification-item--warning]="notification.type === 'warning'"
-              [class.notification-item--error]="notification.type === 'error'"
-              (click)="markAsRead(notification)">
-              <div class="notification-icon">
-                @switch (notification.type) {
-                  @case ('success') {
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M6 10L9 13L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  }
-                  @case ('warning') {
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10 6V11M10 14H10.01M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                  }
-                  @case ('error') {
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M7 7L13 13M7 13L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                  }
-                  @default {
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M10 6V10M10 13H10.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                  }
-                }
-              </div>
-              <div class="notification-content">
-                <h4>{{ notification.title }}</h4>
-                <p>{{ notification.message }}</p>
-                <span class="notification-time">{{ getTimeAgo(notification.timestamp) }}</span>
-              </div>
-              @if (!notification.read) {
-                <span class="unread-dot"></span>
-              }
-            </div>
-          }
-        }
+      <div class="notification-empty" *ngIf="!isLoading && notifications.length === 0">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+          <path d="M24 16V24M24 28H24.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p>Aucune notification</p>
+      </div>
+
+      <div class="notification-footer" *ngIf="notifications.length > 0">
+        <a routerLink="/admin/notifications" class="view-all">
+          Voir toutes les notifications
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 12L10 8L6 4"/>
+          </svg>
+        </a>
       </div>
     </div>
   }

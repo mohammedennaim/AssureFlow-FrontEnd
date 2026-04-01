@@ -5,12 +5,11 @@ import { ClientDashboardService } from '../../../core/application/services/clien
 import { Claim } from '../../../core/domain/models/claim.model';
 import { catchError, of } from 'rxjs';
 import { CLAIM_REPOSITORY } from '../../../core/domain/ports/claim.repository.port';
-import { ClaimStepsTrackerComponent } from '../../../shared/components/claim-steps-tracker/claim-steps-tracker.component';
 
 @Component({
   selector: 'app-client-claims',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClaimStepsTrackerComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './client-claims.component.html',
   styleUrl: './client-claims.component.scss'
 })

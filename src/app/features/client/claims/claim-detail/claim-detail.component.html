@@ -71,19 +71,19 @@
       <div class="details-grid">
         <div class="detail-row">
           <span class="detail-row__label">Policy</span>
-          <span class="detail-row__value">{{ policy?.policyNumber || claim?.policyId || 'N/A' }}</span>
+          <span class="detail-row__value">{{ policy?.policyNumber || claim.policyId || 'N/A' }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-row__label">Incident Date</span>
-          <span class="detail-row__value">{{ claim?.incidentDate ? (claim.incidentDate | date:'EEE, MMM d, y') : 'N/A' }}</span>
+          <span class="detail-row__value">{{ claim.incidentDate ? (claim.incidentDate | date:'EEE, MMM d, y') : 'N/A' }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-row__label">Submitted At</span>
-          <span class="detail-row__value">{{ formatDate(claim?.submittedAt || claim?.createdAt || '') }}</span>
+          <span class="detail-row__value">{{ formatDate(claim.submittedAt || claim.createdAt || '') }}</span>
         </div>
         <div class="detail-row">
           <span class="detail-row__label">Resolved At</span>
-          <span class="detail-row__value">{{ claim?.resolvedAt ? (claim.resolvedAt | date:'EEE, MMM d, y') : 'N/A' }}</span>
+          <span class="detail-row__value">{{ claim.resolvedAt ? (claim.resolvedAt | date:'EEE, MMM d, y') : 'N/A' }}</span>
         </div>
       </div>
     </div>

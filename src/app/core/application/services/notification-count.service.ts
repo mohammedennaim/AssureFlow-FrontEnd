@@ -8,20 +8,17 @@ import { AuthService } from '../../auth/auth.service';
 export class NotificationCountService {
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
-  
+
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
-  private pollingInterval = 30000; // Poll every 30 seconds
+  private pollingInterval = 30000;
 
   constructor() {
     this.startPolling();
   }
 
   private startPolling(): void {
-    // Initial fetch
     this.fetchUnreadCount();
-
-    // Poll every 30 seconds
     interval(this.pollingInterval).pipe(
       switchMap(() => this.fetchUnreadCount())
     ).subscribe();
@@ -33,10 +30,38 @@ export class NotificationCountService {
       return of(0);
     }
 
-    return this.notificationService.getUnreadCount(user.id).pipe(
-      tap(count => this.unreadCountSubject.next(count)),
-      catchError(() => {
-        console.error('[NotificationCount] Error fetching unread count');
+    const userEmail = user.id;
+    const userClientId = user.clientId;
+    console.log('[NotificationCount] Fetching count for:', userEmail, 'clientId:', userClientId, 'role:', user.role);
+
+    // CLIENT : utiliser getNotificationsByRecipient (autorisé)
+    if (user.role === 'CLIENT') {
+      return this.notificationService.getNotificationsByRecipient(userEmail).pipe(
+        switchMap(notifications => {
+          const unread = notifications.filter(n => !n.read).length;
+          console.log('[NotificationCount] CLIENT unread:', unread, '(email:', userEmail + ')');
+          this.unreadCountSubject.next(unread);
+          return of(unread);
+        }),
+        catchError((err) => {
+          console.error('[NotificationCount] Error:', err);
+          return of(0);
+        })
+      );
+    }
+
+    // ADMIN/AGENT : filtrer par email OU clientId
+    return this.notificationService.getAllNotifications(0, 100).pipe(
+      switchMap(page => {
+        const unread = page.content.filter(n => 
+          !n.read && (n.recipient === userEmail || n.recipient === userClientId)
+        ).length;
+        console.log('[NotificationCount]', user.role, 'unread:', unread, '(email:', userEmail + ')');
+        this.unreadCountSubject.next(unread);
+        return of(unread);
+      }),
+      catchError((err) => {
+        console.error('[NotificationCount] Error:', err);
         return of(0);
       })
     );
