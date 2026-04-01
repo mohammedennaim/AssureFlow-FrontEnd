@@ -4,8 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { NotificationService } from '../../../core/application/services/notification.service';
 import { NotificationCountService } from '../../../core/application/services/notification-count.service';
 import { Notification } from '../../../core/domain/models/notification.models';
-import { Subject, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Page } from '../../../core/domain/models/page.model';
 
@@ -24,6 +24,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private currentEmail: string | null = null;
   private currentClientId: string | null = null;
+  private currentRole: string | null = null;
 
   private notificationService = inject(NotificationService);
   private notificationCountService = inject(NotificationCountService);
@@ -35,6 +36,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const user = this.authService.getCurrentUser();
     this.currentEmail = user?.id || null;
     this.currentClientId = user?.clientId || null;
+    this.currentRole = user?.role || null;
 
     console.log('[NotificationCenter] Current user:', user);
     console.log('[NotificationCenter] Current email:', this.currentEmail);
@@ -68,7 +70,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     
     // CLIENT : utiliser getNotificationsByRecipient (autorisé)
     // ADMIN/AGENT : utiliser getAllNotifications
-    if (this.currentEmail?.includes('admin') || this.currentEmail?.includes('agent')) {
+    if (this.isPrivilegedUser()) {
       this.notificationService.getAllNotifications(0, 100).pipe(
         catchError((err) => {
           console.error('[NotificationCenter] Error:', err);
@@ -86,30 +88,14 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      // CLIENT : utiliser getNotificationsByRecipient
-      this.notificationService.getNotificationsByRecipient(this.currentEmail!).pipe(
-        catchError((err) => {
-          console.error('[NotificationCenter] Error:', err);
-          return of([]);
-        })
-      ).subscribe({
-        next: (notifications) => {
-          console.log('[NotificationCenter] Received notifications by recipient:', notifications.length);
-          this.updateNotifications(notifications);
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('[NotificationCenter] Error:', err);
-          this.isLoading = false;
-        }
-      });
+      this.loadClientNotifications();
     }
   }
 
   refreshNotifications(): void {
     this.isRefreshing = true;
     
-    if (this.currentEmail?.includes('admin') || this.currentEmail?.includes('agent')) {
+    if (this.isPrivilegedUser()) {
       this.notificationService.getAllNotifications(0, 100).pipe(
         catchError((err) => {
           console.error('[NotificationCenter] Refresh error:', err);
@@ -126,22 +112,93 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.notificationService.getNotificationsByRecipient(this.currentEmail!).pipe(
-        catchError((err) => {
-          console.error('[NotificationCenter] Refresh error:', err);
-          return of([]);
-        })
-      ).subscribe({
-        next: (notifications) => {
-          this.updateNotifications(notifications);
-          this.isRefreshing = false;
-        },
-        error: (err) => {
-          console.error('[NotificationCenter] Refresh error:', err);
-          this.isRefreshing = false;
-        }
-      });
+      this.refreshClientNotifications();
     }
+  }
+
+  private isPrivilegedUser(): boolean {
+    return this.currentRole === 'ADMIN' || this.currentRole === 'AGENT';
+  }
+
+  private loadClientNotifications(): void {
+    const recipients = this.getClientRecipients();
+    if (recipients.length === 0) {
+      this.updateNotifications([]);
+      this.isLoading = false;
+      return;
+    }
+
+    const requests = recipients.map(recipient =>
+      this.notificationService.getNotificationsByRecipient(recipient).pipe(
+        catchError((err) => {
+          console.error('[NotificationCenter] Error loading recipient notifications:', recipient, err);
+          return of([] as Notification[]);
+        })
+      )
+    );
+
+    forkJoin(requests).pipe(
+      map((results) => this.mergeNotifications(results))
+    ).subscribe({
+      next: (notifications) => {
+        this.updateNotifications(notifications);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('[NotificationCenter] Error:', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private refreshClientNotifications(): void {
+    const recipients = this.getClientRecipients();
+    if (recipients.length === 0) {
+      this.updateNotifications([]);
+      this.isRefreshing = false;
+      return;
+    }
+
+    const requests = recipients.map(recipient =>
+      this.notificationService.getNotificationsByRecipient(recipient).pipe(
+        catchError((err) => {
+          console.error('[NotificationCenter] Refresh error for recipient:', recipient, err);
+          return of([] as Notification[]);
+        })
+      )
+    );
+
+    forkJoin(requests).pipe(
+      map((results) => this.mergeNotifications(results))
+    ).subscribe({
+      next: (notifications) => {
+        this.updateNotifications(notifications);
+        this.isRefreshing = false;
+      },
+      error: (err) => {
+        console.error('[NotificationCenter] Refresh error:', err);
+        this.isRefreshing = false;
+      }
+    });
+  }
+
+  private getClientRecipients(): string[] {
+    const recipients = new Set<string>();
+    if (this.currentEmail) {
+      recipients.add(this.currentEmail);
+    }
+    if (this.currentClientId) {
+      recipients.add(this.currentClientId);
+    }
+    return Array.from(recipients);
+  }
+
+  private mergeNotifications(notificationsByRecipient: Notification[][]): Notification[] {
+    const merged = new Map<string, Notification>();
+    notificationsByRecipient.flat().forEach(notification => {
+      merged.set(notification.id, notification);
+    });
+    return Array.from(merged.values());
   }
 
   private updateNotifications(newNotifications: Notification[]): void {
@@ -159,7 +216,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       const isAdminGlobal = n.recipient === 'ADMIN';
       // Les admins voient leurs notifications + les notifications ADMIN globales
       // Les clients/agents voient leurs notifications (email ou clientId)
-      return isPersonal || (this.currentEmail?.includes('admin') && isAdminGlobal);
+      return isPersonal || (this.currentRole === 'ADMIN' && isAdminGlobal);
     });
 
     console.log('[NotificationCenter] Filtering for email:', this.currentEmail, 'clientId:', this.currentClientId);
@@ -191,9 +248,21 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   }
 
   markAllAsRead(): void {
-    if (!this.currentEmail) return;
+    const recipients = this.isPrivilegedUser()
+      ? (this.currentEmail ? [this.currentEmail] : [])
+      : this.getClientRecipients();
+    if (recipients.length === 0) return;
 
-    this.notificationService.markAllAsRead(this.currentEmail).subscribe({
+    const requests = recipients.map(recipient =>
+      this.notificationService.markAllAsRead(recipient).pipe(
+        catchError((err) => {
+          console.error('[NotificationCenter] Error marking all as read for recipient:', recipient, err);
+          return of(void 0);
+        })
+      )
+    );
+
+    forkJoin(requests).subscribe({
       next: () => {
         this.notifications.forEach(n => n.read = true);
         this.notificationCountService.setUnreadCount(0);

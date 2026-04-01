@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, interval, of } from 'rxjs';
-import { switchMap, catchError, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, forkJoin, interval, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { NotificationService } from './notification.service';
 import { AuthService } from '../../auth/auth.service';
 
@@ -36,9 +36,29 @@ export class NotificationCountService {
 
     // CLIENT : utiliser getNotificationsByRecipient (autorisé)
     if (user.role === 'CLIENT') {
-      return this.notificationService.getNotificationsByRecipient(userEmail).pipe(
+      const recipients = [userEmail, userClientId].filter((value, index, array) =>
+        !!value && array.indexOf(value) === index
+      ) as string[];
+
+      if (recipients.length === 0) {
+        this.unreadCountSubject.next(0);
+        return of(0);
+      }
+
+      const requests = recipients.map(recipient =>
+        this.notificationService.getNotificationsByRecipient(recipient).pipe(
+          catchError((err) => {
+            console.error('[NotificationCount] Error fetching recipient notifications:', recipient, err);
+            return of([]);
+          })
+        )
+      );
+
+      return forkJoin(requests).pipe(
         switchMap(notifications => {
-          const unread = notifications.filter(n => !n.read).length;
+          const merged = new Map<string, { read: boolean }>();
+          notifications.flat().forEach(notification => merged.set(notification.id, notification));
+          const unread = Array.from(merged.values()).filter(n => !n.read).length;
           console.log('[NotificationCount] CLIENT unread:', unread, '(email:', userEmail + ')');
           this.unreadCountSubject.next(unread);
           return of(unread);

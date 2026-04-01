@@ -93,7 +93,7 @@ export class HttpNotificationRepository implements NotificationRepositoryPort {
   }
 
   getNotificationsByRecipient(recipient: string): Observable<Notification[]> {
-    return this.http.get<BaseResponse<BackendNotification[]>>(`${this.baseUrl}/recipient/${recipient}`).pipe(
+    return this.http.get<BaseResponse<BackendNotification[]>>(`${this.baseUrl}/recipient/${encodeURIComponent(recipient)}`).pipe(
       map(response => response.data.map(n => this.mapBackendNotification(n)))
     );
   }
@@ -117,13 +117,13 @@ export class HttpNotificationRepository implements NotificationRepositoryPort {
   }
 
   markAllAsRead(recipient: string): Observable<void> {
-    return this.http.put<BaseResponse<void>>(`${this.baseUrl}/recipient/${recipient}/read-all`, {}).pipe(
+    return this.http.put<BaseResponse<void>>(`${this.baseUrl}/recipient/${encodeURIComponent(recipient)}/read-all`, {}).pipe(
       map(response => response.data)
     );
   }
 
   getUnreadCount(recipient: string): Observable<number> {
-    return this.http.get<BaseResponse<number>>(`${this.baseUrl}/recipient/${recipient}/unread-count`).pipe(
+    return this.http.get<BaseResponse<number>>(`${this.baseUrl}/recipient/${encodeURIComponent(recipient)}/unread-count`).pipe(
       map(response => response.data)
     );
   }
