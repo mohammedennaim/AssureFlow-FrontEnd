@@ -17,7 +17,6 @@ import { takeUntil } from 'rxjs/operators';
 export class AdminLayoutComponent implements OnInit, OnDestroy {
   isSidebarCollapsed = false;
   isUserMenuOpen = false;
-  isDark = false;
   unreadCount = 0;
   private destroy$ = new Subject<void>();
 
@@ -49,11 +48,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   closeUserMenu(): void {
     this.isUserMenuOpen = false;
-  }
-
-  toggleTheme(): void {
-    this.isDark = !this.isDark;
-    document.body.classList.toggle('dark-theme', this.isDark);
   }
 
   logout(): void {

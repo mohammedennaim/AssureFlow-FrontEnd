@@ -231,18 +231,138 @@
 <!-- Expire Policy Modal -->
 <div class="policy-modal-backdrop" [class.policy-modal-backdrop--visible]="showExpireModal" (click)="closeExpireModal()">
   <div class="policy-modal-backdrop__content" (click)="$event.stopPropagation()">
-    <div class="confirm-modal">
-      <div class="confirm-modal__icon confirm-modal__icon--warning">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+    <div class="expire-modal">
+      <!-- Header with gradient -->
+      <div class="expire-modal__header">
+        <div class="expire-modal__icon-wrapper">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+            <path d="M16 10V16L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="expire-modal__title">Expire Policy</h3>
+        <p class="expire-modal__subtitle">Mark this policy as expired and notify the client</p>
+        <button class="modal-close-btn" (click)="closeExpireModal()" type="button">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 5L5 15M5 5l10 10"/>
+          </svg>
+        </button>
       </div>
-      <h3 class="confirm-modal__title">Expire Policy</h3>
-      <p class="confirm-modal__message">Are you sure you want to mark this policy as expired?</p>
-      <div class="confirm-modal__actions">
-        <button class="btn btn--secondary" (click)="closeExpireModal()" type="button">No, Keep Active</button>
-        <button class="btn btn--warning" (click)="expirePolicy()" type="button">Yes, Expire Policy</button>
+
+      <!-- Body -->
+      <div class="expire-modal__body">
+        <!-- Policy Info Alert -->
+        <div class="info-alert">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="10" cy="10" r="8"/>
+            <path d="M10 10v4m0-4h.01"/>
+          </svg>
+          <div class="info-alert__content">
+            <strong>Policy expiration is irreversible</strong>
+            <p>Once expired, the policy cannot be reactivated. Client will lose coverage benefits.</p>
+          </div>
+        </div>
+
+        <!-- Notification Toggle Card -->
+        <div class="notification-card" [class.notification-card--active]="sendNotification">
+          <label class="notification-toggle">
+            <input
+              type="checkbox"
+              [(ngModel)]="sendNotification"
+              class="notification-toggle__input"
+            />
+            <span class="notification-toggle__slider"></span>
+            <div class="notification-toggle__content">
+              <div class="notification-toggle__header">
+                <span class="notification-toggle__title">Notify Client</span>
+                <span class="notification-toggle__badge">Recommended</span>
+              </div>
+              <p class="notification-toggle__description">Send email and SMS notification about policy expiration</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Custom Message Section -->
+        @if (sendNotification) {
+          <div class="message-section">
+            <label class="message-label" for="expireMessage">
+              Personalized Message (Optional)
+            </label>
+            <textarea
+              id="expireMessage"
+              [(ngModel)]="expireMessage"
+              class="message-textarea"
+              rows="4"
+              placeholder="E.g., 'Dear client, please contact us at 555-1234 to renew your policy with a 10% discount. Reference: POL-XXXXX'"
+            ></textarea>
+          </div>
+
+          <!-- Preview Card -->
+          <div class="preview-card">
+            <div class="preview-card__header">
+              <span class="preview-card__title">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="4" width="14" height="10" rx="1"/>
+                  <path d="M2 8l7 5 7-5"/>
+                </svg>
+                Email Preview
+              </span>
+              <span class="preview-badge preview-badge--live">
+                <span class="badge-dot"></span>
+                Live Preview
+              </span>
+            </div>
+            <div class="preview-card__content">
+              <div class="preview-item">
+                <span class="preview-label preview-label--primary">Subject:</span>
+                <div class="preview-value preview-value--subject">
+                  Important: Your insurance policy has expired - POL-XXXXX
+                </div>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label preview-label--primary">Message:</span>
+                <div class="preview-message">
+                  <div class="message-body">
+                    <p class="message-greeting">Dear Valued Client,</p>
+                    <p class="message-content">
+                      Your insurance policy <strong>POL-XXXXX</strong> has expired on <strong>{{ currentDate | date:'MMM d, yyyy' }}</strong>.
+                    </p>
+                    @if (expireMessage) {
+                      <div class="message-custom">
+                        <p>{{ expireMessage }}</p>
+                      </div>
+                    } @else {
+                      <p class="message-default">Please contact our customer service to renew your policy.</p>
+                    }
+                    <p class="message-content">Thank you for trusting AssureFlow.</p>
+                  </div>
+                  <div class="message-signature">
+                    <p>Best regards,</p>
+                    <p><strong>AssureFlow Team</strong></p>
+                    <p class="signature-line">Insurance Services</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="expire-modal__footer">
+        <button class="btn btn--secondary" (click)="closeExpireModal()" type="button">
+          Cancel
+        </button>
+        <button class="btn btn--danger" (click)="expirePolicy()" type="button">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="9" r="7"/>
+            <path d="M9 5v8m0-8h.01"/>
+          </svg>
+          Expire Policy
+          @if (sendNotification) {
+            & Notify Client
+          }
+        </button>
       </div>
     </div>
   </div>
@@ -375,15 +495,31 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="premiumAmount">Premium Amount (€/month)</label>
-              <input type="number" id="premiumAmount" class="form-input" formControlName="premiumAmount" placeholder="150">
-              @if (policyForm.get('premiumAmount')?.invalid && policyForm.get('premiumAmount')?.touched) {
-                <p class="form-error">Premium amount is required</p>
-              }
+              <label class="form-label" for="premiumAmount">
+                Premium Amount (€/month)
+                <span class="form-label__info">Auto-calculé</span>
+              </label>
+              <input 
+                type="number" 
+                id="premiumAmount" 
+                class="form-input form-input--readonly" 
+                formControlName="premiumAmount" 
+                placeholder="0"
+                readonly
+              />
+              <small class="form-hint">
+                Calculé automatiquement : Coverage × Rate ({{ getRateDisplay() }})
+              </small>
             </div>
             <div class="form-group">
-              <label class="form-label" for="coverageAmount">Coverage Amount (€)</label>
-              <input type="number" id="coverageAmount" class="form-input" formControlName="coverageAmount" placeholder="50000">
+              <label class="form-label" for="coverageAmount">Coverage Amount (€) *</label>
+              <input 
+                type="number" 
+                id="coverageAmount" 
+                class="form-input" 
+                formControlName="coverageAmount" 
+                placeholder="50000"
+              />
               @if (policyForm.get('coverageAmount')?.invalid && policyForm.get('coverageAmount')?.touched) {
                 <p class="form-error">Coverage amount is required</p>
               }

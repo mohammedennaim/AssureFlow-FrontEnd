@@ -52,6 +52,8 @@ export class PoliciesComponent implements OnInit {
   // Expire Modal
   showExpireModal = false;
   policyToExpire: string | null = null;
+  expireMessage = '';
+  sendNotification = true;
 
   // Renew Confirmation
   showRenewConfirm = false;
@@ -60,6 +62,17 @@ export class PoliciesComponent implements OnInit {
   // Success Modal
   showSuccessModal = false;
   successMessage = '';
+
+  currentDate = new Date();
+
+  // Premium calculation rates (same as backend)
+  private readonly RATES: Record<string, number> = {
+    'HEALTH': 0.05,
+    'LIFE': 0.03,
+    'VEHICLE': 0.07,
+    'HOME': 0.04,
+    'BUSINESS': 0.06
+  };
 
   constructor() {
     this.initForm();
@@ -76,9 +89,39 @@ export class PoliciesComponent implements OnInit {
       type: ['VEHICLE', Validators.required],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
-      premiumAmount: ['', [Validators.required, Validators.min(1)]],
+      premiumAmount: [{ value: 0, disabled: true }, [Validators.required, Validators.min(1)]],
       coverageAmount: ['', [Validators.required, Validators.min(1)]]
     });
+
+    // Subscribe to form changes to auto-calculate premium
+    this.policyForm.get('type')?.valueChanges.subscribe(() => this.calculatePremium());
+    this.policyForm.get('coverageAmount')?.valueChanges.subscribe(() => this.calculatePremium());
+  }
+
+  calculatePremium(): void {
+    const type = this.policyForm.get('type')?.value;
+    const coverageAmount = this.policyForm.get('coverageAmount')?.value;
+
+    if (type && coverageAmount && !isNaN(coverageAmount)) {
+      const rate = this.RATES[type] || 0;
+      const premium = coverageAmount * rate;
+      
+      // Arrondir à 2 chiffres après la virgule
+      const roundedPremium = Math.round(premium * 100) / 100;
+      
+      // Update premium field (it's disabled, so we need to use setValue with emitEvent: false)
+      this.policyForm.get('premiumAmount')?.setValue(roundedPremium, { emitEvent: false });
+    } else {
+      this.policyForm.get('premiumAmount')?.setValue(0, { emitEvent: false });
+    }
+  }
+
+  getRateDisplay(): string {
+    const type = this.policyForm.get('type')?.value;
+    if (type && this.RATES[type]) {
+      return `${type} = ${(this.RATES[type] * 100).toFixed(0)}%`;
+    }
+    return 'Sélectionnez un type';
   }
 
   loadPolicies(): void {
@@ -348,12 +391,25 @@ export class PoliciesComponent implements OnInit {
 
   openExpireModal(policyId: string): void {
     this.policyToExpire = policyId;
+    this.expireMessage = '';
+    this.sendNotification = true;
     this.showExpireModal = true;
   }
 
   closeExpireModal(): void {
     this.showExpireModal = false;
     this.policyToExpire = null;
+    this.expireMessage = '';
+    this.sendNotification = true;
+  }
+
+  applyTemplate(type: string): void {
+    const templates: Record<string, string> = {
+      'renewal': 'Dear client, please contact us to renew your policy. We offer flexible payment plans and competitive rates. Reference: POL-XXXXX',
+      'contact': 'For more information or to renew your policy, please visit our agency or call us at 555-1234. Our team is available Monday to Friday, 9 AM - 6 PM.',
+      'offer': 'Special renewal offer! Get 10% discount on your new policy if you renew within 30 days. Contact us now at 555-1234. Limited time offer!'
+    };
+    this.expireMessage = templates[type] || '';
   }
 
   expirePolicy(): void {

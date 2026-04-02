@@ -432,15 +432,30 @@
         </div>
         <div class="form-group">
           <label for="amount">Amount (EUR) *</label>
-          <input 
-            type="number" 
-            id="amount" 
-            [(ngModel)]="newInvoice.amount" 
+          <input
+            type="number"
+            id="amount"
+            [(ngModel)]="newInvoice.amount"
             class="form-input"
             min="0"
+            [max]="remainingAmountToPay !== null ? remainingAmountToPay : null"
             step="0.01"
             placeholder="0.00"
           />
+          @if (remainingAmountToPay !== null) {
+            <small class="form-hint" [class.form-hint--warning]="newInvoice.amount > remainingAmountToPay">
+              @if (existingInvoicesForPolicy === 0) {
+                <strong>Reste à payer :</strong> {{ remainingAmountToPay | currency:'EUR':'symbol':'1.2-2' }} (prime complète)
+              } @else if (remainingAmountToPay <= 0) {
+                <strong style="color: #dc3545;">⚠️ Cette police est déjà entièrement payée</strong>
+              } @else {
+                <strong>Reste à payer :</strong> {{ remainingAmountToPay | currency:'EUR':'symbol':'1.2-2' }} 
+                (déjà payé: {{ totalInvoicedForPolicy | currency:'EUR':'symbol':'1.0-0' }} sur {{ getSelectedPolicyPremium() | currency:'EUR':'symbol':'1.0-0' }})
+              }
+            </small>
+          } @else {
+            <small class="form-hint">Select a policy to see remaining amount to pay</small>
+          }
         </div>
         <div class="form-group">
           <label for="taxAmount">Tax Amount (EUR)</label>

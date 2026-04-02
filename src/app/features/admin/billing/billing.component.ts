@@ -59,6 +59,11 @@ export class BillingComponent implements OnInit {
     dueDate: '',
   };
 
+  // Remaining amount to pay for selected policy
+  remainingAmountToPay: number | null = null;
+  existingInvoicesForPolicy: number = 0;
+  totalInvoicedForPolicy: number = 0;
+
   editInvoice: CreateInvoiceData = {
     policyId: '',
     clientId: '',
@@ -243,6 +248,17 @@ export class BillingComponent implements OnInit {
       return;
     }
 
+    // Validate invoice amount against remaining policy premium
+    if (this.remainingAmountToPay !== null && this.newInvoice.amount > this.remainingAmountToPay) {
+      const selectedPolicy = this.policies.find(p => p.id === this.newInvoice.policyId);
+      const policyNumber = selectedPolicy?.policyNumber || this.newInvoice.policyId;
+      this.showNotification(
+        `Le montant de la facture (${this.newInvoice.amount.toFixed(2)} EUR) ne peut pas dépasser le reste à payer de la police ${policyNumber} (${this.remainingAmountToPay.toFixed(2)} EUR)`,
+        'error'
+      );
+      return;
+    }
+
     this.billingService.createInvoice(this.newInvoice).subscribe({
       next: (invoice) => {
         console.log('[Billing] Invoice created:', invoice);
@@ -372,7 +388,35 @@ export class BillingComponent implements OnInit {
         this.newInvoice.amount = selectedPolicy.premium;
         this.newInvoice.taxAmount = selectedPolicy.premium * 0.2; // 20% tax
       }
+      
+      // Calculate remaining amount to pay
+      this.calculateRemainingAmountToPay(selectedPolicy);
     }
+  }
+
+  calculateRemainingAmountToPay(policy: Policy): void {
+    const policyPremium = policy.premium || 0;
+    
+    // Find all existing invoices for this policy
+    const policyInvoices = this.invoices.filter(inv => inv.policyId === policy.id);
+    this.existingInvoicesForPolicy = policyInvoices.length;
+    
+    // Calculate total already invoiced (only for PAID and ACTIVE invoices)
+    this.totalInvoicedForPolicy = policyInvoices
+      .filter(inv => inv.status === 'PAID' || inv.status === 'ACTIVE')
+      .reduce((sum, inv) => sum + inv.amount, 0);
+    
+    // Calculate remaining amount
+    this.remainingAmountToPay = policyPremium - this.totalInvoicedForPolicy;
+    
+    console.log('[Billing] Policy premium:', policyPremium);
+    console.log('[Billing] Total invoiced:', this.totalInvoicedForPolicy);
+    console.log('[Billing] Remaining to pay:', this.remainingAmountToPay);
+  }
+
+  getSelectedPolicyPremium(): number {
+    const policy = this.policies.find(p => p.id === this.newInvoice.policyId);
+    return policy?.premium || 0;
   }
 
   getClientName(clientId: string): string {

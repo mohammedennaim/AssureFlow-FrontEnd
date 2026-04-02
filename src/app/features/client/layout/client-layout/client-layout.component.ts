@@ -14,7 +14,6 @@ import { NotificationCenterComponent } from '../../../../shared/components/notif
 export class ClientLayoutComponent {
   isSidebarCollapsed = false;
   isUserMenuOpen = false;
-  isDark = false;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -29,15 +28,6 @@ export class ClientLayoutComponent {
 
   closeUserMenu(): void {
     this.isUserMenuOpen = false;
-  }
-
-  toggleTheme(): void {
-    this.isDark = !this.isDark;
-    if (this.isDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
   }
 
   logout(): void {
