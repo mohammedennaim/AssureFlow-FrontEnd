@@ -3,11 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../core/application/services/notification.service';
 import { NotificationCountService } from '../../../core/application/services/notification-count.service';
-import { AuthService } from '../../../core/auth/auth.service';
 import { Notification, NotificationType, CreateNotificationRequest } from '../../../core/domain/models/notification.models';
-import { ClientsService } from '../../../core/application/services/admin-clients.service';
-import { UsersService } from '../../../core/application/services/admin-users.service';
-import { forkJoin, catchError, of } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
@@ -19,9 +16,6 @@ import { forkJoin, catchError, of } from 'rxjs';
 export class NotificationsComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private notificationCountService = inject(NotificationCountService);
-  private clientsService = inject(ClientsService);
-  private usersService = inject(UsersService);
-  private authService = inject(AuthService);
 
   filter: 'ALL' | 'UNREAD' | 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT' = 'ALL';
   isLoading = false;
@@ -56,66 +50,36 @@ export class NotificationsComponent implements OnInit {
 
   loadNotifications(): void {
     this.isLoading = true;
-    
-    forkJoin({
-      notificationsPage: this.notificationService.getAllNotifications(0, 1000).pipe(
-        catchError(err => {
-          console.error('[Notifications] Error loading notifications:', err);
-          return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
-        })
-      ),
-      adminNotifications: this.notificationService.getNotificationsByRecipient('ADMIN').pipe(
-        catchError(err => {
-          console.error('[Notifications] Error loading admin notifications:', err);
-          return of([]);
-        })
-      ),
-      clients: this.clientsService.getAll().pipe(catchError(() => of([]))),
-      users: this.usersService.getUsers().pipe(catchError(() => of([])))
-    }).subscribe({
-      next: ({ notificationsPage, adminNotifications, clients, users }) => {
-        // Build an ID -> Email lookup map to resolve UUIDs
-        const recipientMap = new Map<string, string>();
-        recipientMap.set('ADMIN', 'Admin'); // Map ADMIN to display name
-        clients.forEach(c => {
-          if (c.id) recipientMap.set(c.id, c.email);
-        });
-        users.forEach(u => {
-          if (u.id) recipientMap.set(u.id, u.email);
-        });
 
-        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-
-        // Combine all notifications and admin-specific notifications
-        const allNotifications = [...notificationsPage.content, ...adminNotifications];
-        
-        // Remove duplicates based on ID
-        const uniqueNotifications = Array.from(
-          new Map(allNotifications.map(n => [n.id, n])).values()
-        );
-
-        this.notifications = uniqueNotifications.map(n => {
-           const mappedEmail = recipientMap.get(n.recipient);
-           const finalRecipient = mappedEmail 
-             ? mappedEmail 
-             : (uuidRegex.test(n.recipient) ? 'ID: ' + n.recipient.substring(0, 8).toUpperCase() : n.recipient);
-             
-           return {
+    // Load only IN_APP notifications
+    this.notificationService.getNotificationsByChannel('IN_APP', 0, 1000).pipe(
+      catchError(err => {
+        console.error('[Notifications] Error loading notifications:', err);
+        return of({ content: [], totalElements: 0, totalPages: 0, size: 0, number: 0 });
+      })
+    ).subscribe({
+      next: (inAppPage) => {
+        this.notifications = inAppPage.content.map(n => {
+          const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+          if (uuidRegex.test(n.recipient)) {
+            return {
               ...n,
-              recipient: finalRecipient
-           };
+              recipient: 'ID: ' + n.recipient.substring(0, 8).toUpperCase()
+            };
+          }
+          return n;
         });
 
-        // Sort by creation date (newest first)
-        this.notifications.sort((a, b) => 
+        this.notifications.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
+        console.log('[Notifications] Loaded IN_APP notifications:', this.notifications.length);
         this.currentPage = 1;
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('[Notifications] Error fetching grouped data:', err);
+        console.error('[Notifications] Error fetching IN_APP notifications:', err);
         this.isLoading = false;
       }
     });
@@ -139,7 +103,7 @@ export class NotificationsComponent implements OnInit {
     // Filter by search query
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(n => 
+      filtered = filtered.filter(n =>
         n.title.toLowerCase().includes(query) ||
         n.message.toLowerCase().includes(query) ||
         n.recipient.toLowerCase().includes(query)
@@ -151,6 +115,7 @@ export class NotificationsComponent implements OnInit {
       filtered = filtered.filter(n => n.recipient === this.selectedRecipient);
     }
 
+    console.log('[Notifications] Filtered notifications:', filtered.length, 'Total:', this.notifications.length);
     return filtered;
   }
 
@@ -188,10 +153,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   markAllAsRead(): void {
-    const user = this.authService.getCurrentUser();
-    if (!user?.id) return;
-
-    this.notificationService.markAllAsRead(user.id).subscribe({
+    this.notificationService.markAllAsRead('ADMIN').subscribe({
       next: () => {
         this.notifications.forEach(n => n.read = true);
         this.notificationCountService.refreshCount();

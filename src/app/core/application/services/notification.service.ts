@@ -25,6 +25,10 @@ export class NotificationService {
     return this.repository.getAllNotifications(page, size);
   }
 
+  getNotificationsByChannel(channel: string, page: number = 0, size: number = 20): Observable<Page<Notification>> {
+    return this.repository.getNotificationsByChannel(channel, page, size);
+  }
+
   getNotificationById(id: string): Observable<Notification> {
     return this.repository.getNotificationById(id);
   }

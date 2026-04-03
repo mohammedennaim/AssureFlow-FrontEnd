@@ -29,6 +29,7 @@ export interface Notification {
   title: string;
   message: string;
   recipient: string;
+  channel?: string;
   policyId?: string;
   read: boolean;
   sent: boolean;

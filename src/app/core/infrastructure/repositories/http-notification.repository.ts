@@ -60,8 +60,9 @@ export class HttpNotificationRepository implements NotificationRepositoryPort {
       title: backend.subject || 'Notification',
       message: backend.content || '',
       recipient: backend.recipient,
+      channel: backend.channel,
       policyId: backend.policyId,
-      read: isRead,  // Utiliser le champ read du backend
+      read: isRead,
       sent: isSent,
       createdAt: backend.createdAt || backend.sentAt || new Date().toISOString(),
       sentAt: backend.sentAt
@@ -73,6 +74,18 @@ export class HttpNotificationRepository implements NotificationRepositoryPort {
       .set('page', page.toString())
       .set('size', size.toString());
     return this.http.get<BaseResponse<Page<BackendNotification>>>(this.baseUrl, { params }).pipe(
+      map(response => ({
+        ...response.data,
+        content: response.data.content.map(n => this.mapBackendNotification(n))
+      }))
+    );
+  }
+
+  getNotificationsByChannel(channel: string, page: number = 0, size: number = 20): Observable<Page<Notification>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<BaseResponse<Page<BackendNotification>>>(`${this.baseUrl}/channel/${channel}`, { params }).pipe(
       map(response => ({
         ...response.data,
         content: response.data.content.map(n => this.mapBackendNotification(n))

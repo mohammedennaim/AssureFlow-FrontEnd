@@ -16,6 +16,7 @@ export interface NotificationStatistics {
 
 export abstract class NotificationRepositoryPort {
   abstract getAllNotifications(page: number, size: number): Observable<Page<Notification>>;
+  abstract getNotificationsByChannel(channel: string, page: number, size: number): Observable<Page<Notification>>;
   abstract getNotificationById(id: string): Observable<Notification>;
   abstract getNotificationsByPolicyId(policyId: string): Observable<Notification[]>;
   abstract getNotificationsByRecipient(recipient: string): Observable<Notification[]>;
