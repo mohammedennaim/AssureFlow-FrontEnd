@@ -97,24 +97,19 @@ export class HttpClaimRepository implements IClaimRepository {
   }
 
   create(data: CreateClaimData): Observable<Claim> {
-    console.log('[HttpClaimRepository] Creating claim with data:', data);
-    
-    // Ensure proper formatting for backend
     const payload = {
       policyId: data.policyId,
       clientId: data.clientId,
-      incidentDate: data.incidentDate, // Should be in YYYY-MM-DD format
+      incidentDate: data.incidentDate,
       description: data.description,
       estimatedAmount: data.estimatedAmount,
       submittedBy: data.submittedBy
     };
-    
-    console.log('[HttpClaimRepository] Sending payload:', payload);
+
     return this.http.post<any>(this.apiUrl, payload).pipe(
       map((res) => {
-        console.log('[HttpClaimRepository] Create response:', res);
         let dto: ClaimDto | null = null;
-        
+
         if (res?.data) {
           dto = res.data;
         } else if (res?.claim) {
@@ -122,17 +117,8 @@ export class HttpClaimRepository implements IClaimRepository {
         } else {
           dto = res;
         }
-        
-        const claim = this.mapToClaim(dto as ClaimDto);
-        console.log('[HttpClaimRepository] Mapped claim:', claim);
-        return claim;
-      }),
-      catchError((error) => {
-        console.error('[HttpClaimRepository] Error creating claim:', error);
-        console.error('[HttpClaimRepository] Error status:', error.status);
-        console.error('[HttpClaimRepository] Error message:', error.message);
-        console.error('[HttpClaimRepository] Error body:', error.error);
-        throw error;
+
+        return this.mapToClaim(dto as ClaimDto);
       })
     );
   }

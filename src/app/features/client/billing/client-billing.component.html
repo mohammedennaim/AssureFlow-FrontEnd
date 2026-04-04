@@ -20,7 +20,7 @@
       </div>
       <div class="stat-card__info">
         <span class="stat-card__label">Total Paid</span>
-        <span class="stat-card__value">{{ formatCurrency(getTotalPaid()) }}</span>
+        <span class="stat-card__value">{{ getTotalPaid() | formatCurrency }}</span>
       </div>
     </div>
     <div class="stat-card">
@@ -33,7 +33,7 @@
       </div>
       <div class="stat-card__info">
         <span class="stat-card__label">Pending</span>
-        <span class="stat-card__value">{{ formatCurrency(getTotalPending()) }}</span>
+        <span class="stat-card__value">{{ getTotalPending() | formatCurrency }}</span>
       </div>
     </div>
     <div class="stat-card">
@@ -45,7 +45,7 @@
       </div>
       <div class="stat-card__info">
         <span class="stat-card__label">Overdue</span>
-        <span class="stat-card__value">{{ formatCurrency(getTotalOverdue()) }}</span>
+        <span class="stat-card__value">{{ getTotalOverdue() | formatCurrency }}</span>
       </div>
     </div>
     <div class="stat-card">
@@ -75,7 +75,7 @@
       <p>{{ nextPayment.policyName }} - Due {{ formatDate(nextPayment.dueDate) }}</p>
     </div>
     <div class="payment-alert__amount">
-      {{ formatCurrency(nextPayment.amount) }}
+      {{ nextPayment.amount | formatCurrency }}
     </div>
     <button class="btn btn--primary">Pay Now</button>
   </section>
@@ -134,7 +134,7 @@
     } @else {
       @for (invoice of invoices; track invoice.id) {
         <div class="invoice-card">
-          <div class="invoice-card__icon" [style.background]="getAvatarColor(invoice.id.toString())">
+          <div class="invoice-card__icon" [style.background]="invoice.id.toString() | avatarColor">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="white" stroke-width="2"/>
               <path d="M14 2V8H20" stroke="white" stroke-width="2"/>
@@ -148,7 +148,7 @@
                 <h3>Invoice #{{ invoice.invoiceNumber }}</h3>
                 <span class="invoice-card__date">{{ formatDate(invoice.createdAt || invoice.dueDate) }}</span>
               </div>
-              <span class="status-badge" [class]="getStatusClass(invoice.status)">{{ invoice.status | titlecase }}</span>
+              <span class="status-badge" [class]="invoice.status | statusClass">{{ invoice.status | titlecase }}</span>
             </div>
             <p class="invoice-card__description">Invoice for {{ invoice.invoiceNumber }}</p>
             <div class="invoice-card__details">
@@ -158,7 +158,7 @@
               </div>
               <div class="detail">
                 <span class="detail__label">Amount</span>
-                <span class="detail__value">{{ formatCurrency(invoice.amount) }}</span>
+                <span class="detail__value">{{ invoice.amount | formatCurrency }}</span>
               </div>
             </div>
             <div class="invoice-card__actions">

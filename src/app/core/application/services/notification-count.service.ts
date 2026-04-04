@@ -1,8 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, DestroyRef } from '@angular/core';
 import { BehaviorSubject, Observable, forkJoin, interval, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationService } from './notification.service';
 import { AuthService } from '../../auth/auth.service';
+import { ClientSessionService } from './client-session.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationCountService {
@@ -11,7 +13,13 @@ export class NotificationCountService {
 
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
+  private clientSessionService = inject(ClientSessionService);
+  private destroyRef = inject(DestroyRef);
   private pollingInterval = 30000;
+
+  private isInAppNotification(channel?: string): boolean {
+    return (channel || '').toUpperCase() === 'IN_APP';
+  }
 
   constructor() {
     this.startPolling();
@@ -20,7 +28,8 @@ export class NotificationCountService {
   private startPolling(): void {
     this.fetchUnreadCount();
     interval(this.pollingInterval).pipe(
-      switchMap(() => this.fetchUnreadCount())
+      switchMap(() => this.fetchUnreadCount()),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe();
   }
 
@@ -31,59 +40,66 @@ export class NotificationCountService {
     }
 
     const userEmail = user.id;
-    const userClientId = user.clientId;
-    console.log('[NotificationCount] Fetching count for:', userEmail, 'clientId:', userClientId, 'role:', user.role);
 
     // CLIENT : utiliser getNotificationsByRecipient (autorisé)
     if (user.role === 'CLIENT') {
-      const recipients = [userEmail, userClientId].filter((value, index, array) =>
-        !!value && array.indexOf(value) === index
-      ) as string[];
+      return this.clientSessionService.getCurrentClientId().pipe(
+        switchMap((resolvedClientId) => {
+          const recipients = [userEmail, resolvedClientId].filter((value, index, array) =>
+            !!value && array.indexOf(value) === index
+          ) as string[];
 
-      if (recipients.length === 0) {
-        this.unreadCountSubject.next(0);
-        return of(0);
-      }
+          if (recipients.length === 0) {
+            this.unreadCountSubject.next(0);
+            return of(0);
+          }
 
-      const requests = recipients.map(recipient =>
-        this.notificationService.getNotificationsByRecipient(recipient).pipe(
-          catchError((err) => {
-            console.error('[NotificationCount] Error fetching recipient notifications:', recipient, err);
-            return of([]);
-          })
-        )
-      );
+          const requests = recipients.map(recipient =>
+            this.notificationService.getNotificationsByRecipient(recipient).pipe(
+              catchError(() => of([]))
+            )
+          );
 
-      return forkJoin(requests).pipe(
-        switchMap(notifications => {
-          const merged = new Map<string, { read: boolean }>();
-          notifications.flat().forEach(notification => merged.set(notification.id, notification));
-          const unread = Array.from(merged.values()).filter(n => !n.read).length;
-          console.log('[NotificationCount] CLIENT unread:', unread, '(email:', userEmail + ')');
-          this.unreadCountSubject.next(unread);
-          return of(unread);
+          return forkJoin(requests).pipe(
+            switchMap(notifications => {
+              const merged = new Map<string, { read: boolean; channel?: string; type?: string; title?: string; message?: string; policyId?: string; createdAt?: string; sentAt?: string }>();
+              notifications.flat().forEach(notification => merged.set(notification.id, notification));
+
+              const inApp = Array.from(merged.values()).filter(n => this.isInAppNotification(n.channel));
+              const deduped = new Map<string, { read: boolean }>();
+              inApp
+                .sort((a, b) => new Date((b.createdAt || b.sentAt || 0) as string).getTime() - new Date((a.createdAt || a.sentAt || 0) as string).getTime())
+                .forEach(n => {
+                  const rawTimestamp = n.createdAt || n.sentAt || '';
+                  const timestampMs = new Date(rawTimestamp).getTime();
+                  const minuteBucket = Number.isNaN(timestampMs) ? rawTimestamp : Math.floor(timestampMs / 60000).toString();
+                  const signature = [n.type || '', n.title || '', n.message || '', n.policyId || '', minuteBucket].join('|');
+                  if (!deduped.has(signature)) {
+                    deduped.set(signature, { read: n.read });
+                  }
+                });
+
+              const unread = Array.from(deduped.values()).filter(n => !n.read).length;
+              this.unreadCountSubject.next(unread);
+              return of(unread);
+            })
+          );
         }),
-        catchError((err) => {
-          console.error('[NotificationCount] Error:', err);
-          return of(0);
-        })
+        catchError(() => of(0))
       );
     }
 
     // ADMIN/AGENT : filtrer par email OU clientId
     return this.notificationService.getAllNotifications(0, 100).pipe(
       switchMap(page => {
-        const unread = page.content.filter(n => 
-          !n.read && (n.recipient === userEmail || n.recipient === userClientId)
+        const userClientId = user.clientId;
+        const unread = page.content.filter(n =>
+          !n.read && this.isInAppNotification(n.channel) && (n.recipient === userEmail || n.recipient === userClientId || n.recipient === 'ADMIN')
         ).length;
-        console.log('[NotificationCount]', user.role, 'unread:', unread, '(email:', userEmail + ')');
         this.unreadCountSubject.next(unread);
         return of(unread);
       }),
-      catchError((err) => {
-        console.error('[NotificationCount] Error:', err);
-        return of(0);
-      })
+      catchError(() => of(0))
     );
   }
 

@@ -8,6 +8,7 @@ import { catchError, of } from 'rxjs';
 import { CLAIM_REPOSITORY } from '../../../../core/domain/ports/claim.repository.port';
 import { POLICY_REPOSITORY } from '../../../../core/domain/ports/policy.repository.port';
 import { ClaimStepsTrackerComponent } from '../../../../shared/components/claim-steps-tracker/claim-steps-tracker.component';
+import { LoggerService } from '../../../../core/application/services/logger.service';
 
 @Component({
   selector: 'app-claim-detail',

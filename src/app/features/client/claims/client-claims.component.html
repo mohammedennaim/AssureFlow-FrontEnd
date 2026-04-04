@@ -130,7 +130,7 @@
     } @else {
       @for (claim of getFilteredClaims(); track claim.id) {
         <div class="claim-card">
-          <div class="claim-card__icon" [style.background]="getAvatarColor(claim.id.toString())">
+          <div class="claim-card__icon" [style.background]="claim.id.toString() | avatarColor">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3L5 7V13C5 18 8.5 22 12 23C15.5 22 19 18 19 13V7L12 3Z" stroke="white" stroke-width="2"/>
               <path d="M9 13L11 15L15 11" stroke="white" stroke-width="2"/>
@@ -142,7 +142,7 @@
                 <h3>Claim #{{ claim.claimNumber }}</h3>
                 <span class="claim-card__date">{{ formatDate(claim.createdAt || claim.submittedAt || '') }}</span>
               </div>
-              <span class="status-badge" [class]="getStatusClass(claim.status)">{{ claim.status | titlecase }}</span>
+              <span class="status-badge" [class]="claim.status | statusClass">{{ claim.status | titlecase }}</span>
             </div>
             
             <!-- Mini Steps Tracker -->
@@ -183,11 +183,11 @@
               </div>
               <div class="detail">
                 <span class="detail__label">Claim Amount</span>
-                <span class="detail__value">{{ formatCurrency(claim.amount || 0) }}</span>
+                <span class="detail__value">{{ claim.amount || 0 | formatCurrency }}</span>
               </div>
               <div class="detail" *ngIf="claim.approvedAmount">
                 <span class="detail__label">Approved Amount</span>
-                <span class="detail__value">{{ formatCurrency(claim.approvedAmount) }}</span>
+                <span class="detail__value">{{ claim.approvedAmount | formatCurrency }}</span>
               </div>
               <div class="detail" *ngIf="claim.incidentDate">
                 <span class="detail__label">Incident Date</span>

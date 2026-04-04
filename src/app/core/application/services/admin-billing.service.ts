@@ -77,41 +77,4 @@ export class BillingService {
   deletePayment(id: string): Observable<void> {
     return this.paymentRepository.delete(id);
   }
-
-  // Legacy methods for backward compatibility
-  getAll(page: number = 0, size: number = 20): Observable<Invoice[]> {
-    return this.getAllInvoices(page, size);
-  }
-
-  getById(id: string): Observable<Invoice> {
-    return this.getInvoiceById(id);
-  }
-
-  getByNumber(invoiceNumber: string): Observable<Invoice> {
-    return this.getInvoiceByNumber(invoiceNumber);
-  }
-
-  getByClientId(clientId: string): Observable<Invoice[]> {
-    return this.getInvoicesByClientId(clientId);
-  }
-
-  getByPolicyId(policyId: string): Observable<Invoice[]> {
-    return this.getInvoicesByPolicyId(policyId);
-  }
-
-  create(data: CreateInvoiceData): Observable<Invoice> {
-    return this.createInvoice(data);
-  }
-
-  cancel(id: string): Observable<void> {
-    return this.cancelInvoice(id);
-  }
-
-  markAsPaid(id: string, paymentId: string): Observable<void> {
-    return this.markInvoiceAsPaid(id, paymentId);
-  }
-
-  delete(id: string): Observable<void> {
-    return this.deleteInvoice(id);
-  }
 }

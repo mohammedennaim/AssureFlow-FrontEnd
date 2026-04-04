@@ -126,7 +126,7 @@
     } @else {
       @for (policy of getFilteredPolicies(); track policy.id) {
         <div class="policy-card">
-          <div class="policy-card__icon" [style.background]="getAvatarColor(policy.type)">
+          <div class="policy-card__icon" [style.background]="policy.type | avatarColor">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3L5 7V13C5 18 8.5 22 12 23C15.5 22 19 18 19 13V7L12 3Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M9 13L11 15L15 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -135,7 +135,7 @@
           <div class="policy-card__content">
             <div class="policy-card__header">
               <h3>{{ policy.type | titlecase }} Insurance</h3>
-              <span class="status-badge" [class]="getStatusClass(policy.status)">{{ policy.status | titlecase }}</span>
+              <span class="status-badge" [class]="policy.status | statusClass">{{ policy.status | titlecase }}</span>
             </div>
             <div class="policy-card__details">
               <div class="detail">
@@ -148,7 +148,7 @@
               </div>
               <div class="detail">
                 <span class="detail__label">Premium</span>
-                <span class="detail__value">{{ formatCurrency(policy.premium || 0) }}/yr</span>
+                <span class="detail__value">{{ policy.premium || 0 | formatCurrency }}/yr</span>
               </div>
               <div class="detail">
                 <span class="detail__label">Start Date</span>

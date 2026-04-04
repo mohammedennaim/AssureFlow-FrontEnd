@@ -17,14 +17,6 @@ export class ClientsService {
     return this.clientRepository.getById(id);
   }
 
-  getByEmail(email: string): Observable<Client> {
-    return this.clientRepository.getByEmail(email);
-  }
-
-  getByCin(cin: string): Observable<Client> {
-    return this.clientRepository.getByCin(cin);
-  }
-
   create(data: CreateClientData): Observable<Client> {
     return this.clientRepository.create(data);
   }

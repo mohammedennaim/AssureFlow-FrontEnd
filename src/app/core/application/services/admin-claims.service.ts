@@ -17,10 +17,6 @@ export class ClaimsService {
     return this.claimRepository.getById(id);
   }
 
-  getByPolicyId(policyId: string): Observable<Claim[]> {
-    return this.claimRepository.getByPolicyId(policyId);
-  }
-
   getByClientId(clientId: string): Observable<Claim[]> {
     return this.claimRepository.getByClientId(clientId);
   }

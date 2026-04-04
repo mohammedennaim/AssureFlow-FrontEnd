@@ -81,8 +81,6 @@ export class ClientDashboardService {
     return this.getCurrentClientId().pipe(
       switchMap((clientId) => {
         if (!clientId) {
-          console.warn('[ClientDashboard] No clientId found, returning empty stats');
-          console.warn('[ClientDashboard] This usually means: 1) User is not logged in, 2) Client not found for this email, 3) Backend API issue');
           return of({
             totalPolicies: 0,
             activePolicies: 0,
@@ -96,25 +94,13 @@ export class ClientDashboardService {
         // Use getByClientId instead of getAll + filter
         return forkJoin({
           policies: this.policyRepository.getByClientId(clientId).pipe(
-            catchError((err) => {
-              console.error('[ClientDashboard] Error fetching policies:', err);
-              console.warn('[ClientDashboard] Check if backend endpoint GET /api/v1/policies/client/{clientId} exists');
-              return of([]);
-            })
+            catchError(() => of([]))
           ),
           claims: this.claimRepository.getByClientId(clientId).pipe(
-            catchError((err) => {
-              console.error('[ClientDashboard] Error fetching claims:', err);
-              console.warn('[ClientDashboard] Check if backend endpoint GET /api/v1/claims/client/{clientId} exists');
-              return of([]);
-            })
+            catchError(() => of([]))
           ),
           invoices: this.invoiceRepository.getByClientId(clientId).pipe(
-            catchError((err) => {
-              console.error('[ClientDashboard] Error fetching invoices:', err);
-              console.warn('[ClientDashboard] Check if backend endpoint GET /api/v1/invoices/client/{clientId} exists');
-              return of([]);
-            })
+            catchError(() => of([]))
           )
         }).pipe(
           map((data) => {

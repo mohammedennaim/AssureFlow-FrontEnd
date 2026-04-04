@@ -169,7 +169,7 @@ export class AdminStatisticsService {
   }
 
   private getAllInvoices(): Observable<Invoice[]> {
-    return this.billingService.getAll(0, 1000).pipe(catchError(() => of([])));
+    return this.billingService.getAllInvoices(0, 1000).pipe(catchError(() => of([])));
   }
 
   private calculateKpiStats(data: {

@@ -227,7 +227,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private mapPolicies(policies: Policy[]): PolicyItem[] {
+  private mapPolicies(policies: Policy[] = []): PolicyItem[] {
     return policies.slice(0, 5).map(p => ({
       id: p.id,
       name: p.policyNumber || `${p.type} Policy`,
@@ -239,7 +239,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }));
   }
 
-  private mapClaims(claims: Claim[]): ClaimItem[] {
+  private mapClaims(claims: Claim[] = []): ClaimItem[] {
     return claims.slice(0, 5).map(c => ({
       id: c.id,
       policyName: c.policyId || 'Unknown Policy',
@@ -250,18 +250,22 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }));
   }
 
-  private mapPayments(paymentStats: ClientPaymentStats): PaymentItem[] {
+  private mapPayments(paymentStats: ClientPaymentStats | null): PaymentItem[] {
+    if (!paymentStats) {
+      return [];
+    }
+
     const payments: PaymentItem[] = [];
     
     // Add next payment
     if (paymentStats.nextPayment) {
       payments.push({
         id: 'next-payment',
-        date: paymentStats.nextPayment.dueDate.toISOString(),
+        date: this.safeIsoDate(paymentStats.nextPayment.dueDate),
         amount: paymentStats.nextPayment.amount,
         status: 'pending',
         policyName: paymentStats.nextPayment.policyName,
-        dueDate: paymentStats.nextPayment.dueDate.toISOString()
+        dueDate: this.safeIsoDate(paymentStats.nextPayment.dueDate)
       });
     }
     
@@ -272,11 +276,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       .forEach(i => {
         payments.push({
           id: i.id,
-          date: i.createdAt || i.dueDate,
+          date: this.safeIsoDate(i.createdAt || i.dueDate),
           amount: i.amount,
           status: 'pending',
           policyName: `Invoice ${i.invoiceNumber}`,
-          dueDate: i.dueDate
+          dueDate: this.safeIsoDate(i.dueDate)
         });
       });
     
@@ -299,7 +303,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | null | undefined): string {
+    if (!status) {
+      return '';
+    }
+
     const statusMap: Record<string, string> = {
       active: 'status--active',
       pending: 'status--pending',
@@ -313,8 +321,16 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     return statusMap[status.toLowerCase()] || '';
   }
 
-  formatDate(dateString: string): string {
+  formatDate(dateString: string | null | undefined): string {
+    if (!dateString) {
+      return '-';
+    }
+
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
+
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
@@ -329,7 +345,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   /**
    * Normalize policy status to lowercase UI-friendly format
    */
-  private normalizePolicyStatus(status: string): PolicyItem['status'] {
+  private normalizePolicyStatus(status: string | null | undefined): PolicyItem['status'] {
+    if (!status) {
+      return 'pending';
+    }
+
     const normalizedStatus = status.toUpperCase();
     if (normalizedStatus === 'ACTIVE') return 'active';
     if (normalizedStatus === 'PENDING' || normalizedStatus === 'DRAFT' || normalizedStatus === 'SUBMITTED') return 'pending';
@@ -340,13 +360,30 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   /**
    * Normalize claim status to lowercase UI-friendly format
    */
-  private normalizeClaimStatus(status: string): ClaimItem['status'] {
+  private normalizeClaimStatus(status: string | null | undefined): ClaimItem['status'] {
+    if (!status) {
+      return 'pending';
+    }
+
     const normalizedStatus = status.toUpperCase();
     if (normalizedStatus === 'PENDING' || normalizedStatus === 'SUBMITTED') return 'pending';
     if (normalizedStatus === 'UNDER_REVIEW' || normalizedStatus === 'PROCESSING') return 'processing';
     if (normalizedStatus === 'APPROVED' || normalizedStatus === 'PAID') return 'approved';
     if (normalizedStatus === 'REJECTED' || normalizedStatus === 'DENIED') return 'rejected';
     return 'pending';
+  }
+
+  private safeIsoDate(value: Date | string | null | undefined): string {
+    if (!value) {
+      return new Date().toISOString();
+    }
+
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return new Date().toISOString();
+    }
+
+    return date.toISOString();
   }
 
   getAvatarColor(name: string): string {

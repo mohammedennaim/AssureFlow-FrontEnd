@@ -8,11 +8,13 @@ import { Subject, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Page } from '../../../core/domain/models/page.model';
+import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
+import { ClientSessionService } from '../../../core/application/services/client-session.service';
 
 @Component({
   selector: 'app-notification-center',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TimeAgoPipe],
   templateUrl: './notification-center.component.html',
   styleUrl: './notification-center.component.scss'
 })
@@ -30,9 +32,10 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   private notificationCountService = inject(NotificationCountService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private clientSessionService = inject(ClientSessionService);
 
   ngOnInit(): void {
-    // Récupérer l'email de la personne connectée
+    // Read identity from JWT first
     const user = this.authService.getCurrentUser();
     this.currentEmail = user?.id || null;
     this.currentClientId = user?.clientId || null;
@@ -41,6 +44,22 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     console.log('[NotificationCenter] Current user:', user);
     console.log('[NotificationCenter] Current email:', this.currentEmail);
     console.log('[NotificationCenter] Current clientId:', this.currentClientId);
+
+    // Ensure clientId is resolved even when JWT does not include clientId claim.
+    if (!this.isPrivilegedUser()) {
+      this.clientSessionService.getCurrentClientId().subscribe({
+        next: (resolvedClientId) => {
+          if (resolvedClientId) {
+            this.currentClientId = resolvedClientId;
+          }
+          this.loadNotifications();
+        },
+        error: () => {
+          this.loadNotifications();
+        }
+      });
+      return;
+    }
 
     this.loadNotifications();
   }
@@ -117,7 +136,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   }
 
   private isPrivilegedUser(): boolean {
-    return this.currentRole === 'ADMIN' || this.currentRole === 'AGENT';
+    const role = (this.currentRole || '').toUpperCase();
+    return role === 'ADMIN' || role === 'AGENT' || role === 'ROLE_ADMIN' || role === 'ROLE_AGENT';
   }
 
   private loadClientNotifications(): void {
@@ -198,32 +218,73 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     notificationsByRecipient.flat().forEach(notification => {
       merged.set(notification.id, notification);
     });
-    return Array.from(merged.values());
+    return this.sortByNewest(Array.from(merged.values()));
+  }
+
+  private sortByNewest(notifications: Notification[]): Notification[] {
+    return [...notifications].sort((a, b) => {
+      const aTime = new Date(a.createdAt || a.sentAt || 0).getTime();
+      const bTime = new Date(b.createdAt || b.sentAt || 0).getTime();
+      return bTime - aTime;
+    });
+  }
+
+  private isInAppNotification(notification: Notification): boolean {
+    return (notification.channel || '').toUpperCase() === 'IN_APP';
+  }
+
+  private dedupeSemanticNotifications(notifications: Notification[]): Notification[] {
+    const sorted = this.sortByNewest(notifications);
+    const deduped = new Map<string, Notification>();
+
+    for (const notification of sorted) {
+      const rawTimestamp = notification.createdAt || notification.sentAt || '';
+      const timestampMs = new Date(rawTimestamp).getTime();
+      const minuteBucket = Number.isNaN(timestampMs) ? rawTimestamp : Math.floor(timestampMs / 60000).toString();
+      const signature = [
+        notification.type,
+        notification.title,
+        notification.message,
+        notification.policyId || '',
+        minuteBucket
+      ].join('|');
+
+      if (!deduped.has(signature)) {
+        deduped.set(signature, notification);
+      }
+    }
+
+    return Array.from(deduped.values());
   }
 
   private updateNotifications(newNotifications: Notification[]): void {
-    // Filtrer les notifications par email OU clientId de la personne connectée
-    // Pour ADMIN : inclure aussi les notifications 'ADMIN'
-    if (!this.currentEmail) {
-      this.notifications = newNotifications;
-      const unread = this.notifications.filter(n => !n.read).length;
-      this.notificationCountService.setUnreadCount(unread);
-      return;
-    }
+    const role = (this.currentRole || '').toUpperCase();
+    const isAdmin = role === 'ADMIN' || role === 'ROLE_ADMIN';
 
-    const filteredNotifications = newNotifications.filter(n => {
-      const isPersonal = n.recipient === this.currentEmail || n.recipient === this.currentClientId;
-      const isAdminGlobal = n.recipient === 'ADMIN';
-      // Les admins voient leurs notifications + les notifications ADMIN globales
-      // Les clients/agents voient leurs notifications (email ou clientId)
-      return isPersonal || (this.currentRole === 'ADMIN' && isAdminGlobal);
+    const filteredNotifications = newNotifications.filter((n) => {
+      if (!this.isInAppNotification(n)) {
+        return false;
+      }
+
+      if (isAdmin) {
+        // Admin header should show only global admin notifications.
+        return n.recipient === 'ADMIN';
+      }
+
+      // Client/Agent should show only own notifications.
+      const isOwnRecipient = n.recipient === this.currentEmail || n.recipient === this.currentClientId;
+      return isOwnRecipient && n.recipient !== 'ADMIN';
     });
 
     console.log('[NotificationCenter] Filtering for email:', this.currentEmail, 'clientId:', this.currentClientId);
     console.log('[NotificationCenter] Filtered from', newNotifications.length, 'to', filteredNotifications.length);
     console.log('[NotificationCenter] Filtered recipients:', [...new Set(filteredNotifications.map(n => n.recipient))]);
 
-    this.notifications = filteredNotifications;
+    const normalizedNotifications = isAdmin
+      ? filteredNotifications
+      : this.dedupeSemanticNotifications(filteredNotifications);
+
+    this.notifications = this.sortByNewest(normalizedNotifications);
     const unread = this.notifications.filter(n => !n.read).length;
     console.log('[NotificationCenter] Updated - total:', this.notifications.length, 'unread:', unread);
     this.notificationCountService.setUnreadCount(unread);
@@ -284,17 +345,6 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       this.router.navigate(['/admin/notifications']);
     }
     this.close();
-  }
-
-  getTimeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return "À l'instant";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-    return `${Math.floor(seconds / 86400)}j`;
   }
 
   getNotificationTypeClass(type: string): string {
