@@ -9,7 +9,7 @@ export type { Client };
 export class ClientsService {
   private clientRepository = inject(CLIENT_REPOSITORY);
 
-  getAll(page: number = 0, size: number = 20): Observable<Client[]> {
+  getAll(page: number = 0, size: number = 1000): Observable<Client[]> {
     return this.clientRepository.getAll(page, size);
   }
 

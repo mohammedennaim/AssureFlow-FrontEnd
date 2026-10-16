@@ -17,20 +17,7 @@ export class HttpClientRepository implements IClientRepository {
       params: { page: page.toString(), size: size.toString() }
     }).pipe(
       map((res) => {
-        let data: ClientDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.clients && Array.isArray(res.clients)) {
-          data = res.clients;
-        } else if (res?.items && Array.isArray(res.items)) {
-          data = res.items;
-        }
-        
+        const data = this.extractList(res);
         return data.map(this.mapToClient);
       }),
       catchError(() => of([]))
@@ -176,6 +163,19 @@ export class HttpClientRepository implements IClientRepository {
 
   deactivate(id: string): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${id}/deactivate`, {});
+  }
+
+  private extractList(res: unknown): ClientDto[] {
+    if (Array.isArray(res)) return res;
+    const body = res as Record<string, unknown> | null;
+    if (!body) return [];
+    if (Array.isArray(body['data'])) return body['data'] as ClientDto[];
+    const nested = body['data'] as Record<string, unknown> | undefined;
+    if (nested && Array.isArray(nested['content'])) return nested['content'] as ClientDto[];
+    if (Array.isArray(body['content'])) return body['content'] as ClientDto[];
+    if (Array.isArray(body['clients'])) return body['clients'] as ClientDto[];
+    if (Array.isArray(body['items'])) return body['items'] as ClientDto[];
+    return [];
   }
 
   private mapToClient(dto: ClientDto): Client {

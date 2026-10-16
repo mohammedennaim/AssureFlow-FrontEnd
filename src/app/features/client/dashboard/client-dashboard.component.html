@@ -1,420 +1,317 @@
-<div class="dashboard">
-  <!-- Header Section -->
-  <header class="dashboard__header">
-    <div class="dashboard__header-content">
-      <div class="dashboard__welcome">
-        <h1 class="dashboard__title">
-          <span class="dashboard__greeting">{{ getGreeting() }},</span>
-        </h1>
-        <p class="dashboard__subtitle">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 4V8L10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          {{ getFormattedDate() }}
+<ng-template #icon let-name>
+  <lucide-icon [img]="icons[name] || icons['shield']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+</ng-template>
+
+<!-- ==================== Accueil ==================== -->
+<section class="hero-c" aria-labelledby="welcome-title">
+  <div class="site-container hero-c__inner">
+    <div class="hero-c__top">
+      <div class="hero-c__text">
+        <p class="hero-c__eyebrow">
+          {{ todayLabel }}<span *ngIf="memberSince"> · Client depuis {{ memberSince }}</span>
         </p>
+        <h1 id="welcome-title">{{ greeting }}<span *ngIf="firstName">, {{ firstName }}</span></h1>
+        <p class="hero-c__lead">Vos contrats, vos sinistres et vos factures, réunis au même endroit. On s’occupe du reste.</p>
+
+        <div *ngIf="!loading && policies.length" class="hero-c__chips" aria-label="Mes garanties">
+          <a *ngFor="let policy of policies; trackBy: trackById" class="hero-c__chip" [attr.data-tone]="policy.tone"
+             [routerLink]="['/client/policies', policy.id]" [attr.aria-label]="'Assurance ' + policy.title + ' – ' + policy.statusLabel">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: policy.icon }"></ng-container>
+            {{ policy.title }}
+            <i aria-hidden="true"></i>
+          </a>
+        </div>
       </div>
 
-      <div class="dashboard__actions">
-        <a routerLink="/client/submit-claim" class="dashboard__btn dashboard__btn--primary">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 3.75V14.25M3.75 9H14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Submit Claim
+      <div class="hero-c__art" aria-hidden="true">
+        <span class="hero-c__ring"></span>
+        <span class="hero-c__emblem">
+          <lucide-icon [img]="icons['contracts']" [size]="64" [strokeWidth]="1.5"></lucide-icon>
+        </span>
+        <span class="hero-c__badge">
+          <lucide-icon [img]="icons['check']" [size]="18" [strokeWidth]="2.25"></lucide-icon>
+        </span>
+      </div>
+
+      <div class="priority" [attr.data-tone]="loading ? 'neutral' : attention?.tone || 'neutral'" role="status" aria-live="polite">
+        <ng-container *ngIf="!loading && attention; else prioritySkeleton">
+          <div class="priority__top">
+            <span class="priority__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: priorityIcon }"></ng-container>
+            </span>
+            <span class="priority__tag">{{ priorityTag }}</span>
+          </div>
+          <strong class="priority__title">{{ attention.title }}</strong>
+          <p class="priority__text">{{ attention.text }}</p>
+          <a *ngIf="attention.action as action" class="priority__cta" [routerLink]="action.link">
+            {{ action.label }}
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+          <button *ngIf="attention.tone === 'neutral'" type="button" class="priority__cta" (click)="refreshData()">
+            Réessayer
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'refresh' }"></ng-container>
+          </button>
+        </ng-container>
+        <ng-template #prioritySkeleton>
+          <span class="priority__skeleton priority__skeleton--icon"></span>
+          <span class="priority__skeleton"></span>
+          <span class="priority__skeleton priority__skeleton--short"></span>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Vue d’ensemble -->
+    <section class="hero-c__block" aria-labelledby="overview-title">
+      <div class="hero-c__label-row">
+        <h2 id="overview-title" class="hero-c__label">Vue d’ensemble</h2>
+        <div class="hero-c__sync">
+          <span *ngIf="lastUpdated">Mis à jour à {{ formatTime(lastUpdated) }}</span>
+          <button type="button" class="head__refresh" [class.spinning]="isRefreshing" [disabled]="isRefreshing"
+                  (click)="refreshData()" aria-label="Actualiser les données">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'refresh' }"></ng-container>
+          </button>
+        </div>
+      </div>
+
+      <div class="overview__grid" *ngIf="!loading; else overviewSkeleton">
+        <article *ngFor="let tile of spaceTiles" class="stat" [attr.data-tone]="tile.tone">
+          <div class="stat__main">
+            <span class="stat__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: tile.icon }"></ng-container>
+            </span>
+            <span class="stat__text">
+              <span class="stat__label">{{ tile.label }}</span>
+              <strong class="stat__value">{{ tile.value }}</strong>
+            </span>
+            <span class="pill stat__badge" [attr.data-tone]="tile.tone">{{ tile.badge }}</span>
+          </div>
+          <div class="stat__foot">
+            <p class="stat__hint">{{ tile.hint }}</p>
+            <a class="stat__cta" [routerLink]="tile.link">
+              {{ tile.cta }}
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+            </a>
+          </div>
+        </article>
+      </div>
+      <ng-template #overviewSkeleton>
+        <div class="overview__grid" aria-hidden="true">
+          <span *ngFor="let i of [1, 2, 3]" class="stat stat--skeleton"></span>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- Accès rapides -->
+    <section class="hero-c__block" aria-labelledby="quick-title">
+      <div class="hero-c__label-row">
+        <h2 id="quick-title" class="hero-c__label">Accès rapides</h2>
+        <a class="hero-c__more" routerLink="/client/support">
+          Besoin d’autre chose ?
+          <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
         </a>
       </div>
-    </div>
-  </header>
 
-  <!-- Quick Actions -->
-  <section class="dashboard__stats dashboard__stats--quick-actions">
-    <a routerLink="/client/policies" class="stat-card stat-card--action" [style.--stat-color]="'#06b6d4'" [style.--stat-gradient]="'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)'" [style.--stat-shadow]="'0 4px 14px rgba(6, 182, 212, 0.4)'">
-      <div class="stat-card__content">
-        <div class="stat-card__icon" [style.background]="'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)'">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 3.66667L4.58333 6.41667V11.9167C4.58333 16.0417 7.33333 19.25 11 20.1667C14.6667 19.25 17.4167 16.0417 17.4167 11.9167V6.41667L11 3.66667Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8.25 11L10.0833 12.8333L13.75 9.16667" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="stat-card__info">
-          <span class="stat-card__label">Quick Action</span>
-          <span class="stat-card__value stat-card__value--action">View Policies</span>
-        </div>
-      </div>
-      <div class="stat-card__sparkline">
-        <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-            stroke="#06b6d4"
-          />
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
-            fill="currentColor"
-            fill="#06b6d4"
-            opacity="0.1"
-          />
-        </svg>
-      </div>
-    </a>
+      <nav class="shortcuts__grid" aria-labelledby="quick-title">
+        <a *ngFor="let shortcut of shortcuts" class="shortcut" [attr.data-color]="shortcut.color" [routerLink]="shortcut.link">
+          <span class="shortcut__icon">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: shortcut.icon }"></ng-container>
+          </span>
+          <span class="shortcut__text">
+            <strong>{{ shortcut.label }}</strong>
+            <small>{{ shortcut.description }}</small>
+          </span>
+          <span class="shortcut__arrow">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'chevron' }"></ng-container>
+          </span>
+        </a>
+      </nav>
+    </section>
+  </div>
+</section>
 
-    <a routerLink="/client/claims" class="stat-card stat-card--action" [style.--stat-color]="'#f59e0b'" [style.--stat-gradient]="'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'" [style.--stat-shadow]="'0 4px 14px rgba(245, 158, 11, 0.4)'">
-      <div class="stat-card__content">
-        <div class="stat-card__icon" [style.background]="'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14.6667 5.04167H12.8333V4.58333C12.8333 3.56581 12.0008 2.75 10.9583 2.75C9.91583 2.75 9.08333 3.56581 9.08333 4.58333V5.04167H7.33333C5.95833 5.04167 5.04167 5.95833 5.04167 7.33333V16.5C5.04167 17.875 5.95833 18.7917 7.33333 18.7917H14.6667C16.0417 18.7917 16.9583 17.875 16.9583 16.5V7.33333C16.9583 5.95833 16.0417 5.04167 14.6667 5.04167Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="stat-card__info">
-          <span class="stat-card__label">Quick Action</span>
-          <span class="stat-card__value stat-card__value--action">File Claim</span>
-        </div>
+<div class="site-container page">
+  <!-- ==================== Contrats et sinistres ==================== -->
+  <section id="details" class="situation" aria-labelledby="details-title" afReveal>
+    <header class="head head--compact">
+      <div class="head__text">
+        <span class="head__eyebrow">En détail</span>
+        <h2 id="details-title">Mes contrats et sinistres</h2>
       </div>
-      <div class="stat-card__sparkline">
-        <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-            stroke="#f59e0b"
-          />
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
-            fill="currentColor"
-            fill="#f59e0b"
-            opacity="0.1"
-          />
-        </svg>
-      </div>
-    </a>
+    </header>
 
-    <a routerLink="/client/documents" class="stat-card stat-card--action" [style.--stat-color]="'#10b981'" [style.--stat-gradient]="'linear-gradient(135deg, #10b981 0%, #34d399 100%)'" [style.--stat-shadow]="'0 4px 14px rgba(16, 185, 129, 0.4)'">
-      <div class="stat-card__content">
-        <div class="stat-card__icon" [style.background]="'linear-gradient(135deg, #10b981 0%, #34d399 100%)'">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 2.5L5 5.5V14.5C5 16.5 7 18.5 10 18.5C13 18.5 15 16.5 15 14.5V7.5L10 2.5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 2.5V7.5H15" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+    <div class="situation__grid situation__grid--duo">
+      <!-- Contrats -->
+      <div class="card">
+        <div class="card__head">
+          <h3>
+            <span class="card__head-icon"><ng-container *ngTemplateOutlet="icon; context: { $implicit: 'contracts' }"></ng-container></span>
+            Mes contrats
+          </h3>
+          <a routerLink="/client/policies">Voir tous <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container></a>
         </div>
-        <div class="stat-card__info">
-          <span class="stat-card__label">Quick Action</span>
-          <span class="stat-card__value stat-card__value--action">Documents</span>
-        </div>
-      </div>
-      <div class="stat-card__sparkline">
-        <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-            stroke="#10b981"
-          />
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
-            fill="currentColor"
-            fill="#10b981"
-            opacity="0.1"
-          />
-        </svg>
-      </div>
-    </a>
 
-    <a routerLink="/client/support" class="stat-card stat-card--action" [style.--stat-color]="'#6366f1'" [style.--stat-gradient]="'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'" [style.--stat-shadow]="'0 4px 14px rgba(99, 102, 241, 0.4)'">
-      <div class="stat-card__content">
-        <div class="stat-card__icon" [style.background]="'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9.5 10.5C9.5 10.5 10 11.5 11 11.5C12 11.5 12.5 10.5 12.5 9C12.5 7.5 11 7 11 7C11 7 9.5 6.5 9.5 8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="stat-card__info">
-          <span class="stat-card__label">Quick Action</span>
-          <span class="stat-card__value stat-card__value--action">Support</span>
-        </div>
+        <ul class="contracts" *ngIf="policies.length; else noPolicies">
+          <li *ngFor="let policy of policies; trackBy: trackById">
+            <a class="contract contract--media" [routerLink]="['/client/policies', policy.id]">
+              <span class="contract__thumb">
+                <img *ngIf="policy.image; else policyIcon" [src]="policy.image" [alt]="'Assurance ' + policy.title" width="720" height="540" loading="lazy">
+                <ng-template #policyIcon>
+                  <ng-container *ngTemplateOutlet="icon; context: { $implicit: policy.icon }"></ng-container>
+                </ng-template>
+              </span>
+              <span class="contract__main">
+                <strong>{{ policy.title }}</strong>
+                <small>N° {{ policy.number }}</small>
+              </span>
+              <span class="pill" [attr.data-tone]="policy.tone">{{ policy.statusLabel }}</span>
+              <span class="contract__premium">{{ formatCurrency(policy.premium) }}<small> / an</small></span>
+            </a>
+          </li>
+        </ul>
+        <button *ngIf="policies.length" type="button" class="card__foot" (click)="scrollToOffers()">
+          <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'plus' }"></ng-container>
+          Ajouter une garantie
+        </button>
+        <ng-template #noPolicies>
+          <div class="empty">
+            <span class="empty__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'contracts' }"></ng-container>
+            </span>
+            <p class="empty__title">{{ loading ? 'Chargement de vos contrats…' : 'Aucun contrat pour le moment' }}</p>
+            <p *ngIf="!loading">Vos contrats apparaîtront ici dès leur activation.</p>
+            <button *ngIf="!loading" type="button" class="btn-outline btn-outline--sm" (click)="scrollToOffers()">Découvrir nos offres</button>
+          </div>
+        </ng-template>
       </div>
-      <div class="stat-card__sparkline">
-        <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-            stroke="#6366f1"
-          />
-          <path
-            d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
-            fill="currentColor"
-            fill="#6366f1"
-            opacity="0.1"
-          />
-        </svg>
-      </div>
-    </a>
-  </section>
 
-  <!-- KPI Stats Grid -->
-  <section class="dashboard__stats">
-    @for (stat of kpiStats; track $index) {
-      <div class="stat-card" [class.stat-card--loading]="loading" [style.--stat-color]="stat.color" [style.--stat-gradient]="stat.gradient" [style.--stat-shadow]="stat.shadow">
-        <div class="stat-card__content">
-          <div class="stat-card__icon" [style.background]="stat.gradient">
-            @switch (stat.icon) {
-              @case ('shield') {
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M11 3.66667L4.58333 6.41667V11.9167C4.58333 16.0417 7.33333 19.25 11 20.1667C14.6667 19.25 17.4167 16.0417 17.4167 11.9167V6.41667L11 3.66667Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M8.25 11L10.0833 12.8333L13.75 9.16667" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              }
-              @case ('check-circle') {
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-                  <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              }
-              @case ('clipboard') {
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14.6667 5.04167H12.8333V4.58333C12.8333 3.56581 12.0008 2.75 10.9583 2.75C9.91583 2.75 9.08333 3.56581 9.08333 4.58333V5.04167H7.33333C5.95833 5.04167 5.04167 5.95833 5.04167 7.33333V16.5C5.04167 17.875 5.95833 18.7917 7.33333 18.7917H14.6667C16.0417 18.7917 16.9583 17.875 16.9583 16.5V7.33333C16.9583 5.95833 16.0417 5.04167 14.6667 5.04167Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M8.25 11H13.75" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              }
-              @case ('dollar') {
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.0833 17.4167V19.25M11.9167 2.75V4.58333M6.41667 6.41667C6.41667 4.58333 7.79167 3.66667 11 3.66667C14.2083 3.66667 15.5833 4.58333 15.5833 6.41667C15.5833 8.25 14.2083 9.16667 11 9.16667C7.79167 9.16667 6.41667 10.0833 6.41667 11.9167V12.8333C6.41667 14.6667 7.79167 15.5833 11 15.5833C14.2083 15.5833 15.5833 14.6667 15.5833 12.8333" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M5.5 18.3333H16.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              }
-              @default {
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-                </svg>
-              }
-            }
+      <!-- Sinistre en cours -->
+      <div class="card">
+        <div class="card__head">
+          <h3>
+            <span class="card__head-icon"><ng-container *ngTemplateOutlet="icon; context: { $implicit: 'claims' }"></ng-container></span>
+            Mon sinistre en cours
+          </h3>
+          <a routerLink="/client/claims">Voir tous <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container></a>
+        </div>
+
+        <div *ngIf="activeClaim; else noClaim" class="claim">
+          <div class="claim__summary">
+            <span class="claim__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'file' }"></ng-container>
+            </span>
+            <span class="claim__info">
+              <strong>N° {{ activeClaim.number }}</strong>
+              <small>{{ activeClaim.description }}</small>
+              <small *ngIf="activeClaim.date">Ouvert le {{ formatDate(activeClaim.date) }}</small>
+            </span>
+            <span class="pill" [attr.data-tone]="activeClaim.tone">{{ activeClaim.statusLabel }}</span>
           </div>
 
-          <div class="stat-card__info">
-            <span class="stat-card__label">{{ stat.label }}</span>
-            <div class="stat-card__value-wrapper">
-              @if (loading) {
-                <div class="skeleton skeleton--number"></div>
-              } @else {
-                <span class="stat-card__value">{{ stat.value }}</span>
-              }
-            </div>
+          <ol class="tracker" [attr.aria-label]="'Étape ' + (activeClaim.step + 1) + ' sur ' + claimSteps.length">
+            <li *ngFor="let step of claimSteps; let i = index"
+                [class.done]="i < activeClaim.step"
+                [class.current]="i === activeClaim.step">
+              <span class="tracker__dot">
+                <ng-container *ngIf="i < activeClaim.step">
+                  <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'check' }"></ng-container>
+                </ng-container>
+              </span>
+              <span class="tracker__label">{{ step }}</span>
+              <span class="tracker__meta">
+                {{ i === 0 && activeClaim.date ? formatDate(activeClaim.date, false) : i === activeClaim.step ? 'En cours' : '' }}
+              </span>
+            </li>
+          </ol>
+
+          <a class="claim__cta" [routerLink]="['/client/claims', activeClaim.id]">
+            Voir le détail
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+        </div>
+        <ng-template #noClaim>
+          <div class="empty">
+            <span class="empty__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'claims' }"></ng-container>
+            </span>
+            <p class="empty__title">{{ loading ? 'Chargement…' : 'Aucun sinistre en cours' }}</p>
+            <p *ngIf="!loading">Un imprévu ? Déclarez-le en ligne, on vous accompagne à chaque étape.</p>
+            <a *ngIf="!loading" class="btn-brand btn-brand--sm" routerLink="/client/submit-claim">Déclarer un sinistre</a>
           </div>
-        </div>
-
-        <div class="stat-card__sparkline">
-          <svg viewBox="0 0 100 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8"
-              stroke="currentColor"
-              stroke-width="2"
-              fill="none"
-              [attr.stroke]="stat.color"
-            />
-            <path
-              d="M0 25 Q10 20, 20 22 T40 18 T60 12 T80 15 T100 8 L100 30 L0 30 Z"
-              fill="currentColor"
-              [attr.fill]="stat.color"
-              opacity="0.1"
-            />
-          </svg>
-        </div>
-      </div>
-    }
-  </section>
-
-  <!-- Charts Section - Temporarily disabled due to ngx-charts compatibility -->
-  <!--
-  <section class="dashboard__charts">
-    <div class="dashboard-card">
-      <div class="dashboard-card__header">
-        <div class="dashboard-card__title">
-          <h3>Policy Types Distribution</h3>
-        </div>
-      </div>
-      <div class="dashboard-card__body">
-        <p>Charts will be enabled once ngx-charts compatibility is resolved</p>
+        </ng-template>
       </div>
     </div>
   </section>
-  -->
 
-  <!-- Main Content Grid -->
-  <section class="dashboard__main-grid">
-    <!-- Recent Policies -->
-    <div class="dashboard-card dashboard-card--wide">
-      <div class="dashboard-card__header">
-        <div class="dashboard-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 2.5L4 5.5V9.5C4 13.5 6.5 17 10 18.5C13.5 17 16 13.5 16 9.5V5.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7.5 10L9 11.5L12.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <h3>My Policies</h3>
+  <!-- ==================== Offres ==================== -->
+  <section id="offres" class="band offers" aria-labelledby="offers-title" afReveal>
+    <header class="head">
+      <div class="head__text">
+        <span class="head__eyebrow">Pour vous</span>
+        <h2 id="offers-title">Complétez votre protection</h2>
+        <p>Ajoutez une garantie à votre espace en quelques clics, au meilleur tarif assuré.</p>
+      </div>
+      <div class="head__aside">
+        <a class="head__link" routerLink="/client/support">
+          Parler à un conseiller
+          <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+        </a>
+        <div *ngIf="carousel.offers.prev || carousel.offers.next" class="nav-arrows">
+          <button type="button" (click)="scrollTrack(offersTrack, -1)" [disabled]="!carousel.offers.prev" aria-label="Offres précédentes">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrowLeft' }"></ng-container>
+          </button>
+          <button type="button" (click)="scrollTrack(offersTrack, 1)" [disabled]="!carousel.offers.next" aria-label="Offres suivantes">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </button>
         </div>
-        <a routerLink="/client/policies" class="dashboard-card__link">View All</a>
       </div>
+    </header>
 
-      <div class="dashboard-card__body">
-        @if (loading) {
-          <div class="table-skeleton">
-            @for (item of [1,2,3]; track $index) {
-              <div class="table-skeleton__row">
-                <div class="skeleton skeleton--text"></div>
-                <div class="skeleton skeleton--text skeleton--short"></div>
-                <div class="skeleton skeleton--text skeleton--short"></div>
-                <div class="skeleton skeleton--text"></div>
-              </div>
-            }
+    <div #offersTrack class="track offers__track" (scroll)="updateCarousel('offers', offersTrack)">
+      <article *ngFor="let offer of offers" class="offer">
+        <div class="offer__media">
+          <img [src]="offer.image" [alt]="'Assurance ' + offer.title" width="720" height="540" loading="lazy">
+          <span *ngIf="offer.popular" class="offer__tag">Populaire</span>
+          <span class="offer__badge">
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: offer.icon }"></ng-container>
+          </span>
+        </div>
+        <div class="offer__body">
+          <h3>{{ offer.title }}</h3>
+          <p>{{ offer.description }}</p>
+          <div class="offer__foot">
+            <span class="offer__price"><small>À partir de</small><strong>{{ offer.price }} MAD <small>/ an</small></strong></span>
+            <a class="offer__link" routerLink="/client/support" [attr.aria-label]="'Découvrir l’assurance ' + offer.title">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+            </a>
           </div>
-        } @else {
-          <div class="table">
-            <div class="table__header">
-              <span class="table__cell">Policy Name</span>
-              <span class="table__cell">Type</span>
-              <span class="table__cell">Status</span>
-              <span class="table__cell">Premium</span>
-              <span class="table__cell">Renewal</span>
-            </div>
-            @for (policy of recentPolicies; track trackById($index, policy)) {
-              <div class="table__row">
-                <div class="table__cell">
-                  <div class="table__cell-content">
-                    <div class="table__icon" [style.background]="getAvatarColor(policy.name)">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2L3 4.5V8.5C3 11.5 5.5 14 8 14.5C10.5 14 13 11.5 13 8.5V4.5L8 2Z" stroke="currentColor" stroke-width="1.2"/>
-                      </svg>
-                    </div>
-                    <span class="table__text">{{ policy.name }}</span>
-                  </div>
-                </div>
-                <div class="table__cell">
-                  <span class="table__text">{{ policy.type }}</span>
-                </div>
-                <div class="table__cell">
-                  <span class="status-badge" [class]="getStatusClass(policy.status)">
-                    {{ policy.status | titlecase }}
-                  </span>
-                </div>
-                <div class="table__cell">
-                  <span class="table__text">{{ formatCurrency(policy.premium) }}/yr</span>
-                </div>
-                <div class="table__cell">
-                  <span class="table__text">{{ formatDate(policy.renewalDate) }}</span>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ==================== Aide ==================== -->
+  <section class="help" aria-labelledby="help-title" afReveal>
+    <img class="help__bot" src="images/help-bot-head.webp" alt="" width="360" height="350" loading="lazy">
+
+    <div class="help__text">
+      <h2 id="help-title">Besoin d’aide <span>?</span></h2>
+      <p>Notre assistant est disponible 24/7 pour répondre à toutes vos questions et vous accompagner.</p>
     </div>
 
-    <!-- Recent Claims -->
-    <div class="dashboard-card">
-      <div class="dashboard-card__header">
-        <div class="dashboard-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 2.5L3 6.5V14.5C3 16.5 5 18.5 10 18.5C15 18.5 17 16.5 17 14.5V6.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7.5 10.5H12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 7.5V13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <h3>Recent Claims</h3>
-        </div>
-        <a routerLink="/client/claims" class="dashboard-card__link">View All</a>
-      </div>
-
-      <div class="dashboard-card__body">
-        @if (loading) {
-          <div class="activity-skeleton">
-            @for (item of [1,2,3]; track $index) {
-              <div class="activity-skeleton__item">
-                <div class="skeleton skeleton--circle"></div>
-                <div class="activity-skeleton__content">
-                  <div class="skeleton skeleton--text skeleton--short"></div>
-                  <div class="skeleton skeleton--text"></div>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="activity-feed">
-            @for (claim of recentClaims; track trackById($index, claim)) {
-              <div class="activity-feed__item">
-                <div class="activity-feed__avatar" [style.background]="getAvatarColor(claim.policyName)">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 2L2.5 5V11C2.5 14.5 5.5 17 9 18C12.5 17 15.5 14.5 15.5 11V5L9 2Z" stroke="white" stroke-width="1.2"/>
-                  </svg>
-                </div>
-                <div class="activity-feed__content">
-                  <p class="activity-feed__text">
-                    <strong>{{ claim.policyName }}</strong>
-                  </p>
-                  <p class="activity-feed__description">{{ claim.description }}</p>
-                  <div class="activity-feed__meta">
-                    <span class="activity-feed__time">{{ formatDate(claim.date) }}</span>
-                    <span class="status-badge" [class]="getStatusClass(claim.status)">{{ claim.status | titlecase }}</span>
-                    <span class="activity-feed__amount">{{ formatCurrency(claim.amount) }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
+    <div class="help__actions">
+      <a class="help__cta" routerLink="/client/support">
+        <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'chat' }"></ng-container>
+        Discuter avec AssureFlow
+      </a>
+      <a class="help__link" routerLink="/client/support" fragment="faq">
+        Voir la FAQ
+        <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+      </a>
     </div>
 
-    <!-- Upcoming Payments -->
-    <div class="dashboard-card">
-      <div class="dashboard-card__header">
-        <div class="dashboard-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 5.5V3.5C6 2.94772 6.44772 2.5 7 2.5H13C13.5523 2.5 14 2.94772 14 3.5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 7.5H16V15.5C16 16.0523 15.5523 16.5 15 16.5H5C4.44772 16.5 4 16.0523 4 15.5V7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 11.5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <h3>Upcoming Payments</h3>
-        </div>
-        <a routerLink="/client/billing" class="dashboard-card__link">View All</a>
-      </div>
-
-      <div class="dashboard-card__body">
-        @if (loading) {
-          <div class="activity-skeleton">
-            @for (item of [1,2,3]; track $index) {
-              <div class="activity-skeleton__item">
-                <div class="skeleton skeleton--circle"></div>
-                <div class="activity-skeleton__content">
-                  <div class="skeleton skeleton--text skeleton--short"></div>
-                  <div class="skeleton skeleton--text"></div>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="payment-list">
-            @for (payment of upcomingPayments; track trackById($index, payment)) {
-              <div class="payment-item">
-                <div class="payment-item__icon">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M10 7V10L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <div class="payment-item__content">
-                  <p class="payment-item__name">{{ payment.policyName }}</p>
-                  <p class="payment-item__date">Due: {{ formatDate(payment.dueDate) }}</p>
-                </div>
-                <div class="payment-item__amount">{{ formatCurrency(payment.amount) }}</div>
-                <span class="status-badge" [class]="getStatusClass(payment.status)">{{ payment.status | titlecase }}</span>
-              </div>
-            }
-          </div>
-        }
-      </div>
+    <div class="help__mascot" aria-hidden="true">
+      <span class="help__bubble">Je suis là<br>pour vous !</span>
+      <img src="images/help-bot-wave.webp" alt="" width="419" height="440" loading="lazy">
     </div>
   </section>
 </div>

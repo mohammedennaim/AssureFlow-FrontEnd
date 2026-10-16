@@ -11,11 +11,81 @@
 
 .sidebar {
     width: 260px;
-    background-color: #1e293b !important;
+    background: var(--sidebar-bg) !important;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 10;
 
     .sidebar-icon { width: 24px; }
+
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        min-height: 72px;
+        padding: 1rem 1.25rem;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        transition: opacity 0.2s ease;
+
+        &:hover { opacity: 0.85; }
+
+        &:focus-visible {
+            outline: 2px solid var(--brand-turquoise);
+            outline-offset: 4px;
+        }
+
+        img {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(67, 196, 192, 0.25));
+        }
+    }
+
+    .sidebar-brand-name {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+    }
+
+    .brand-text {
+        font-family: var(--font-brand);
+        font-size: 1.1875rem;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        color: #ffffff;
+        white-space: nowrap;
+    }
+
+    .brand-flow {
+        background: linear-gradient(90deg, #22b4ec 0%, #43c4c0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .brand-subtitle {
+        align-self: flex-start;
+        margin-top: 0.3125rem;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #7fdcd8;
+        background: rgba(67, 196, 192, 0.12);
+        border: 1px solid rgba(67, 196, 192, 0.22);
+        border-radius: 999px;
+        white-space: nowrap;
+    }
 
     .nav-link {
         color: #cbd5e1 !important;
@@ -28,15 +98,18 @@
         }
 
         &.active {
-            background-color: var(--bs-success);
+            background: var(--sidebar-active);
             color: #ffffff !important;
             opacity: 1;
-            box-shadow: 0 4px 6px -1px rgba(var(--bs-success-rgb), 0.4);
+            box-shadow: inset 3px 0 0 var(--brand-turquoise);
+
+            i { color: var(--brand-turquoise); }
         }
     }
 
     &.collapsed {
         width: 80px;
+        .sidebar-brand { padding: 1rem 0; }
         .nav-link {
             justify-content: center;
             padding-left: 0 !important;

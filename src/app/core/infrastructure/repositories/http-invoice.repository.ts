@@ -25,21 +25,7 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
     return this.http.get<any>(this.apiUrl, {
       params: { page: page.toString(), size: size.toString() }
     }).pipe(
-      map((res) => {
-        let data: InvoiceDto[] = [];
-        
-        if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.data?.content && Array.isArray(res.data.content)) {
-          data = res.data.content;
-        } else if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        }
-        
-        return data.map(this.mapToInvoice);
-      }),
+      map((res) => this.extractList(res).map(this.mapToInvoice)),
       catchError(() => of([]))
     );
   }
@@ -66,20 +52,14 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
 
   getByClientId(clientId: string): Observable<Invoice[]> {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
-      map((res) => {
-        const data: InvoiceDto[] = res?.data || res || [];
-        return data.map(this.mapToInvoice);
-      }),
+      map((res) => this.extractList(res).map(this.mapToInvoice)),
       catchError(() => of([]))
     );
   }
 
   getByPolicyId(policyId: string): Observable<Invoice[]> {
     return this.http.get<any>(`${this.apiUrl}/policy/${policyId}`).pipe(
-      map((res) => {
-        const data: InvoiceDto[] = res?.data || res || [];
-        return data.map(this.mapToInvoice);
-      }),
+      map((res) => this.extractList(res).map(this.mapToInvoice)),
       catchError(() => of([]))
     );
   }
@@ -103,6 +83,19 @@ export class HttpInvoiceRepository implements IInvoiceRepository {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  private extractList(res: unknown): InvoiceDto[] {
+    if (Array.isArray(res)) return res;
+    const body = res as Record<string, unknown> | null;
+    if (!body) return [];
+    if (Array.isArray(body['data'])) return body['data'] as InvoiceDto[];
+    const nested = body['data'] as Record<string, unknown> | undefined;
+    if (nested && Array.isArray(nested['content'])) return nested['content'] as InvoiceDto[];
+    if (Array.isArray(body['content'])) return body['content'] as InvoiceDto[];
+    if (Array.isArray(body['invoices'])) return body['invoices'] as InvoiceDto[];
+    if (Array.isArray(body['items'])) return body['items'] as InvoiceDto[];
+    return [];
   }
 
   private mapToInvoice(dto: InvoiceDto): Invoice {

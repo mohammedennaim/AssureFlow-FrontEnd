@@ -1,71 +1,370 @@
-<div class="documents-page">
-
-  <!-- Header -->
-  <header class="page-header">
-    <div class="page-header__content">
-      <div class="page-header__title">
-        <h1>My Documents</h1>
-        <p>Access your policy contracts and claim reports</p>
-      </div>
-      <div class="filter-tabs">
-        <button class="filter-btn" [class.active]="activeFilter === 'all'" (click)="activeFilter = 'all'">All</button>
-        <button class="filter-btn" [class.active]="activeFilter === 'POLICY'" (click)="activeFilter = 'POLICY'">Policies</button>
-        <button class="filter-btn" [class.active]="activeFilter === 'CLAIM'" (click)="activeFilter = 'CLAIM'">Claims</button>
-      </div>
+<div class="cp">
+  <header class="cp-head">
+    <div class="cp-head__text">
+      <p class="cp-head__eyebrow">Mon espace</p>
+      <h1>Mes <span>documents</span></h1>
+      <p class="cp-head__lead">Attestations, contrats, factures et déclarations de sinistre : consultez-les et enregistrez-les en PDF quand vous en avez besoin.</p>
+    </div>
+    <div class="cp-head__actions">
+      <a routerLink="/client/support" fragment="contact" class="cp-btn cp-btn--secondary">
+        <lucide-icon [img]="icons['help']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Demander un document
+      </a>
     </div>
   </header>
 
-  <!-- Error Banner -->
-  <div class="error-banner" *ngIf="errorMessage">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
-    {{ errorMessage }}
-  </div>
-
-  <!-- Loading -->
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Loading your documents...</p>
-  </div>
-
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading && filteredDocuments.length === 0 && !errorMessage">
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="10" y="6" width="28" height="36" rx="3" stroke="var(--border)" stroke-width="2"/><path d="M16 18H32M16 24H32M16 30H26" stroke="var(--border)" stroke-width="2" stroke-linecap="round"/></svg>
-    <h3>No documents found</h3>
-    <p>Your policy contracts and claim reports will appear here.</p>
-  </div>
-
-  <!-- Documents Grid -->
-  <div class="documents-grid" *ngIf="!isLoading && filteredDocuments.length > 0">
-    <div class="document-card" *ngFor="let doc of filteredDocuments">
-      <div class="document-card__icon" [class.policy-icon]="doc.type === 'POLICY'" [class.claim-icon]="doc.type === 'CLAIM'">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ng-container *ngIf="doc.type === 'POLICY'">
-            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 2V8H20M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </ng-container>
-          <ng-container *ngIf="doc.type === 'CLAIM'">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </ng-container>
-        </svg>
+  @if (errorMessage && !isLoading) {
+    <div class="cp-alert" data-tone="danger" role="alert">
+      <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+      <div class="docs__alert-body">
+        <strong>Chargement impossible</strong>
+        {{ errorMessage }}
       </div>
-      <div class="document-card__content">
-        <div class="document-card__header">
-          <h4>{{ doc.title }}</h4>
-          <span [class]="getStatusClass(doc.status)">{{ doc.status }}</span>
-        </div>
-        <div class="document-card__meta">
-          <span class="doc-type">{{ doc.type === 'POLICY' ? 'Policy Contract' : 'Claim Report' }}</span>
-          <span class="doc-ref">Ref: {{ doc.reference }}</span>
-          <span class="doc-date">{{ doc.date | date:'mediumDate' }}</span>
-        </div>
+      <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="loadDocuments()">
+        <lucide-icon [img]="icons['refresh']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Réessayer
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && overdue.length) {
+    <div class="due" role="status">
+      <span class="due__icon" aria-hidden="true">
+        <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2.1"></lucide-icon>
+      </span>
+      <div class="due__text">
+        <strong>
+          {{ overdue.length === 1 ? '1 facture en retard' : overdue.length + ' factures en retard' }} · {{ overdueTotal }}
+        </strong>
+        <span>Réglez-la pour garder vos garanties actives et vos attestations à jour.</span>
       </div>
-      <div class="document-card__actions">
-        <a [routerLink]="doc.type === 'POLICY' ? '/client/policies' : '/client/claims'" class="btn btn--outline btn--sm">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 7L7 13M1 7H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          View
+      <div class="due__actions">
+        <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="openPreview(overdue[0])">Voir la facture</button>
+        <a routerLink="/client/billing" class="cp-btn cp-btn--primary cp-btn--sm">
+          <lucide-icon [img]="icons['pay']" [size]="15" [strokeWidth]="2.1" aria-hidden="true"></lucide-icon>
+          Régler
         </a>
       </div>
     </div>
-  </div>
+  }
 
+  <!-- Attestations -->
+  @if (isLoading) {
+    <div class="quick">
+      @for (i of [1, 2, 3]; track i) { <div class="cp-skeleton quick__skeleton"></div> }
+    </div>
+  } @else if (attestations.length) {
+    <section class="quick" aria-labelledby="quick-title">
+      <div class="quick__head">
+        <h2 id="quick-title">Vos attestations</h2>
+        <p>Prêtes à imprimer ou à envoyer, pour chaque contrat actif.</p>
+      </div>
+      <ul class="quick__list" role="list">
+        @for (doc of attestations; track doc.key) {
+          <li class="att" [class.att--soon]="remaining(doc).soon">
+            <div class="att__top">
+              @if (contractOf(doc)?.image; as image) {
+                <img class="att__thumb" [src]="image" alt="" width="52" height="52" loading="lazy" />
+              } @else {
+                <span class="att__thumb att__thumb--icon" aria-hidden="true">
+                  <lucide-icon [img]="icons[doc.icon]" [size]="22" [strokeWidth]="1.9"></lucide-icon>
+                </span>
+              }
+              <div class="att__text">
+                <strong>{{ doc.subtitle }}</strong>
+                <span>N° {{ doc.reference }}</span>
+              </div>
+              <span class="att__badge">
+                <lucide-icon [img]="icons['verified']" [size]="14" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+                {{ remaining(doc).soon ? 'À renouveler' : 'Valide' }}
+              </span>
+            </div>
+
+            @if (doc.validUntil) {
+              <div class="att__validity">
+                <div class="att__dates">
+                  <span>Jusqu’au <strong>{{ date(doc.validUntil) }}</strong></span>
+                  <span class="att__left">{{ remaining(doc).label }}</span>
+                </div>
+                <div class="att__bar" role="progressbar" aria-label="Période de validité restante"
+                     [attr.aria-valuenow]="validityLeft(doc)" aria-valuemin="0" aria-valuemax="100">
+                  <span [style.width.%]="validityLeft(doc)"></span>
+                </div>
+              </div>
+            }
+
+            <div class="att__actions">
+              <button type="button" class="att__download" (click)="openPreview(doc, true)" [attr.aria-label]="'Télécharger l’attestation ' + doc.subtitle + ' en PDF'">
+                <lucide-icon [img]="icons['download']" [size]="16" [strokeWidth]="2.1" aria-hidden="true"></lucide-icon>
+                Télécharger
+              </button>
+              <button type="button" class="att__ghost" (click)="openPreview(doc)" [attr.aria-label]="'Aperçu de l’attestation ' + doc.subtitle">
+                <lucide-icon [img]="icons['eye']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                Aperçu
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- Library -->
+  <section class="library" aria-labelledby="library-title">
+    <div class="library__head">
+      <div>
+        <h2 id="library-title">Tous mes documents</h2>
+        @if (!isLoading) {
+          <span class="library__count">
+            {{ hasActiveFilters ? filteredDocuments.length + ' sur ' + documents.length : documents.length }} document{{ documents.length > 1 ? 's' : '' }}
+          </span>
+        }
+      </div>
+      <div class="view" role="group" aria-label="Mode d’affichage">
+        <button type="button" [class.is-active]="viewMode === 'date'" [attr.aria-pressed]="viewMode === 'date'" (click)="setView('date')">
+          <lucide-icon [img]="icons['date']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Par date
+        </button>
+        <button type="button" [class.is-active]="viewMode === 'contract'" [attr.aria-pressed]="viewMode === 'contract'" (click)="setView('contract')">
+          <lucide-icon [img]="icons['documents']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Par contrat
+        </button>
+      </div>
+    </div>
+
+    <div class="library__toolbar">
+      <div class="tabs" role="tablist" aria-label="Filtrer les documents par catégorie">
+        @for (f of filters; track f.key) {
+          <button type="button" class="tabs__item" role="tab" [class.is-active]="activeFilter === f.key"
+                  [attr.aria-selected]="activeFilter === f.key" (click)="setFilter(f.key)">
+            {{ f.label }}
+            @if (!isLoading) { <small>{{ count(f.key) }}</small> }
+          </button>
+        }
+      </div>
+
+      <div class="library__tools">
+        <label class="cp-search search">
+          <span class="sr-only">Rechercher un document</span>
+          <lucide-icon [img]="icons['search']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          <input #searchInput type="search" [ngModel]="search" (ngModelChange)="setSearch($event)"
+                 placeholder="N° de contrat, facture…" autocomplete="off" aria-keyshortcuts="/" />
+          @if (search) {
+            <button type="button" class="search__clear" (click)="setSearch(''); searchInput.focus()" aria-label="Effacer la recherche">
+              <lucide-icon [img]="icons['close']" [size]="14" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+            </button>
+          } @else {
+            <kbd class="search__kbd" aria-hidden="true">/</kbd>
+          }
+        </label>
+        <label class="sort">
+          <span class="sr-only">Trier les documents</span>
+          <select [(ngModel)]="sortOrder">
+            <option value="recent">Plus récents</option>
+            <option value="oldest">Plus anciens</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div aria-live="polite" [attr.aria-busy]="isLoading">
+      @if (isLoading) {
+        <div class="files">
+          @for (i of [1, 2, 3, 4, 5]; track i) { <div class="file file--skeleton"><span class="cp-skeleton"></span></div> }
+        </div>
+      } @else if (filteredDocuments.length === 0) {
+        <div class="empty">
+          <img src="images/help-bot-wave.webp" alt="" width="96" height="96" loading="lazy" />
+          @if (documents.length === 0) {
+            <h3>Aucun document pour le moment</h3>
+            <p>Dès que vous souscrivez un contrat ou déclarez un sinistre, vos documents apparaissent ici automatiquement.</p>
+            <a routerLink="/client/policies" class="cp-btn cp-btn--secondary cp-btn--sm">Voir mes contrats</a>
+          } @else {
+            <h3>Aucun résultat</h3>
+            @if (search.trim()) {
+              <p>Aucun document ne correspond à « {{ search.trim() }} » dans cette catégorie.</p>
+            } @else {
+              <p>Vous n’avez pas encore de document dans cette catégorie.</p>
+            }
+            <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="resetFilters()">Effacer les filtres</button>
+          }
+        </div>
+      } @else {
+        @for (group of groups; track group.key) {
+          <div class="group" [class.is-collapsed]="collapsed.has(group.key)">
+            @if (group.contract; as contract) {
+              <div class="folder">
+                <button type="button" class="folder__toggle" (click)="toggleGroup(group.key)"
+                        [attr.aria-expanded]="!collapsed.has(group.key)" [attr.aria-controls]="'group-' + group.key">
+                  @if (contract.image) {
+                    <img class="folder__thumb" [src]="contract.image" alt="" width="44" height="44" loading="lazy" />
+                  } @else {
+                    <span class="folder__thumb folder__thumb--icon" aria-hidden="true">
+                      <lucide-icon [img]="icons[contract.icon]" [size]="20" [strokeWidth]="1.9"></lucide-icon>
+                    </span>
+                  }
+                  <span class="folder__text">
+                    <strong>{{ contract.label }}</strong>
+                    <span>N° {{ contract.number }} · {{ group.items.length }} document{{ group.items.length > 1 ? 's' : '' }}</span>
+                  </span>
+                  <span class="pill" [attr.data-tone]="status(contract).tone">{{ status(contract).label }}</span>
+                  <lucide-icon class="folder__chevron" [img]="icons['chevronDown']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                </button>
+                <a class="cp-link folder__link" [routerLink]="['/client/policies', contract.id]">Voir le contrat</a>
+              </div>
+            } @else {
+              <h3 class="group__label">{{ group.label }}</h3>
+            }
+
+            @if (!collapsed.has(group.key)) {
+              <ul class="files" role="list" [id]="'group-' + group.key">
+                @for (doc of group.items; track doc.key) {
+                  <li class="file" [attr.data-cat]="doc.category">
+                    <button type="button" class="file__main" (click)="openPreview(doc)">
+                      <span class="file__icon" aria-hidden="true">
+                        <lucide-icon [img]="icons[doc.icon]" [size]="18" [strokeWidth]="1.9"></lucide-icon>
+                        <em>PDF</em>
+                      </span>
+                      <span class="file__text">
+                        <span class="file__title">
+                          {{ doc.title }}
+                          @if (isRecent(doc)) { <span class="file__new">Nouveau</span> }
+                        </span>
+                        <span class="file__meta">
+                          {{ categoryLabel(doc) }} · {{ doc.subtitle }}
+                          @if (doc.category !== 'INVOICE' && doc.category !== 'RECEIPT') { · N° {{ doc.reference || '—' }} }
+                        </span>
+                      </span>
+                    </button>
+
+                    <span class="file__date">{{ date(doc.date) }}</span>
+                    <span class="pill file__status" [attr.data-tone]="status(doc).tone">{{ status(doc).label }}</span>
+
+                    <div class="file__actions">
+                      <button type="button" class="icon-btn" (click)="openPreview(doc, true)" [attr.aria-label]="'Télécharger ' + doc.title + ' en PDF'" title="Télécharger en PDF">
+                        <lucide-icon [img]="icons['download']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                      </button>
+                      <a class="icon-btn" [routerLink]="doc.link" [attr.aria-label]="'Ouvrir le dossier lié à ' + doc.title" title="Ouvrir le dossier">
+                        <lucide-icon [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                      </a>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <aside class="request">
+    <img class="request__bot" src="images/help-bot-head.webp" alt="" width="56" height="56" loading="lazy" />
+    <div class="request__text">
+      <h2>Un document manque ?</h2>
+      <p>Carte verte, relevé d’information, avenant, attestation spécifique… Un conseiller vous l’envoie sous 48 h ouvrées.</p>
+    </div>
+    <a routerLink="/client/support" fragment="contact" class="cp-btn cp-btn--primary">
+      Faire une demande
+      <lucide-icon [img]="icons['arrow']" [size]="16" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+    </a>
+  </aside>
 </div>
+
+<!-- Preview -->
+@if (preview; as doc) {
+  <div class="preview af-print-root" role="dialog" aria-modal="true" aria-labelledby="preview-title" (click)="closePreview()">
+    <div class="preview__frame" (click)="$event.stopPropagation()">
+      <div class="preview__bar no-print">
+        <div class="preview__nav">
+          <button type="button" class="icon-btn" (click)="step(-1)" [disabled]="previewIndex <= 0" aria-label="Document précédent" title="Précédent (←)">
+            <lucide-icon [img]="icons['chevronLeft']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          </button>
+          @if (previewIndex >= 0) {
+            <span class="preview__pos">{{ previewIndex + 1 }} / {{ previewTotal }}</span>
+          }
+          <button type="button" class="icon-btn" (click)="step(1)" [disabled]="previewIndex < 0 || previewIndex >= previewTotal - 1" aria-label="Document suivant" title="Suivant (→)">
+            <lucide-icon [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          </button>
+          <span class="preview__name" id="preview-title">{{ doc.title }}</span>
+        </div>
+        <div class="preview__actions">
+          <button type="button" class="icon-btn" (click)="copyReference()" [attr.aria-label]="copied ? 'Référence copiée' : 'Copier la référence'" [title]="copied ? 'Copié' : 'Copier la référence'">
+            <lucide-icon [img]="icons[copied ? 'checkAll' : 'copy']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          </button>
+          <a class="icon-btn" [href]="shareLink" aria-label="Envoyer par e-mail" title="Envoyer par e-mail">
+            <lucide-icon [img]="icons['mail']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          </a>
+          <a class="cp-btn cp-btn--secondary cp-btn--sm preview__open" [routerLink]="doc.link" (click)="closePreview()">Ouvrir le dossier</a>
+          <button type="button" class="cp-btn cp-btn--primary cp-btn--sm" (click)="print()">
+            <lucide-icon [img]="icons['printer']" [size]="15" [strokeWidth]="2.1" aria-hidden="true"></lucide-icon>
+            <span>Imprimer / PDF</span>
+          </button>
+          <button type="button" class="icon-btn preview__close" (click)="closePreview()" aria-label="Fermer l’aperçu" title="Fermer (Échap)">
+            <lucide-icon [img]="icons['close']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="preview__scroll">
+        <article class="paper af-print-area">
+          <header class="paper__head">
+            <img src="brand/logo.png" alt="AssureFlow" class="paper__logo" />
+            <div class="paper__issuer">
+              <strong>AssureFlow Assurances</strong>
+              <span>Service clients</span>
+              <span>Édité le {{ date(today) }}</span>
+            </div>
+          </header>
+
+          <div class="paper__title">
+            <h1>{{ doc.title }}</h1>
+            <p>Référence {{ doc.reference || '—' }}</p>
+          </div>
+
+          <div class="paper__parties">
+            <div>
+              <span>Assuré</span>
+              <strong>{{ clientName }}</strong>
+              @if (client?.clientNumber) { <em>Client n° {{ client?.clientNumber }}</em> }
+              @if (client?.email) { <em>{{ client?.email }}</em> }
+            </div>
+            <div>
+              <span>Statut</span>
+              <strong>{{ status(doc).label }}</strong>
+              <em>{{ categoryLabel(doc) }} du {{ date(doc.date) }}</em>
+            </div>
+          </div>
+
+          @if (doc.intro) {
+            <p class="paper__intro">
+              AssureFlow Assurances certifie que <strong>{{ clientName }}</strong> {{ doc.intro }}
+            </p>
+          }
+
+          <table class="paper__table">
+            <tbody>
+              @for (field of doc.fields; track field.label) {
+                <tr>
+                  <th scope="row">{{ field.label }}</th>
+                  <td>{{ field.value }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          @if (doc.note) { <p class="paper__note">{{ doc.note }}</p> }
+
+          <footer class="paper__foot">
+            <div class="paper__sign">
+              <span>Fait le {{ date(today) }}</span>
+              <strong>Pour AssureFlow Assurances</strong>
+              <em>Le service clients</em>
+            </div>
+            <p>Document généré depuis votre espace client AssureFlow. Pour toute question, contactez votre conseiller depuis la rubrique Assistance.</p>
+          </footer>
+        </article>
+      </div>
+    </div>
+  </div>
+}

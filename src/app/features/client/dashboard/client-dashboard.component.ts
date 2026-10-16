@@ -1,185 +1,221 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { AF_ICONS } from '../../../shared/icons/af-icons';
+import { RevealDirective } from '../../../shared/directives/reveal.directive';
 import { catchError, of, forkJoin, interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { ClientDashboardService, ClientDashboardStats, ClientPolicyStats, ClientClaimStats, ClientPaymentStats } from '../../../core/application/services/client-dashboard.service';
+import {
+  ClientDashboardService,
+  ClientClaimStats,
+  ClientPaymentStats
+} from '../../../core/application/services/client-dashboard.service';
+import { CLIENT_REPOSITORY } from '../../../core/domain/ports/client.repository.port';
 import { Policy } from '../../../core/domain/models/policy.model';
 import { Claim } from '../../../core/domain/models/claim.model';
-import { Invoice } from '../../../core/domain/ports/invoice.repository.port';
 
-const POLLING_INTERVAL_MS = 30000; // 30 seconds
+const POLLING_INTERVAL_MS = 30000;
 
-interface KpiStat {
-  label: string;
-  value: number | string;
-  icon: string;
-  color: string;
-  gradient: string;
-  shadow: string;
-}
+type Tone = 'success' | 'info' | 'warning' | 'danger' | 'neutral';
+type PolicyIcon = 'car' | 'heart' | 'home' | 'shield' | 'briefcase';
 
-interface ChartData {
-  label: string;
-  value: number;
-  color?: string;
+interface Attention {
+  tone: Tone;
+  title: string;
+  text: string;
+  action?: { label: string; link: string };
 }
 
 interface PolicyItem {
   id: string;
-  name: string;
-  type: string;
-  status: 'active' | 'pending' | 'expired';
+  title: string;
+  number: string;
+  icon: PolicyIcon;
+  startDate: string;
+  endDate: string;
   premium: number;
-  renewalDate: string;
-  coverage: number;
+  statusLabel: string;
+  tone: Tone;
+  image?: string;
 }
 
-interface ClaimItem {
-  id: string;
-  policyName: string;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'processing';
-  amount: number;
+interface Shortcut {
+  label: string;
   description: string;
+  link: string;
+  icon: 'claim' | 'pay' | 'documents' | 'advisor';
+  color: 'blue' | 'teal' | 'amber' | 'indigo';
 }
 
-interface PaymentItem {
+interface ClaimTracker {
   id: string;
+  number: string;
+  description: string;
   date: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-  policyName: string;
-  dueDate: string;
+  statusLabel: string;
+  tone: Tone;
+  step: number;
 }
+
+type CarouselKey = 'offers';
+
+interface SpaceTile {
+  label: string;
+  value: string;
+  hint: string;
+  badge: string;
+  icon: string;
+  cta: string;
+  tone: Tone;
+  link: string;
+}
+
+interface Offer {
+  title: string;
+  description: string;
+  price: string;
+  image: string;
+  icon: PolicyIcon;
+  popular?: boolean;
+}
+
+const CLOSED_CLAIM_STATUSES = ['APPROVED', 'REJECTED', 'DENIED', 'PAID', 'CLOSED'];
+
+const POLICY_TYPES: Record<string, { label: string; icon: PolicyIcon; image?: string }> = {
+  AUTO: { label: 'Auto', icon: 'car', image: 'images/offer-auto.jpg' },
+  VEHICLE: { label: 'Auto', icon: 'car', image: 'images/offer-auto.jpg' },
+  HEALTH: { label: 'Santé', icon: 'heart', image: 'images/offer-sante.jpg' },
+  LIFE: { label: 'Vie', icon: 'shield', image: 'images/offer-vie.jpg' },
+  HOME: { label: 'Habitation', icon: 'home', image: 'images/offer-habitation.jpg' },
+  PROPERTY: { label: 'Habitation', icon: 'home', image: 'images/offer-habitation.jpg' },
+  BUSINESS: { label: 'Professionnelle', icon: 'briefcase' }
+};
+
+const PRIORITY_STYLE: Record<Tone, { tag: string; icon: string }> = {
+  danger: { tag: 'En retard', icon: 'alert' },
+  warning: { tag: 'Bientôt', icon: 'calendar' },
+  info: { tag: 'En cours', icon: 'clock' },
+  success: { tag: 'À jour', icon: 'check' },
+  neutral: { tag: 'Indisponible', icon: 'info' }
+};
 
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LucideAngularModule, RevealDirective],
   templateUrl: './client-dashboard.component.html',
   styleUrl: './client-dashboard.component.scss'
 })
-export class ClientDashboardComponent implements OnInit, OnDestroy {
+export class ClientDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly icons = AF_ICONS;
   loading = true;
-  error: string | null = null;
-  today = new Date();
   isRefreshing = false;
+  firstName = '';
+  fullName = '';
+  initials = '';
+  memberSince = '';
 
-  kpiStats: KpiStat[] = [];
-  chartData: ChartData[] = [];
-  recentPolicies: PolicyItem[] = [];
-  recentClaims: ClaimItem[] = [];
-  upcomingPayments: PaymentItem[] = [];
-  stats: ClientDashboardStats | null = null;
-
-  // Chart data
-  policyTypeChartData: any[] = [];
-  claimStatusChartData: any[] = [];
-  paymentTrendChartData: any[] = [];
-  
-  // Chart options
-  colorScheme: any = {
-    name: 'assureflow',
-    selectable: true,
-    group: 'Ordinal',
-    domain: ['#06b6d4', '#10b981', '#f59e0b', '#6366f1', '#ef4444', '#8b5cf6']
+  @ViewChild('offersTrack') offersTrack?: ElementRef<HTMLElement>;
+  carousel: Record<CarouselKey, { prev: boolean; next: boolean }> = {
+    offers: { prev: false, next: false }
   };
 
-  // Real-time polling
-  private pollingSubscription?: Subscription;
-  private readonly POLLING_INTERVAL = POLLING_INTERVAL_MS;
+  activeClaim: ClaimTracker | null = null;
+  readonly claimSteps = ['Déclaration', 'Analyse', 'Décision', 'Indemnisation'];
 
+  spaceTiles: SpaceTile[] = [];
+  private hasPolicyData = false;
+  private hasPaymentData = false;
+  private hasClaimData = false;
+  attention: Attention | null = null;
+  lastUpdated: Date | null = null;
+  policies: PolicyItem[] = [];
+  totalPolicies = 0;
+  activePolicies = 0;
+  nextPayment: { amount: number; dueDate: string } | null = null;
+  nextPaymentDue: { label: string; tone: Tone } | undefined;
+  amountDue = 0;
+  openClaims = 0;
+
+  readonly shortcuts: Shortcut[] = [
+    { label: 'Déclarer un sinistre', description: 'En ligne, en 5 minutes', link: '/client/submit-claim', icon: 'claim', color: 'blue' },
+    { label: 'Payer une facture', description: 'Carte bancaire, 100 % sécurisé', link: '/client/billing', icon: 'pay', color: 'teal' },
+    { label: 'Mes attestations', description: 'Téléchargeables en PDF', link: '/client/documents', icon: 'documents', color: 'amber' },
+    { label: 'Parler à un conseiller', description: 'Chat ou téléphone, 7j/7', link: '/client/support', icon: 'advisor', color: 'indigo' }
+  ];
+
+  readonly offers: Offer[] = [
+    { title: 'Auto', description: 'Roulez l’esprit tranquille, partout au Maroc.', price: '1 200', image: 'images/offer-auto.jpg', icon: 'car', popular: true },
+    { title: 'Santé', description: 'Une couverture complète pour vous et vos proches.', price: '850', image: 'images/offer-sante.jpg', icon: 'heart' },
+    { title: 'Habitation', description: 'Protégez votre logement et vos biens.', price: '1 500', image: 'images/offer-habitation.jpg', icon: 'home' },
+    { title: 'Vie', description: 'Préparez sereinement l’avenir de votre famille.', price: '2 000', image: 'images/offer-vie.jpg', icon: 'shield' }
+  ];
+
+  private pollingSubscription?: Subscription;
   private clientDashboardService = inject(ClientDashboardService);
+  private clientRepository = inject(CLIENT_REPOSITORY);
 
   ngOnInit(): void {
+    this.clientRepository.getMe().subscribe({
+      next: (client) => {
+        this.firstName = client?.firstName?.trim() || '';
+        this.fullName = [client?.firstName, client?.lastName].filter(Boolean).join(' ').trim();
+        this.initials = [client?.firstName, client?.lastName]
+          .map(part => (part || '').trim().charAt(0).toUpperCase())
+          .join('');
+        const since = client?.createdAt ? new Date(client.createdAt) : null;
+        this.memberSince = since && !Number.isNaN(since.getTime()) ? String(since.getFullYear()) : '';
+      },
+      error: () => {}
+    });
     this.loadDashboard();
-    this.startRealTimePolling();
-  }
-
-  ngOnDestroy(): void {
-    this.stopRealTimePolling();
-  }
-
-  private startRealTimePolling(): void {
-    // Poll for claim status updates every 30 seconds
-    this.pollingSubscription = interval(this.POLLING_INTERVAL)
-      .pipe(
-        switchMap(() => this.clientDashboardService.getClientClaimStats())
-      )
-      .subscribe({
-        next: (claimStats) => {
-          console.log('[ClientDashboard] Real-time update: claims refreshed');
-          this.recentClaims = this.mapClaims(claimStats.myClaims);
-          this.updateClaimStatusChart(claimStats);
-        },
-        error: (err) => console.error('[ClientDashboard] Polling error:', err)
+    this.pollingSubscription = interval(POLLING_INTERVAL_MS)
+      .pipe(switchMap(() => this.clientDashboardService.getClientClaimStats().pipe(catchError(() => of(null)))))
+      .subscribe(claimStats => {
+        if (!claimStats) return;
+        this.activeClaim = this.pickActiveClaim(claimStats.myClaims || []);
+        this.openClaims = claimStats.pending + claimStats.underReview;
+        this.hasClaimData = true;
+        if (!this.loading) {
+          this.spaceTiles = this.buildSpaceTiles();
+        }
       });
   }
 
-  private stopRealTimePolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
+  ngAfterViewInit(): void {
+    setTimeout(() => this.updateCarousels());
+  }
+
+  ngOnDestroy(): void {
+    this.pollingSubscription?.unsubscribe();
   }
 
   loadDashboard(): void {
-    this.loading = true;
-    this.error = null;
+    this.loading = !this.isRefreshing;
 
-    // Load all data in parallel
     forkJoin({
-      dashboardStats: this.clientDashboardService.getClientDashboardStats().pipe(
-        catchError((err) => {
-          console.error('[ClientDashboard] Error loading dashboard stats:', err);
-          return of({
-            totalPolicies: 0,
-            activePolicies: 0,
-            pendingClaims: 0,
-            totalPremium: 0,
-            nextPaymentAmount: 0,
-            nextPaymentDate: null
-          });
-        })
-      ),
-      policyStats: this.clientDashboardService.getClientPolicyStats().pipe(
-        catchError((err) => {
-          console.error('[ClientDashboard] Error loading policy stats:', err);
-          return of(null);
-        })
-      ),
-      claimStats: this.clientDashboardService.getClientClaimStats().pipe(
-        catchError((err) => {
-          console.error('[ClientDashboard] Error loading claim stats:', err);
-          return of(null);
-        })
-      ),
-      paymentStats: this.clientDashboardService.getClientPaymentStats().pipe(
-        catchError((err) => {
-          console.error('[ClientDashboard] Error loading payment stats:', err);
-          return of(null);
-        })
-      )
-    }).subscribe((data) => {
-      this.stats = data.dashboardStats;
-      this.loadKpiStats(data.dashboardStats);
-      
-      // Load real data from stats
-      if (data.policyStats) {
-        this.recentPolicies = this.mapPolicies(data.policyStats.myPolicies);
-        this.updatePolicyTypeChart(data.policyStats);
-      }
-      
-      if (data.claimStats) {
-        this.recentClaims = this.mapClaims(data.claimStats.myClaims);
-        this.updateClaimStatusChart(data.claimStats);
-      }
-      
-      if (data.paymentStats) {
-        this.upcomingPayments = this.mapPayments(data.paymentStats);
-        this.updatePaymentTrendChart(data.paymentStats);
-      }
-      
+      stats: this.clientDashboardService.getClientDashboardStats().pipe(catchError(() => of(null))),
+      policyStats: this.clientDashboardService.getClientPolicyStats().pipe(catchError(() => of(null))),
+      claimStats: this.clientDashboardService.getClientClaimStats().pipe(catchError(() => of(null))),
+      paymentStats: this.clientDashboardService.getClientPaymentStats().pipe(catchError(() => of(null)))
+    }).subscribe(({ stats, policyStats, claimStats, paymentStats }) => {
+      this.policies = (policyStats?.myPolicies || []).slice(0, 3).map(p => this.mapPolicy(p));
+      this.totalPolicies = stats?.totalPolicies ?? policyStats?.myPolicies?.length ?? 0;
+      this.activePolicies = stats?.activePolicies ?? policyStats?.active ?? 0;
+      this.activeClaim = this.pickActiveClaim(claimStats?.myClaims || []);
+      this.nextPayment = paymentStats?.nextPayment
+        ? { amount: paymentStats.nextPayment.amount, dueDate: String(paymentStats.nextPayment.dueDate) }
+        : null;
+      this.nextPaymentDue = this.nextPayment ? this.dueLabel(this.daysUntil(this.nextPayment.dueDate)) : undefined;
+      this.amountDue = (paymentStats?.totalPending ?? 0) + (paymentStats?.totalOverdue ?? 0);
+      this.openClaims = claimStats ? claimStats.pending + claimStats.underReview : 0;
+      this.hasPolicyData = !!(stats || policyStats);
+      this.hasPaymentData = !!paymentStats;
+      this.hasClaimData = !!claimStats;
+      this.spaceTiles = this.buildSpaceTiles();
+      this.attention = this.buildAttention(claimStats, paymentStats);
+      this.lastUpdated = new Date();
       this.loading = false;
       this.isRefreshing = false;
     });
@@ -190,232 +226,213 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboard();
   }
 
-  private loadKpiStats(stats: ClientDashboardStats): void {
-    this.kpiStats = [
-      {
-        label: 'Total Policies',
-        value: stats.totalPolicies,
-        icon: 'shield',
-        color: '#06b6d4',
-        gradient: 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)',
-        shadow: '0 4px 14px rgba(6, 182, 212, 0.4)'
-      },
-      {
-        label: 'Active Policies',
-        value: stats.activePolicies,
-        icon: 'check-circle',
-        color: '#10b981',
-        gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-        shadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
-      },
-      {
-        label: 'Pending Claims',
-        value: stats.pendingClaims,
-        icon: 'clipboard',
-        color: '#f59e0b',
-        gradient: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
-        shadow: '0 4px 14px rgba(245, 158, 11, 0.4)'
-      },
-      {
-        label: 'Total Premium',
-        value: '$' + Math.round(stats.totalPremium).toLocaleString(),
-        icon: 'dollar',
-        color: '#6366f1',
-        gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-        shadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
-      }
-    ];
+  scrollToOffers(): void {
+    document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  private mapPolicies(policies: Policy[] = []): PolicyItem[] {
-    return policies.slice(0, 5).map(p => ({
-      id: p.id,
-      name: p.policyNumber || `${p.type} Policy`,
-      type: p.type,
-      status: this.normalizePolicyStatus(p.status),
-      premium: p.premium || 0,
-      renewalDate: p.endDate,
-      coverage: p.coverageAmount || 0
-    }));
+  scrollTrack(track: HTMLElement, direction: 1 | -1): void {
+    const card = track.firstElementChild as HTMLElement | null;
+    const step = card ? card.offsetWidth + 20 : track.clientWidth * 0.8;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    track.scrollBy({ left: direction * step, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
-  private mapClaims(claims: Claim[] = []): ClaimItem[] {
-    return claims.slice(0, 5).map(c => ({
-      id: c.id,
-      policyName: c.policyId || 'Unknown Policy',
-      date: c.submittedAt || c.createdAt || new Date().toISOString(),
-      status: this.normalizeClaimStatus(c.status),
-      amount: c.amount || 0,
-      description: c.description || 'No description'
-    }));
-  }
-
-  private mapPayments(paymentStats: ClientPaymentStats | null): PaymentItem[] {
-    if (!paymentStats) {
-      return [];
-    }
-
-    const payments: PaymentItem[] = [];
-    
-    // Add next payment
-    if (paymentStats.nextPayment) {
-      payments.push({
-        id: 'next-payment',
-        date: this.safeIsoDate(paymentStats.nextPayment.dueDate),
-        amount: paymentStats.nextPayment.amount,
-        status: 'pending',
-        policyName: paymentStats.nextPayment.policyName,
-        dueDate: this.safeIsoDate(paymentStats.nextPayment.dueDate)
-      });
-    }
-    
-    // Add recent pending invoices
-    paymentStats.recentPayments
-      .filter(i => i.status === 'PENDING')
-      .slice(0, 4)
-      .forEach(i => {
-        payments.push({
-          id: i.id,
-          date: this.safeIsoDate(i.createdAt || i.dueDate),
-          amount: i.amount,
-          status: 'pending',
-          policyName: `Invoice ${i.invoiceNumber}`,
-          dueDate: this.safeIsoDate(i.dueDate)
-        });
-      });
-    
-    return payments;
-  }
-
-  getGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
-  getFormattedDate(): string {
-    return this.today.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  getStatusClass(status: string | null | undefined): string {
-    if (!status) {
-      return '';
-    }
-
-    const statusMap: Record<string, string> = {
-      active: 'status--active',
-      pending: 'status--pending',
-      expired: 'status--expired',
-      approved: 'status--approved',
-      rejected: 'status--rejected',
-      processing: 'status--processing',
-      paid: 'status--paid',
-      overdue: 'status--overdue'
+  updateCarousel(key: CarouselKey, track: HTMLElement | undefined): void {
+    if (!track) return;
+    this.carousel[key] = {
+      prev: track.scrollLeft > 4,
+      next: track.scrollLeft + track.clientWidth < track.scrollWidth - 4
     };
-    return statusMap[status.toLowerCase()] || '';
   }
 
-  formatDate(dateString: string | null | undefined): string {
-    if (!dateString) {
-      return '-';
-    }
-
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) {
-      return '-';
-    }
-
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  @HostListener('window:resize')
+  updateCarousels(): void {
+    this.updateCarousel('offers', this.offersTrack?.nativeElement);
   }
 
-  formatCurrency(amount: number): string {
-    return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  get priorityTag(): string {
+    return PRIORITY_STYLE[this.attention?.tone || 'neutral'].tag;
   }
 
-  trackById(index: number, item: any): string {
+  get priorityIcon(): string {
+    return PRIORITY_STYLE[this.attention?.tone || 'neutral'].icon;
+  }
+
+  get todayLabel(): string {
+    const label = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return label.charAt(0).toUpperCase() + label.slice(1) + '.';
+  }
+
+  get greeting(): string {
+    return new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir';
+  }
+
+  formatCurrency(amount: number | null | undefined): string {
+    const value = Math.round(amount || 0);
+    return `${value.toLocaleString('fr-FR')} MAD`;
+  }
+
+  formatDate(value: string | null | undefined, withYear = true): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('fr-FR', withYear
+      ? { day: '2-digit', month: 'short', year: 'numeric' }
+      : { day: '2-digit', month: 'short' });
+  }
+
+  trackById(_: number, item: { id: string }): string {
     return item.id;
   }
 
-  /**
-   * Normalize policy status to lowercase UI-friendly format
-   */
-  private normalizePolicyStatus(status: string | null | undefined): PolicyItem['status'] {
-    if (!status) {
-      return 'pending';
+  formatTime(date: Date | null): string {
+    return date ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+
+  private daysUntil(value: string): number | null {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return Math.round((date.getTime() - start.getTime()) / 86400000);
+  }
+
+  private dueLabel(days: number | null): { label: string; tone: Tone } | undefined {
+    if (days === null) return undefined;
+    if (days < 0) return { label: `En retard de ${-days} j`, tone: 'danger' };
+    if (days === 0) return { label: 'Aujourd’hui', tone: 'danger' };
+    if (days === 1) return { label: 'Demain', tone: 'warning' };
+    return { label: `Dans ${days} jours`, tone: days <= 7 ? 'warning' : 'info' };
+  }
+
+  private plural(count: number, word: string): string {
+    return `${word}${count > 1 ? 's' : ''}`;
+  }
+
+  private pickActiveClaim(claims: Claim[]): ClaimTracker | null {
+    const claim = claims.find(c => !CLOSED_CLAIM_STATUSES.includes((c.status || '').toUpperCase()));
+    if (!claim) return null;
+
+    const status = (claim.status || '').toUpperCase();
+    const [statusLabel, tone, step]: [string, Tone, number] =
+      status === 'UNDER_REVIEW' || status === 'PROCESSING' ? ['En cours d’analyse', 'warning', 1] :
+      ['Déclaré', 'info', 0];
+
+    return {
+      id: claim.id,
+      number: claim.claimNumber || '—',
+      description: claim.description || 'Sinistre déclaré',
+      date: claim.submittedAt || claim.createdAt || claim.incidentDate || '',
+      statusLabel,
+      tone,
+      step
+    };
+  }
+
+  private buildSpaceTiles(): SpaceTile[] {
+    const policies = this.activePolicies;
+    const claims = this.openClaims;
+    const unavailable = 'Indisponible pour le moment';
+
+    const coverage: SpaceTile = !this.hasPolicyData
+      ? { label: 'Ma couverture', value: '—', hint: unavailable, badge: '—', icon: 'contracts', cta: 'Mes contrats', tone: 'neutral', link: '/client/policies' }
+      : policies
+        ? { label: 'Couverture', value: `${policies} ${this.plural(policies, 'contrat')}`, hint: 'Vous êtes bien protégé.', badge: 'Active', icon: 'contracts', cta: 'Mes contrats', tone: 'success', link: '/client/policies' }
+        : { label: 'Couverture', value: 'Aucun contrat', hint: 'Trouvons la bonne protection.', badge: 'Inactive', icon: 'contracts', cta: 'Nos offres', tone: 'neutral', link: '/client/support' };
+
+    const payment: SpaceTile = !this.hasPaymentData
+      ? { label: 'Mes factures', value: '—', hint: unavailable, badge: '—', icon: 'invoices', cta: 'Mes factures', tone: 'neutral', link: '/client/billing' }
+      : this.amountDue
+        ? { label: 'Montant à régler', value: this.formatCurrency(this.amountDue), hint: 'Pour rester couvert.', badge: 'En retard', icon: 'invoices', cta: 'Régler', tone: 'danger', link: '/client/billing' }
+        : this.nextPayment
+          ? { label: 'Prochaine échéance', value: this.formatCurrency(this.nextPayment.amount), hint: `${this.nextPaymentDue?.label || 'Le ' + this.formatDate(this.nextPayment.dueDate)}.`, badge: 'À venir', icon: 'invoices', cta: 'Mes factures', tone: this.nextPaymentDue?.tone || 'info', link: '/client/billing' }
+          : { label: 'Mes factures', value: 'À jour', hint: 'Rien à payer pour le moment.', badge: 'À jour', icon: 'invoices', cta: 'Mes factures', tone: 'success', link: '/client/billing' };
+
+    const claim: SpaceTile = !this.hasClaimData
+      ? { label: 'Mes sinistres', value: '—', hint: unavailable, badge: '—', icon: 'claims', cta: 'Mes sinistres', tone: 'neutral', link: '/client/claims' }
+      : claims
+        ? {
+            label: 'Sinistres',
+            value: `${claims} ${this.plural(claims, 'dossier')}`,
+            hint: this.activeClaim ? `Statut : ${this.activeClaim.statusLabel.toLowerCase()}.` : 'Nos équipes s’en occupent.',
+            badge: 'En cours',
+            icon: 'claims',
+            cta: 'Suivre',
+            tone: 'warning',
+            link: this.activeClaim ? `/client/claims/${this.activeClaim.id}` : '/client/claims'
+          }
+        : { label: 'Sinistres', value: 'Aucun', hint: 'Un imprévu ? Déclarez-le en 5 min.', badge: 'Rien en cours', icon: 'claims', cta: 'Déclarer', tone: 'success', link: '/client/submit-claim' };
+
+    return [coverage, payment, claim];
+  }
+
+  private buildAttention(claimStats: ClientClaimStats | null, paymentStats: ClientPaymentStats | null): Attention {
+    if (!claimStats || !paymentStats) {
+      return {
+        tone: 'neutral',
+        title: 'Certaines informations sont indisponibles',
+        text: 'Nous n’avons pas pu charger toutes vos données. Réessayez dans un instant.'
+      };
     }
 
-    const normalizedStatus = status.toUpperCase();
-    if (normalizedStatus === 'ACTIVE') return 'active';
-    if (normalizedStatus === 'PENDING' || normalizedStatus === 'DRAFT' || normalizedStatus === 'SUBMITTED') return 'pending';
-    if (normalizedStatus === 'EXPIRED' || normalizedStatus === 'CANCELLED') return 'expired';
-    return 'pending';
-  }
-
-  /**
-   * Normalize claim status to lowercase UI-friendly format
-   */
-  private normalizeClaimStatus(status: string | null | undefined): ClaimItem['status'] {
-    if (!status) {
-      return 'pending';
+    const overdue = paymentStats?.overdueInvoices ?? 0;
+    if (overdue) {
+      return {
+        tone: 'danger',
+        title: `${overdue} ${this.plural(overdue, 'facture')} en retard`,
+        text: `Réglez ${this.formatCurrency(paymentStats?.totalOverdue)} pour conserver votre couverture active.`,
+        action: { label: 'Régler maintenant', link: '/client/billing' }
+      };
     }
 
-    const normalizedStatus = status.toUpperCase();
-    if (normalizedStatus === 'PENDING' || normalizedStatus === 'SUBMITTED') return 'pending';
-    if (normalizedStatus === 'UNDER_REVIEW' || normalizedStatus === 'PROCESSING') return 'processing';
-    if (normalizedStatus === 'APPROVED' || normalizedStatus === 'PAID') return 'approved';
-    if (normalizedStatus === 'REJECTED' || normalizedStatus === 'DENIED') return 'rejected';
-    return 'pending';
-  }
-
-  private safeIsoDate(value: Date | string | null | undefined): string {
-    if (!value) {
-      return new Date().toISOString();
+    const days = this.nextPayment ? this.daysUntil(this.nextPayment.dueDate) : null;
+    if (this.nextPayment && days !== null && days <= 7) {
+      return {
+        tone: 'warning',
+        title: days <= 0 ? 'Échéance aujourd’hui' : `Échéance dans ${days} ${this.plural(days, 'jour')}`,
+        text: `${this.formatCurrency(this.nextPayment.amount)} à régler avant le ${this.formatDate(this.nextPayment.dueDate)}.`,
+        action: { label: 'Payer en ligne', link: '/client/billing' }
+      };
     }
 
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return new Date().toISOString();
+    const openClaims = claimStats ? claimStats.pending + claimStats.underReview : 0;
+    if (openClaims) {
+      return {
+        tone: 'info',
+        title: `${openClaims} ${this.plural(openClaims, 'sinistre')} en cours de traitement`,
+        text: 'Nos équipes analysent votre dossier. Vous serez notifié à chaque étape.',
+        action: { label: 'Suivre mon dossier', link: '/client/claims' }
+      };
     }
 
-    return date.toISOString();
+    return {
+      tone: 'success',
+      title: 'Tout est en ordre',
+      text: 'Aucune action requise de votre part. Bonne journée !'
+    };
   }
 
-  getAvatarColor(name: string): string {
-    const colors = [
-      'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-      'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-      'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)',
-      'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
-    ];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  }
+  private mapPolicy(policy: Policy): PolicyItem {
+    const type = POLICY_TYPES[(policy.type || '').toUpperCase()] || { label: 'Assurance', icon: 'shield' as PolicyIcon };
+    const status = (policy.status || '').toUpperCase();
+    const [statusLabel, tone]: [string, Tone] =
+      status === 'ACTIVE' ? ['Actif', 'success'] :
+      status === 'EXPIRED' ? ['Expiré', 'neutral'] :
+      status === 'CANCELLED' ? ['Résilié', 'danger'] :
+      ['En attente', 'info'];
 
-  private updatePolicyTypeChart(policyStats: ClientPolicyStats): void {
-    this.policyTypeChartData = Object.entries(policyStats.byType).map(([name, value]) => ({
-      name: name.replace('_', ' '),
-      value
-    }));
-  }
-
-  private updateClaimStatusChart(claimStats: ClientClaimStats): void {
-    this.claimStatusChartData = Object.entries(claimStats.byStatus).map(([name, value]) => ({
-      name: name.replace('_', ' '),
-      value
-    }));
-  }
-
-  private updatePaymentTrendChart(paymentStats: ClientPaymentStats): void {
-    this.paymentTrendChartData = [
-      { name: 'Paid', value: paymentStats.totalPaid },
-      { name: 'Pending', value: paymentStats.totalPending },
-      { name: 'Overdue', value: paymentStats.totalOverdue }
-    ];
+    return {
+      id: policy.id,
+      title: type.label,
+      number: policy.policyNumber || '—',
+      icon: type.icon,
+      image: type.image,
+      startDate: policy.startDate,
+      endDate: policy.endDate,
+      premium: policy.premium || 0,
+      statusLabel,
+      tone
+    };
   }
 }

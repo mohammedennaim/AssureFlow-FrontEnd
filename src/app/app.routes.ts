@@ -96,8 +96,9 @@ export const routes: Routes = [
 			},
 			{
 				path: 'support',
-				loadComponent: () => import('./features/client/support/client-support.component').then(m => m.ClientSupportComponent).catch(() => import('./features/client/dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent))
+				loadComponent: () => import('./features/client/assistant/client-assistant.component').then(m => m.ClientAssistantComponent)
 			},
+			{ path: 'assistant', redirectTo: 'support', pathMatch: 'full' },
 			{
 				path: 'submit-claim',
 				loadComponent: () => import('./features/client/submit-claim/client-submit-claim.component').then(m => m.ClientSubmitClaimComponent)
@@ -123,6 +124,6 @@ export const routes: Routes = [
 		]
 	},
 
-	{ path: '', redirectTo: '/login', pathMatch: 'full' },
-	{ path: '**', redirectTo: '/login' }
+	{ path: '', pathMatch: 'full', loadComponent: () => import('./features/public/landing/landing.component').then(m => m.LandingComponent) },
+	{ path: '**', redirectTo: '' }
 ];

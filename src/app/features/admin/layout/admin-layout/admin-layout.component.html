@@ -1,238 +1,145 @@
 <div class="admin-layout">
-  <!-- Sidebar -->
   <aside class="sidebar" [class.collapsed]="isSidebarCollapsed">
-    <!-- Brand -->
     <div class="sidebar__brand">
-      <div class="sidebar__logo">
-        <svg class="sidebar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="12" fill="url(#logo-gradient)"/>
-          <path d="M20 8L12 14V22C12 28 16 34 20 36C24 34 28 28 28 22V14L20 8Z" fill="white" fill-opacity="0.3"/>
-          <path d="M20 12L15 18V24C15 28 17 32 20 34C23 32 25 28 25 24V18L20 12Z" fill="white"/>
-          <defs>
-            <linearGradient id="logo-gradient" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#6366F1"/>
-              <stop offset="1" stop-color="#8B5CF6"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <div class="sidebar__brand-name" *ngIf="!isSidebarCollapsed">
-        <span class="sidebar__brand-text">Assure</span>
-        <span class="sidebar__brand-text-gradient">Flow</span>
-      </div>
-      <button class="sidebar__toggle" *ngIf="!isSidebarCollapsed" (click)="toggleSidebar()" type="button" aria-label="Toggle sidebar">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button class="sidebar__toggle sidebar__toggle--collapsed" *ngIf="isSidebarCollapsed" (click)="toggleSidebar()" type="button" aria-label="Expand sidebar">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 13L11 8L6 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <a class="sidebar__logo" routerLink="/admin/dashboard" aria-label="AssureFlow – Admin">
+        <img class="sidebar__logo-icon" src="brand/logo-mark.png" alt="">
+        @if (!isSidebarCollapsed) {
+          <span class="sidebar__brand-text">Assure<span>Flow</span></span>
+        }
+      </a>
+      <button class="sidebar__toggle" type="button" (click)="toggleSidebar()" [attr.aria-label]="isSidebarCollapsed ? 'Ouvrir le menu' : 'Réduire le menu'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          @if (isSidebarCollapsed) {
+            <path d="M6 13L11 8L6 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          } @else {
+            <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          }
         </svg>
       </button>
     </div>
 
-    <!-- Navigation -->
-    <nav class="sidebar__nav">
-      <!-- Main Menu Section -->
-      <div class="sidebar__section" *ngIf="!isSidebarCollapsed">
-        <span class="sidebar__section-title">Main Menu</span>
-      </div>
-
+    <nav class="sidebar__nav" aria-label="Navigation principale">
       <ul class="sidebar__list">
-        <li class="sidebar__item">
-          <a routerLink="/admin/dashboard" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5L3 6.5V11.5C3 15.5 6 18.5 10 19.5C14 18.5 17 15.5 17 11.5V6.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7.5 10.5L10 13L12.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Dashboard</span>
-          </a>
-        </li>
+        @for (item of navItems; track item.link) {
+          <li>
+            <a
+              class="sidebar__link"
+              [routerLink]="item.link"
+              routerLinkActive="sidebar__link--active"
+              [routerLinkActiveOptions]="{ exact: !!item.exact }"
+            >
+              <span class="sidebar__link-icon" aria-hidden="true">
+                <i [class]="item.icon"></i>
+              </span>
+              @if (!isSidebarCollapsed) {
+                <span class="sidebar__link-label">{{ item.label }}</span>
+                @if (item.badge && unreadCount > 0) {
+                  <span class="sidebar__badge">{{ unreadCount }}</span>
+                }
+              }
+            </a>
+          </li>
+        }
       </ul>
 
-      <!-- Management Section -->
-      <div class="sidebar__section" *ngIf="!isSidebarCollapsed">
-        <span class="sidebar__section-title">Management</span>
-      </div>
-
-      <ul class="sidebar__list">
-        <li class="sidebar__item">
-          <a routerLink="/admin/users" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 7.5C11.3807 7.5 12.5 6.38071 12.5 5C12.5 3.61929 11.3807 2.5 10 2.5C8.61929 2.5 7.5 3.61929 7.5 5C7.5 6.38071 8.61929 7.5 10 7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M5.5 15.5C5.5 13.0147 7.51472 11 10 11C12.4853 11 14.5 13.0147 14.5 15.5V16.5H5.5V15.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2.5 15.5C2.5 13.5 4 12 6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M14 12C16 12 17.5 13.5 17.5 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Users</span>
-          </a>
-        </li>
-        <li class="sidebar__item">
-          <a routerLink="/admin/clients" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.5 5C7.5 6.38071 6.38071 7.5 5 7.5C3.61929 7.5 2.5 6.38071 2.5 5C2.5 3.61929 3.61929 2.5 5 2.5C6.38071 2.5 7.5 3.61929 7.5 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17.5 5C17.5 6.38071 16.3807 7.5 15 7.5C13.6193 7.5 12.5 6.38071 12.5 5C12.5 3.61929 13.6193 2.5 15 2.5C16.3807 2.5 17.5 3.61929 17.5 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2.5 14.5C2.5 12.0147 4.51472 10 7 10C9.48528 10 11.5 12.0147 11.5 14.5V15.5H2.5V14.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12.5 14.5C12.5 12.0147 14.5147 10 17 10C19.4853 10 21.5 12.0147 21.5 14.5V15.5H12.5V14.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Clients</span>
-          </a>
-        </li>
-        <li class="sidebar__item">
-          <a routerLink="/admin/policies" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5L4 5.5V9.5C4 13.5 6.5 17 10 18.5C13.5 17 16 13.5 16 9.5V5.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7.5 10L9 11.5L12.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Policies</span>
-          </a>
-        </li>
-        <li class="sidebar__item">
-          <a routerLink="/admin/claims" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5L3 6.5V14.5C3 16.5 5 18.5 10 18.5C15 18.5 17 16.5 17 14.5V6.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7.5 10.5H12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M10 7.5V13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Claims</span>
-          </a>
-        </li>
-      </ul>
-
-      <!-- Operations Section -->
-      <div class="sidebar__section" *ngIf="!isSidebarCollapsed">
-        <span class="sidebar__section-title">Operations</span>
-      </div>
-
-      <ul class="sidebar__list">
-        <li class="sidebar__item">
-          <a routerLink="/admin/billing" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 5.5V3.5C6 2.94772 6.44772 2.5 7 2.5H13C13.5523 2.5 14 2.94772 14 3.5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 7.5H16V15.5C16 16.0523 15.5523 16.5 15 16.5H5C4.44772 16.5 4 16.0523 4 15.5V7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 11.5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 13.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Billing</span>
-          </a>
-        </li>
-        <li class="sidebar__item">
-          <a routerLink="/admin/notifications" routerLinkActive="sidebar__link--active" class="sidebar__link">
-            <div class="sidebar__link-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5C8 2.5 6.5 4 6.5 6V9.5C6.5 10.5 5.5 11.5 4.5 11.5H15.5C14.5 11.5 13.5 10.5 13.5 9.5V6C13.5 4 12 2.5 10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7.5 15.5C7.5 16.8807 8.61929 18 10 18C11.3807 18 12.5 16.8807 12.5 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Notifications</span>
-            <span class="sidebar__badge" *ngIf="!isSidebarCollapsed && unreadCount > 0">{{ unreadCount }}</span>
-          </a>
-        </li>
-      </ul>
     </nav>
 
-    <!-- User Footer -->
-    <div class="sidebar__footer">
-      <div class="sidebar__user" *ngIf="!isSidebarCollapsed">
-        <div class="sidebar__user-avatar">
-          <span>AD</span>
-        </div>
-        <div class="sidebar__user-info">
-          <span class="sidebar__user-name">Admin User</span>
-          <span class="sidebar__user-role">Administrator</span>
-        </div>
+    <div class="sidebar__foot">
+      <div class="sidebar__status" [class.sidebar__status--collapsed]="isSidebarCollapsed">
+        <span class="sidebar__status-dot" aria-hidden="true"></span>
+        @if (!isSidebarCollapsed) {
+          <div>
+            <strong>Système opérationnel</strong>
+            <time>MAJ {{ lastUpdatedLabel }}</time>
+          </div>
+        }
       </div>
-      <a class="sidebar__link sidebar__link--danger" (click)="logout()">
-        <div class="sidebar__link-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11.5 13.5L15 10M15 10L11.5 6.5M15 10H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+
+      @if (!isSidebarCollapsed) {
+        <div class="sidebar__promo">
+          <div class="sidebar__promo-copy">
+            <strong>AssureFlow</strong>
+            <p>Gérez clients, polices et sinistres plus simplement.</p>
+          </div>
+          <img class="sidebar__promo-img" src="brand/logo-mark.png" alt="" width="56" height="56">
         </div>
-        <span class="sidebar__link-label" *ngIf="!isSidebarCollapsed">Logout</span>
-      </a>
+      }
     </div>
   </aside>
 
-  <!-- Main Content Wrapper -->
   <div class="main-wrapper">
-    <!-- Topbar -->
     <header class="topbar">
       <div class="topbar__start">
-        <button class="topbar__menu-btn" *ngIf="isSidebarCollapsed" (click)="toggleSidebar()" type="button" aria-label="Open sidebar">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 6H17M3 10H17M3 14H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+        @if (isSidebarCollapsed) {
+          <button class="topbar__menu-btn" type="button" (click)="toggleSidebar()" aria-label="Ouvrir le menu">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+        }
 
-        <div class="topbar__search">
-          <svg class="topbar__search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16 16L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <input type="text" placeholder="Search..." class="topbar__search-input">
+        <div class="topbar__context">
+          <p class="topbar__eyebrow">Administration</p>
+          <h1 class="topbar__title">{{ pageTitle }}</h1>
         </div>
       </div>
 
+      <div class="topbar__center">
+        <label class="topbar__search">
+          <span class="topbar__search-icon" aria-hidden="true">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input
+            type="search"
+            class="topbar__search-input"
+            placeholder="Client, contrat, police…"
+            aria-label="Rechercher un client, un contrat ou une police"
+          >
+          <kbd class="topbar__search-shortcut" aria-hidden="true">⌘K</kbd>
+        </label>
+      </div>
+
       <div class="topbar__end">
-        <app-notification-center></app-notification-center>
+        <div class="topbar__actions">
+          <app-notification-center></app-notification-center>
 
-        <div class="topbar__user-menu" [class.open]="isUserMenuOpen">
-          <button class="topbar__user-trigger" (click)="toggleUserMenu()" type="button" aria-label="User menu">
-            <div class="topbar__user-avatar">
-              <span>AD</span>
-            </div>
-            <div class="topbar__user-info" *ngIf="!isSidebarCollapsed">
-              <span class="topbar__user-name">Admin User</span>
-              <span class="topbar__user-role">Administrator</span>
-            </div>
-            <svg class="topbar__user-chevron" *ngIf="!isSidebarCollapsed" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 10L10 6M10 6H7M10 6V9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          <span class="topbar__divider" aria-hidden="true"></span>
 
-          <div class="topbar__user-dropdown">
-            <a class="topbar__dropdown-item" href="#">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="9" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M3 15C3 12.5 5.5 10.5 9 10.5C12.5 10.5 15 12.5 15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <span>Profile</span>
-            </a>
-            <a class="topbar__dropdown-item" href="#">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M9 6V9L11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>Settings</span>
-            </a>
-            <div class="topbar__dropdown-divider"></div>
-            <a class="topbar__dropdown-item topbar__dropdown-item--danger" (click)="logout()">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.5 12L14 8.5M14 8.5L10.5 5M14 8.5H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9 15.5C13.1421 15.5 16.5 12.1421 16.5 8C16.5 3.85786 13.1421 0.5 9 0.5C4.85786 0.5 1.5 3.85786 1.5 8C1.5 12.1421 4.85786 15.5 9 15.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>Logout</span>
-            </a>
+          <div class="topbar__user-menu" [class.open]="isUserMenuOpen">
+            <button
+              class="topbar__user-trigger"
+              type="button"
+              (click)="toggleUserMenu()"
+              [attr.aria-expanded]="isUserMenuOpen"
+              aria-haspopup="menu"
+              aria-label="Menu utilisateur"
+            >
+              <div class="topbar__user-avatar" aria-hidden="true">AD</div>
+              <div class="topbar__user-info">
+                <span class="topbar__user-name">Admin</span>
+                <span class="topbar__user-role">Administrateur</span>
+              </div>
+              <i class="fa-solid fa-chevron-down topbar__user-chevron" aria-hidden="true"></i>
+            </button>
+
+            <div class="topbar__user-dropdown" role="menu">
+              <a class="topbar__dropdown-item" routerLink="/admin/users" role="menuitem" (click)="closeUserMenu()">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                Profil
+              </a>
+              <a class="topbar__dropdown-item" routerLink="/admin/notifications" role="menuitem" (click)="closeUserMenu()">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                Notifications
+              </a>
+              <div class="topbar__dropdown-divider"></div>
+              <button class="topbar__dropdown-item topbar__dropdown-item--danger" type="button" role="menuitem" (click)="logout()">
+                <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Page Content -->
     <main class="page-content">
       <router-outlet></router-outlet>
     </main>

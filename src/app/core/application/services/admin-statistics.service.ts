@@ -93,6 +93,15 @@ export interface BillingStats {
   byStatus: Record<string, number>;
 }
 
+export interface DashboardBundle {
+  stats: DashboardKpiStats;
+  policies: Policy[];
+  claims: Claim[];
+  clients: Client[];
+  invoices: Invoice[];
+  users: User[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminStatisticsService {
   private policiesService = inject(PoliciesService);
@@ -102,28 +111,39 @@ export class AdminStatisticsService {
   private usersService = inject(UsersService);
 
   /**
+   * Charge toutes les données dashboard en un seul passage (évite les doubles fetch).
+   */
+  getDashboardBundle(): Observable<DashboardBundle> {
+    return forkJoin({
+      policies: this.policiesService.getAll().pipe(catchError(() => of([] as Policy[]))),
+      claims: this.claimsService.getAll().pipe(catchError(() => of([] as Claim[]))),
+      clients: this.clientsService.getAll(0, 1000).pipe(catchError(() => of([] as Client[]))),
+      invoices: this.getAllInvoices().pipe(catchError(() => of([] as Invoice[]))),
+      users: this.usersService.getUsers().pipe(catchError(() => of([] as User[])))
+    }).pipe(
+      map((data) => {
+        const policies = Array.isArray(data.policies) ? data.policies : [];
+        const claims = Array.isArray(data.claims) ? data.claims : [];
+        const clients = Array.isArray(data.clients) ? data.clients : [];
+        const invoices = Array.isArray(data.invoices) ? data.invoices : [];
+        const users = Array.isArray(data.users) ? data.users : [];
+        return {
+          policies,
+          claims,
+          clients,
+          invoices,
+          users,
+          stats: this.calculateKpiStats({ policies, claims, clients, invoices, users })
+        };
+      })
+    );
+  }
+
+  /**
    * Calcule toutes les statistiques KPI pour le dashboard
    */
   getDashboardKpiStats(): Observable<DashboardKpiStats> {
-    return forkJoin({
-      policies: this.policiesService.getAll().pipe(
-        catchError(() => of([]))
-      ),
-      claims: this.claimsService.getAll().pipe(
-        catchError(() => of([]))
-      ),
-      clients: this.clientsService.getAll().pipe(
-        catchError(() => of([]))
-      ),
-      invoices: this.getAllInvoices().pipe(
-        catchError(() => of([]))
-      ),
-      users: this.usersService.getUsers().pipe(
-        catchError(() => of([]))
-      )
-    }).pipe(
-      map((data) => this.calculateKpiStats(data))
-    );
+    return this.getDashboardBundle().pipe(map((bundle) => bundle.stats));
   }
 
   /**

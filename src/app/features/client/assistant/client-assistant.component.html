@@ -1,0 +1,394 @@
+<div class="chat" [class.chat--sidebar-open]="sidebarOpen">
+  <!-- ==================== Historique ==================== -->
+  <aside class="chat__sidebar" id="chat-sidebar" aria-label="Historique des discussions">
+    <div class="chat__sidebar-head">
+      <button type="button" class="chat__new" (click)="newChat()">
+        <lucide-icon [img]="icons['newChat']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Nouvelle discussion
+      </button>
+      <button type="button" class="chat__icon-btn chat__sidebar-close" (click)="sidebarOpen = false" aria-label="Fermer l’historique">
+        <lucide-icon [img]="icons['close']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+      </button>
+    </div>
+
+    <nav class="chat__history" aria-label="Discussions précédentes">
+      @if (!conversations.length) {
+        <p class="chat__history-empty">
+          <lucide-icon [img]="icons['conversations']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+          Vos discussions apparaîtront ici.
+        </p>
+      }
+      @for (group of groups; track group.label) {
+        <h3 class="chat__history-label">{{ group.label }}</h3>
+        <ul>
+          @for (conversation of group.items; track conversation.id) {
+            <li class="chat__conv" [class.is-active]="conversation.id === activeId">
+              <button type="button" class="chat__conv-open" (click)="open(conversation)"
+                      [attr.aria-current]="conversation.id === activeId ? 'true' : null">
+                {{ conversation.title }}
+              </button>
+              <button type="button" class="chat__conv-delete" (click)="remove(conversation, $event)"
+                      [attr.aria-label]="'Supprimer la discussion « ' + conversation.title + ' »'">
+                <lucide-icon [img]="icons['trash']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </nav>
+
+    <div class="chat__sidebar-foot">
+      <div class="advisor-card">
+        <div class="advisor-card__top">
+          <span class="advisor-card__avatars" aria-hidden="true">
+            <span>SA</span><span>YB</span><span>KM</span>
+          </span>
+          <span class="presence" [class.presence--on]="availability.open">
+            <i aria-hidden="true"></i>{{ availability.label }}
+          </span>
+        </div>
+        <strong class="advisor-card__title">Une équipe à votre écoute</strong>
+        <p class="advisor-card__text">{{ availability.detail }} · {{ supportHours }}</p>
+        <button type="button" class="advisor-card__cta" (click)="startHandoff()">
+          <lucide-icon [img]="icons['advisor']" [size]="17" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon>
+          Parler à un conseiller
+        </button>
+        <div class="advisor-card__links">
+          <a [href]="phoneHref">
+            <lucide-icon [img]="icons['phone']" [size]="14" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Appeler
+          </a>
+          <a [href]="'mailto:' + supportEmail">
+            <lucide-icon [img]="icons['mail']" [size]="14" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            E-mail
+          </a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  @if (sidebarOpen) {
+    <div class="chat__backdrop" (click)="sidebarOpen = false" aria-hidden="true"></div>
+  }
+
+  <!-- ==================== Conversation ==================== -->
+  <section class="chat__main" aria-label="Aide et assistant AssureFlow">
+    <header class="chat__bar">
+      <button type="button" class="chat__icon-btn chat__sidebar-toggle" (click)="sidebarOpen = true"
+              aria-controls="chat-sidebar" [attr.aria-expanded]="sidebarOpen" aria-label="Afficher l’historique">
+        <lucide-icon [img]="icons['panel']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+      </button>
+      <h1 class="chat__title">
+        Assistant AssureFlow
+        <span class="chat__badge">
+          <lucide-icon [img]="icons['sparkles']" [size]="12" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          IA
+        </span>
+      </h1>
+      <button type="button" class="chat__bar-advisor" (click)="startHandoff()"
+              [attr.aria-label]="'Parler à un conseiller – ' + availability.label">
+        <span class="chat__bar-dot" [class.is-on]="availability.open" aria-hidden="true"></span>
+        <lucide-icon [img]="icons['advisor']" [size]="17" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon>
+        <span class="chat__bar-advisor-label">Parler à un conseiller</span>
+      </button>
+      <button type="button" class="chat__icon-btn chat__bar-new" (click)="newChat()" aria-label="Nouvelle discussion">
+        <lucide-icon [img]="icons['newChat']" [size]="19" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+      </button>
+    </header>
+
+    <div class="chat__thread" #thread>
+      @if (!messages.length) {
+        <div class="chat__welcome">
+          <img class="chat__welcome-bot" src="images/help-bot-head.webp" alt="" width="360" height="350">
+          <h2>Bonjour{{ firstName ? ' ' + firstName : '' }}, <span>comment puis-je vous aider ?</span></h2>
+          <p>Posez votre question sur vos contrats, sinistres ou factures : je vous réponds instantanément, 24h/24. Besoin d’un humain ? Je vous mets en relation avec un conseiller.</p>
+
+          <div class="chat__suggestions">
+            @for (suggestion of suggestions; track suggestion.prompt) {
+              <button type="button" class="chat__suggestion" (click)="send(suggestion.prompt)">
+                <span class="chat__suggestion-icon">
+                  <lucide-icon [img]="icons[suggestion.icon]" [size]="18" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+                </span>
+                <span>
+                  <strong>{{ suggestion.title }}</strong>
+                  <small>{{ suggestion.hint }}</small>
+                </span>
+              </button>
+            }
+          </div>
+
+          <button type="button" class="handoff-banner" (click)="startHandoff()">
+            <span class="handoff-banner__avatars" aria-hidden="true">
+              <span>SA</span><span>YB</span><span>KM</span>
+            </span>
+            <span class="handoff-banner__text">
+              <strong>Besoin de parler à un conseiller ?</strong>
+              <small>
+                <span class="presence" [class.presence--on]="availability.open"><i aria-hidden="true"></i>{{ availability.label }}</span>
+                · {{ availability.detail }}
+              </small>
+            </span>
+            <span class="handoff-banner__cta">
+              Démarrer
+              <lucide-icon [img]="icons['arrow']" [size]="16" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+            </span>
+          </button>
+
+          <section class="chat__faq" id="faq" aria-labelledby="faq-title">
+            <h3 id="faq-title">Questions fréquentes</h3>
+            <div class="chat__faq-list">
+              @for (question of faq; track question) {
+                <button type="button" class="chat__faq-item" (click)="send(question)">
+                  <lucide-icon [img]="icons['help']" [size]="16" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon>
+                  <span>{{ question }}</span>
+                  <lucide-icon class="chat__faq-arrow" [img]="icons['arrow']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                </button>
+              }
+            </div>
+          </section>
+        </div>
+      } @else {
+        <ol class="chat__messages" aria-live="polite" aria-relevant="additions">
+          @for (message of messages; track message.id) {
+            @if (message.role === 'user') {
+              <li class="msg msg--user">
+                <div class="msg__bubble" [class.msg__bubble--choice]="message.choice">{{ message.text }}</div>
+              </li>
+            } @else {
+              <li class="msg msg--assistant" [attr.data-message]="message.id">
+                <span class="msg__avatar" aria-hidden="true">
+                  <img src="brand/logo-mark-white.png" alt="">
+                </span>
+                <div class="msg__body">
+                  <span class="sr-only">Assistant :</span>
+                  <div class="msg__content" [class.msg__content--streaming]="isStreamingMessage(message)" [innerHTML]="message.html"></div>
+
+                  @if (!isStreamingMessage(message)) {
+                    @if (message.actions?.length) {
+                      <div class="msg__actions">
+                        @for (action of message.actions; track action.label) {
+                          @if (action.route) {
+                            <a class="msg__chip" [routerLink]="action.route">
+                              <lucide-icon [img]="icons[action.icon]" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                              {{ action.label }}
+                            </a>
+                          } @else {
+                            <button type="button" class="msg__chip msg__chip--accent" (click)="runAction(action)">
+                              <lucide-icon [img]="icons[action.icon]" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                              {{ action.label }}
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
+
+                    <!-- Choix rapides -->
+                    @if (message.quick; as quick) {
+                      <div class="quick" [class.quick--done]="!!quick.selected" [class.quick--compact]="quick.step === 'topic'"
+                           role="group" [attr.aria-label]="quick.step === 'channel' ? 'Mode de contact' : quick.step === 'topic' ? 'Sujet de la demande' : 'Dossier concerné'">
+                        @for (option of quick.options; track option.id) {
+                          @if (option.href && !quick.selected) {
+                            <a class="quick__option" [href]="option.href" (click)="choose(message, option)">
+                              <span class="quick__icon"><lucide-icon [img]="icons[option.icon]" [size]="18" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon></span>
+                              <span class="quick__text">
+                                <strong>{{ option.label }}</strong>
+                                @if (option.hint) { <small>{{ option.hint }}</small> }
+                              </span>
+                            </a>
+                          } @else {
+                            <button type="button" class="quick__option" [class.is-chosen]="isChosen(quick, option)"
+                                    [disabled]="!!quick.selected || isBusy" (click)="choose(message, option)"
+                                    [attr.aria-pressed]="isChosen(quick, option)">
+                              <span class="quick__icon"><lucide-icon [img]="icons[option.icon]" [size]="18" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon></span>
+                              <span class="quick__text">
+                                <strong>
+                                  {{ option.label }}
+                                  @if (option.suggested && !quick.selected) { <em class="quick__tag">Suggéré</em> }
+                                </strong>
+                                @if (option.hint) { <small>{{ option.hint }}</small> }
+                              </span>
+                              @if (isChosen(quick, option)) {
+                                <lucide-icon class="quick__check" [img]="icons['check']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                              }
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
+
+                    <!-- Demande au conseiller -->
+                    @if (message.request; as request) {
+                      @if (request.status === 'sent') {
+                        <div class="request request--sent" role="status">
+                          <div class="request__sent-head">
+                            <span class="request__badge">
+                              <lucide-icon [img]="icons['checkAll']" [size]="18" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+                            </span>
+                            <div>
+                              <strong>{{ request.channel === 'callback' ? 'Rappel programmé' : 'Demande transmise' }}</strong>
+                              <small>Réf. {{ request.reference }} · {{ sentLabel(request.sentAt) }}</small>
+                            </div>
+                          </div>
+                          <ol class="request__track">
+                            <li class="is-done">
+                              <span></span>
+                              <div><strong>Demande reçue</strong><small>{{ request.topic }}</small></div>
+                            </li>
+                            <li class="is-current">
+                              <span></span>
+                              <div><strong>Prise en charge par un conseiller</strong><small>{{ availability.open ? 'En cours' : availability.detail }}</small></div>
+                            </li>
+                            <li>
+                              <span></span>
+                              <div>
+                                @if (request.channel === 'callback') {
+                                  <strong>Appel au {{ request.phone }}</strong><small>{{ request.slot }}</small>
+                                } @else {
+                                  <strong>Réponse du conseiller</strong><small>Par e-mail et dans vos notifications</small>
+                                }
+                              </div>
+                            </li>
+                          </ol>
+                        </div>
+                      } @else {
+                        <form class="request" (ngSubmit)="submitRequest(message)" novalidate [attr.aria-busy]="request.status === 'sending'">
+                          <div class="request__recap">
+                            <span class="request__tag">
+                              <lucide-icon [img]="icons[request.channel === 'callback' ? 'phone' : 'chat']" [size]="13" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                              {{ request.channel === 'callback' ? 'Rappel' : 'Message écrit' }}
+                            </span>
+                            <span class="request__tag">{{ request.topic }}</span>
+                            @if (request.related) {
+                              <span class="request__tag">{{ request.related }}</span>
+                            }
+                          </div>
+
+                          @if (request.channel === 'callback') {
+                            <div class="request__field">
+                              <label [for]="'phone-' + message.id">Numéro à rappeler</label>
+                              <div class="request__control">
+                                <lucide-icon [img]="icons['phone']" [size]="16" [strokeWidth]="1.9" aria-hidden="true"></lucide-icon>
+                                <input type="tel" [id]="'phone-' + message.id" [name]="'phone-' + message.id" [(ngModel)]="request.phone"
+                                       autocomplete="tel" placeholder="06 12 34 56 78" [attr.aria-invalid]="phoneInvalid(request)">
+                              </div>
+                              @if (phoneInvalid(request)) {
+                                <p class="request__error">Indiquez un numéro de téléphone valide.</p>
+                              }
+                            </div>
+                            <div class="request__field">
+                              <span class="request__label">Créneau souhaité</span>
+                              <div class="request__slots" role="radiogroup" aria-label="Créneau souhaité">
+                                @for (slot of slots; track slot) {
+                                  <button type="button" class="request__slot" role="radio" [class.is-on]="request.slot === slot"
+                                          [attr.aria-checked]="request.slot === slot" (click)="setSlot(request, slot)">{{ slot }}</button>
+                                }
+                              </div>
+                            </div>
+                          }
+
+                          <div class="request__field">
+                            <div class="request__label-row">
+                              <label [for]="'summary-' + message.id">{{ request.channel === 'callback' ? 'Motif de l’appel' : 'Votre message' }}</label>
+                              <span class="request__ai">
+                                <lucide-icon [img]="icons['sparkles']" [size]="12" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                                Préparé par l’assistant
+                              </span>
+                            </div>
+                            <textarea [id]="'summary-' + message.id" [name]="'summary-' + message.id" rows="6" maxlength="2000"
+                                      [(ngModel)]="request.summary" [attr.aria-invalid]="summaryInvalid(request)"></textarea>
+                            <div class="request__meta">
+                              @if (summaryInvalid(request)) {
+                                <p class="request__error">Décrivez votre demande en quelques mots ({{ summaryMin }} caractères min.).</p>
+                              } @else {
+                                <p class="request__hint">
+                                  <lucide-icon [img]="icons['secure']" [size]="12" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                                  Ne communiquez jamais votre mot de passe.
+                                </p>
+                              }
+                              <span class="request__count">{{ request.summary.length }}/2000</span>
+                            </div>
+                          </div>
+
+                          <div class="request__actions">
+                            <button type="button" class="request__btn" (click)="cancelRequest(message)" [disabled]="request.status === 'sending'">Annuler</button>
+                            <button type="submit" class="request__btn request__btn--primary" [disabled]="request.status === 'sending'">
+                              @if (request.status === 'sending') {
+                                <span class="request__spinner" aria-hidden="true"></span>
+                                Envoi…
+                              } @else {
+                                <lucide-icon [img]="icons[request.channel === 'callback' ? 'phone' : 'send']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                                {{ request.channel === 'callback' ? 'Demander le rappel' : 'Envoyer au conseiller' }}
+                              }
+                            </button>
+                          </div>
+                        </form>
+                      }
+                    }
+
+                    @if (!isInteractive(message)) {
+                      <div class="msg__tools">
+                        <button type="button" class="msg__tool" (click)="copy(message)"
+                                [attr.aria-label]="copiedId === message.id ? 'Copié' : 'Copier la réponse'"
+                                [attr.title]="copiedId === message.id ? 'Copié' : 'Copier'">
+                          <lucide-icon [img]="icons[copiedId === message.id ? 'checkAll' : 'copy']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                        </button>
+                        <button type="button" class="msg__tool" [class.is-on]="message.feedback === 'up'" (click)="rate(message, 'up')"
+                                aria-label="Réponse utile" title="Réponse utile" [attr.aria-pressed]="message.feedback === 'up'">
+                          <lucide-icon [img]="icons['thumbUp']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                        </button>
+                        <button type="button" class="msg__tool" [class.is-on]="message.feedback === 'down'" (click)="rate(message, 'down')"
+                                aria-label="Réponse peu utile" title="Réponse peu utile" [attr.aria-pressed]="message.feedback === 'down'">
+                          <lucide-icon [img]="icons['thumbDown']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                        </button>
+                        @if (isLastAssistant(message) && !isBusy) {
+                          <button type="button" class="msg__tool" (click)="regenerate()" aria-label="Régénérer la réponse" title="Régénérer">
+                            <lucide-icon [img]="icons['refresh']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                          </button>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              </li>
+            }
+          }
+
+          @if (isThinking) {
+            <li class="msg msg--assistant">
+              <span class="msg__avatar" aria-hidden="true">
+                <img src="brand/logo-mark-white.png" alt="">
+              </span>
+              <div class="msg__body">
+                <span class="msg__typing" role="status" aria-label="L’assistant rédige une réponse">
+                  <i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+
+    <footer class="chat__footer">
+      <form class="chat__composer" (ngSubmit)="submit()" [class.is-busy]="isBusy">
+        <label class="sr-only" for="chat-input">Votre message</label>
+        <textarea id="chat-input" #composer name="message" rows="1" maxlength="2000"
+                  [(ngModel)]="draft" (input)="autosize()" (keydown)="onKeydown($event)"
+                  placeholder="Posez votre question à l’assistant…"></textarea>
+        @if (isBusy) {
+          <button type="button" class="chat__send chat__send--stop" (click)="stop()" aria-label="Arrêter la réponse">
+            <lucide-icon [img]="icons['stop']" [size]="14" [strokeWidth]="3" aria-hidden="true"></lucide-icon>
+          </button>
+        } @else {
+          <button type="submit" class="chat__send" [disabled]="!canSend" aria-label="Envoyer le message">
+            <lucide-icon [img]="icons['arrowUp']" [size]="18" [strokeWidth]="2.5" aria-hidden="true"></lucide-icon>
+          </button>
+        }
+      </form>
+      <p class="chat__disclaimer">
+        L’assistant peut se tromper. Vérifiez les informations importantes auprès de
+        <button type="button" (click)="startHandoff()">votre conseiller</button>.
+      </p>
+    </footer>
+  </section>
+</div>

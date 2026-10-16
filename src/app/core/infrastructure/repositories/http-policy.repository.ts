@@ -14,23 +14,7 @@ export class HttpPolicyRepository implements IPolicyRepository {
 
   getAll(): Observable<Policy[]> {
     return this.http.get<any>(this.apiUrl).pipe(
-      map((res) => {
-        let data: PolicyDto[] = [];
-
-        if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.policies && Array.isArray(res.policies)) {
-          data = res.policies;
-        } else if (res?.items && Array.isArray(res.items)) {
-          data = res.items;
-        }
-
-        return data.map(this.mapToPolicy);
-      }),
+      map((res) => this.extractList(res).map(this.mapToPolicy)),
       catchError(() => of([]))
     );
   }
@@ -58,21 +42,7 @@ export class HttpPolicyRepository implements IPolicyRepository {
     const url = `${this.apiUrl}/client/${clientId}`;
 
     return this.http.get<any>(url).pipe(
-      map((res) => {
-        let data: PolicyDto[] = [];
-
-        if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.policies && Array.isArray(res.policies)) {
-          data = res.policies;
-        }
-
-        return data.map(this.mapToPolicy);
-      }),
+      map((res) => this.extractList(res).map(this.mapToPolicy)),
       catchError(() => of([]))
     );
   }
@@ -166,6 +136,19 @@ export class HttpPolicyRepository implements IPolicyRepository {
         return this.mapToPolicy(dto as PolicyDto);
       })
     );
+  }
+
+  private extractList(res: unknown): PolicyDto[] {
+    if (Array.isArray(res)) return res;
+    const body = res as Record<string, unknown> | null;
+    if (!body) return [];
+    if (Array.isArray(body['data'])) return body['data'] as PolicyDto[];
+    const nested = body['data'] as Record<string, unknown> | undefined;
+    if (nested && Array.isArray(nested['content'])) return nested['content'] as PolicyDto[];
+    if (Array.isArray(body['content'])) return body['content'] as PolicyDto[];
+    if (Array.isArray(body['policies'])) return body['policies'] as PolicyDto[];
+    if (Array.isArray(body['items'])) return body['items'] as PolicyDto[];
+    return [];
   }
 
   private mapToPolicy(dto: PolicyDto): Policy {

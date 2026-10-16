@@ -1,0 +1,302 @@
+@use '../../../shared/styles/site-shell';
+@use '../../../shared/styles/site-home';
+
+/* ==================== Header (public) ==================== */
+.site-nav__link {
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.site-header__actions .btn-brand lucide-icon {
+  display: flex;
+}
+
+.landing-login {
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand-navy);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--brand-light);
+    color: var(--brand-blue);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-blue);
+    outline-offset: 2px;
+  }
+}
+
+.site-mobile-nav button {
+  padding: 0.75rem 0.875rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-align: left;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--brand-light);
+  }
+}
+
+.site-footer__links button {
+  display: block;
+  margin-bottom: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--brand-turquoise);
+  }
+}
+
+.site-footer {
+  margin-top: 0;
+}
+
+/* ==================== Sections ==================== */
+.page {
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.why-band {
+  .why {
+    align-items: center;
+  }
+}
+
+.steps {
+  padding-top: 0.5rem;
+}
+
+/* ==================== Assistant IA ==================== */
+.assistant {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'bot text'
+    'bot features';
+  align-items: center;
+  gap: 1.125rem clamp(1rem, 2.5vw, 2rem);
+  padding: clamp(1.125rem, 2vw, 1.5rem) clamp(1.25rem, 3vw, 2rem);
+  overflow: hidden;
+  border: 1px solid rgba(7, 153, 213, 0.18);
+  border-radius: var(--radius-2xl, 24px);
+  background:
+    radial-gradient(40% 80% at 0% 100%, rgba(67, 196, 192, 0.22) 0%, rgba(67, 196, 192, 0) 70%),
+    radial-gradient(45% 90% at 100% 0%, rgba(7, 153, 213, 0.16) 0%, rgba(7, 153, 213, 0) 70%),
+    linear-gradient(135deg, #eaf6fd 0%, #f3f9fc 55%, #e9f8f7 100%);
+
+  &__bot {
+    grid-area: bot;
+    width: clamp(120px, 12vw, 164px);
+    height: auto;
+    align-self: end;
+    margin-bottom: calc(-1 * clamp(1.125rem, 2vw, 1.5rem));
+    filter: drop-shadow(0 18px 24px rgba(21, 52, 91, 0.2));
+  }
+
+  &__text {
+    grid-area: text;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+
+  &__copy {
+    flex: 1 1 480px;
+    min-width: 0;
+
+    h2 {
+      margin: 0.5rem 0 0.375rem;
+      font-family: var(--font-brand);
+      font-size: clamp(1.5rem, 2.4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--brand-navy);
+      text-wrap: balance;
+
+      span {
+        color: var(--brand-blue);
+      }
+    }
+
+    > p {
+      margin: 0;
+      text-wrap: pretty;
+      font-size: var(--text-sm);
+      line-height: 1.55;
+      color: var(--text-secondary);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+
+    .btn-brand {
+      min-width: 190px;
+      justify-content: center;
+    }
+
+    .btn-brand lucide-icon {
+      display: flex;
+    }
+  }
+
+  &__login {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+  }
+
+  &__link {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--brand-blue);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--brand-blue);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+  }
+
+  &__features {
+    grid-area: features;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 16px 32px -26px rgba(21, 52, 91, 0.45);
+
+      > span:last-child {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+    }
+
+    strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--brand-navy);
+    }
+
+    small {
+      font-size: var(--text-xs);
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+  }
+
+  &__feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0799d5 0%, #43c4c0 100%);
+    color: #ffffff;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .landing-login {
+    display: none;
+  }
+
+  .assistant {
+    grid-template-areas:
+      'bot text'
+      'features features';
+
+    &__bot {
+      align-self: center;
+      margin-bottom: 0;
+    }
+
+    &__features {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .site-header__actions > .btn-brand {
+    display: none;
+  }
+
+  .assistant {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'text'
+      'features';
+    padding: 1.25rem;
+
+    &__bot {
+      display: none;
+    }
+  }
+
+  .assistant__features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant__link {
+    transition: none;
+  }
+}

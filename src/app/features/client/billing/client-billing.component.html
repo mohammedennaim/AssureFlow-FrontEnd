@@ -1,181 +1,215 @@
-<div class="billing-page">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="page-header__content">
-      <div class="page-header__title">
-        <h1>Billing & Payments</h1>
-        <p>Manage your invoices and payments</p>
-      </div>
+<div class="cp">
+  <header class="cp-head">
+    <div class="cp-head__text">
+      <p class="cp-head__eyebrow">Mon espace</p>
+      <h1>Mes <span>factures</span></h1>
+      <p class="cp-head__lead">Consultez vos échéances, suivez vos paiements et gardez un œil sur vos cotisations.</p>
+    </div>
+    <div class="cp-head__actions">
+      <a routerLink="/client/support" class="cp-btn cp-btn--secondary">
+        <lucide-icon [img]="icons['help']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Une question ?
+      </a>
     </div>
   </header>
 
-  <!-- Stats Cards -->
-  <section class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6.41667 18.3333H15.5833C16.125 18.3333 16.5 17.875 16.5 17.4167V7.33333H5.5V17.4167C5.5 17.875 5.875 18.3333 6.41667 18.3333Z" stroke="white" stroke-width="1.5"/>
-          <path d="M13.75 6.41667V5.04167C13.75 4.275 13.125 3.66667 12.375 3.66667H9.625C8.875 3.66667 8.25 4.275 8.25 5.04167V6.41667" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Total Paid</span>
-        <span class="stat-card__value">{{ getTotalPaid() | formatCurrency }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-          <path d="M11 7V11" stroke="white" stroke-width="1.5"/>
-          <circle cx="11" cy="13.5" r="1" fill="white"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Pending</span>
-        <span class="stat-card__value">{{ getTotalPending() | formatCurrency }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-          <path d="M8 8L14 14M14 8L8 14" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Overdue</span>
-        <span class="stat-card__value">{{ getTotalOverdue() | formatCurrency }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 12L11 14L15 10" stroke="white" stroke-width="1.5"/>
-          <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Paid Invoices</span>
-        <span class="stat-card__value">{{ getPaidInvoicesCount() }}</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Next Payment Alert -->
-  <section class="payment-alert" *ngIf="getNextPayment() as nextPayment">
-    <div class="payment-alert__icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5"/>
-      </svg>
-    </div>
-    <div class="payment-alert__content">
-      <h3>Upcoming Payment</h3>
-      <p>{{ nextPayment.policyName }} - Due {{ formatDate(nextPayment.dueDate) }}</p>
-    </div>
-    <div class="payment-alert__amount">
-      {{ nextPayment.amount | formatCurrency }}
-    </div>
-    <button class="btn btn--primary">Pay Now</button>
-  </section>
-
-  <!-- Filters -->
-  <section class="filters-section">
-    <div class="filters">
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'all'"
-        (click)="filter = 'all'">
-        All
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'paid'"
-        (click)="filter = 'paid'">
-        Paid
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'pending'"
-        (click)="filter = 'pending'">
-        Pending
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'overdue'"
-        (click)="filter = 'overdue'">
-        Overdue
-      </button>
-    </div>
-  </section>
-
-  <!-- Invoices List -->
-  <section class="invoices-list">
+  <section class="cp-stats" aria-label="Résumé de facturation">
     @if (loading) {
-      @for (item of [1,2,3]; track $index) {
-        <div class="invoice-card invoice-card--skeleton">
-          <div class="skeleton skeleton--circle"></div>
-          <div class="invoice-card__content">
-            <div class="skeleton skeleton--text"></div>
-            <div class="skeleton skeleton--text skeleton--short"></div>
-          </div>
-        </div>
+      @for (i of [1, 2, 3]; track i) { <div class="cp-skeleton cp-skeleton--stat"></div> }
+    } @else {
+      <div class="cp-stat" [attr.data-tone]="dueTotal > 0 ? 'warning' : 'success'">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['wallet']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">À régler</span>
+          <span class="cp-stat__value">{{ amount(dueTotal) }}</span>
+          <span class="cp-stat__hint">{{ count('due') }} facture{{ count('due') > 1 ? 's' : '' }} en attente</span>
+        </span>
+      </div>
+      <div class="cp-stat" [attr.data-tone]="overdueCount > 0 ? 'danger' : 'neutral'">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['alert']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">En retard</span>
+          <span class="cp-stat__value">{{ overdueCount }}</span>
+          <span class="cp-stat__hint">{{ overdueCount ? 'À régulariser rapidement' : 'Aucun retard, bravo !' }}</span>
+        </span>
+      </div>
+      <div class="cp-stat" data-tone="success">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['check']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">Payé cette année</span>
+          <span class="cp-stat__value">{{ amount(paidThisYear) }}</span>
+          <span class="cp-stat__hint">{{ amount(paidTotal) }} payés au total</span>
+        </span>
+      </div>
+    }
+  </section>
+
+  @if (errorMessage && !loading) {
+    <div class="cp-alert" data-tone="danger" role="alert">
+      <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+      <div class="billing__alert-body">
+        <strong>Chargement impossible</strong>
+        {{ errorMessage }}
+      </div>
+      <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="loadBilling()">
+        <lucide-icon [img]="icons['refresh']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Réessayer
+      </button>
+    </div>
+  }
+
+  @if (loading ? null : nextInvoice; as next) {
+    <section class="next-pay" [attr.data-tone]="isOverdue(next) ? 'danger' : 'warning'" aria-labelledby="next-pay-title">
+      <span class="cp-tile cp-tile--lg" [attr.data-tone]="isOverdue(next) ? 'danger' : 'warning'">
+        <lucide-icon [img]="icons['calendar']" [size]="26" [strokeWidth]="1.75"></lucide-icon>
+      </span>
+      <div class="next-pay__body">
+        <p class="next-pay__eyebrow" id="next-pay-title">Prochain paiement</p>
+        <p class="next-pay__amount">{{ amount(total(next)) }}</p>
+        <p class="next-pay__meta">
+          Facture n° {{ next.invoiceNumber || '—' }} · échéance le {{ date(next.dueDate) }}
+        </p>
+      </div>
+      <div class="next-pay__side">
+        <span class="pill" [attr.data-tone]="isOverdue(next) ? 'danger' : 'warning'">{{ dueLabel(next) }}</span>
+        <button type="button" class="cp-btn cp-btn--primary" (click)="openPay(next)">
+          <lucide-icon [img]="icons['pay']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Payer maintenant
+        </button>
+      </div>
+    </section>
+  }
+
+  <div class="cp-toolbar">
+    <div class="cp-filters" role="tablist" aria-label="Filtrer les factures">
+      @for (f of filters; track f.key) {
+        <button type="button" class="cp-filter" role="tab" [class.cp-filter--active]="filter === f.key"
+                [attr.aria-selected]="filter === f.key" (click)="filter = f.key">
+          {{ f.label }}
+          <small>{{ count(f.key) }}</small>
+        </button>
       }
-    } @else if (invoices.length === 0) {
-      <div class="empty-state">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
-          <path d="M32 18V32L40 40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <h3>No invoices found</h3>
-        <p>Your payment history will appear here</p>
+    </div>
+    <label class="cp-search">
+      <span class="sr-only">Rechercher une facture</span>
+      <lucide-icon [img]="icons['search']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+      <input type="search" [(ngModel)]="search" placeholder="N° de facture, montant…" autocomplete="off" />
+    </label>
+  </div>
+
+  <section class="cp-list" aria-live="polite" [attr.aria-busy]="loading">
+    @if (loading) {
+      @for (i of [1, 2, 3, 4]; track i) { <div class="cp-skeleton cp-skeleton--row"></div> }
+    } @else if (filteredInvoices.length === 0) {
+      <div class="cp-empty">
+        <span class="cp-empty__icon"><lucide-icon [img]="icons['invoices']" [size]="28" [strokeWidth]="1.75"></lucide-icon></span>
+        @if (invoices.length === 0) {
+          <h3>Aucune facture pour le moment</h3>
+          <p>Vos factures apparaîtront ici dès l’émission de votre première échéance.</p>
+          <a routerLink="/client/policies" class="cp-btn cp-btn--secondary cp-btn--sm">
+            <lucide-icon [img]="icons['contracts']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Voir mes contrats
+          </a>
+        } @else {
+          <h3>Aucune facture ne correspond</h3>
+          <p>Modifiez votre recherche ou choisissez un autre filtre.</p>
+          <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="resetFilters()">Réinitialiser les filtres</button>
+        }
       </div>
     } @else {
-      @for (invoice of invoices; track invoice.id) {
-        <div class="invoice-card">
-          <div class="invoice-card__icon" [style.background]="invoice.id.toString() | avatarColor">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="white" stroke-width="2"/>
-              <path d="M14 2V8H20" stroke="white" stroke-width="2"/>
-              <path d="M8 13H16" stroke="white" stroke-width="2"/>
-              <path d="M8 17H16" stroke="white" stroke-width="2"/>
-            </svg>
-          </div>
-          <div class="invoice-card__content">
-            <div class="invoice-card__header">
-              <div class="invoice-card__title">
-                <h3>Invoice #{{ invoice.invoiceNumber }}</h3>
-                <span class="invoice-card__date">{{ formatDate(invoice.createdAt || invoice.dueDate) }}</span>
-              </div>
-              <span class="status-badge" [class]="invoice.status | statusClass">{{ invoice.status | titlecase }}</span>
-            </div>
-            <p class="invoice-card__description">Invoice for {{ invoice.invoiceNumber }}</p>
-            <div class="invoice-card__details">
-              <div class="detail">
-                <span class="detail__label">Due Date</span>
-                <span class="detail__value">{{ formatDate(invoice.dueDate) }}</span>
-              </div>
-              <div class="detail">
-                <span class="detail__label">Amount</span>
-                <span class="detail__value">{{ invoice.amount | formatCurrency }}</span>
-              </div>
-            </div>
-            <div class="invoice-card__actions">
-              @if (invoice.status === 'PENDING' || invoice.overDue) {
-                <button class="btn btn--primary">Pay Invoice</button>
+      @for (invoice of filteredInvoices; track invoice.id) {
+        <article class="cp-row invoice">
+          <span class="cp-tile" [attr.data-tone]="status(invoice).tone">
+            <lucide-icon [img]="icons['invoices']" [size]="20" [strokeWidth]="1.75"></lucide-icon>
+          </span>
+          <div class="cp-row__main">
+            <h2 class="cp-row__title">Facture n° {{ invoice.invoiceNumber || '—' }}</h2>
+            <div class="cp-row__meta">
+              <span>
+                <lucide-icon [img]="icons['date']" [size]="13" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                Échéance {{ date(invoice.dueDate) }}
+              </span>
+              @if (invoice.createdAt) {
+                <span>Émise le {{ date(invoice.createdAt) }}</span>
               }
-              <button class="btn btn--outline">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 2.5V4.5M9 13.5V15.5M4.5 9H6.5M11.5 9H13.5M6.28929 6.28929L7.71071 7.71071M10.2893 10.2893L11.7107 11.7107M6.28929 11.7107L7.71071 10.2893M10.2893 7.71071L11.7107 6.28929" stroke="currentColor" stroke-width="1.5"/>
-                  <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
-                Download
+              @if (invoice.policyId) {
+                <a class="invoice__policy" [routerLink]="['/client/policies', invoice.policyId]">
+                  <lucide-icon [img]="icons['contracts']" [size]="13" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  Voir le contrat
+                </a>
+              }
+            </div>
+          </div>
+          <div class="cp-row__side">
+            <span class="cp-row__amount">{{ amount(total(invoice)) }}</span>
+            <span class="pill" [attr.data-tone]="status(invoice).tone">{{ status(invoice).label }}</span>
+          </div>
+          @if (isUnpaid(invoice)) {
+            <div class="invoice__actions">
+              <button type="button" class="cp-btn cp-btn--primary cp-btn--sm" (click)="openPay(invoice)"
+                      [attr.aria-label]="'Payer la facture n° ' + invoice.invoiceNumber">
+                <lucide-icon [img]="icons['pay']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                Payer
               </button>
             </div>
-          </div>
-        </div>
+          }
+        </article>
       }
     }
   </section>
 </div>
+
+@if (payTarget; as inv) {
+  <div class="pay-modal" (click)="closePay()">
+    <div #payPanel class="pay-modal__panel cp-card" role="dialog" aria-modal="true" aria-labelledby="pay-modal-title"
+         tabindex="-1" (click)="$event.stopPropagation()">
+      <div class="cp-card__head">
+        <h2 class="cp-card__title" id="pay-modal-title">
+          <span class="cp-tile" data-tone="info"><lucide-icon [img]="icons['pay']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+          Régler ma facture
+        </h2>
+        <button type="button" class="cp-icon-btn" (click)="closePay()" aria-label="Fermer">
+          <lucide-icon [img]="icons['close']" [size]="18" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+
+      <dl class="cp-dl">
+        <div>
+          <dt>Montant</dt>
+          <dd>{{ amount(total(inv)) }}</dd>
+        </div>
+        <div>
+          <dt>Échéance</dt>
+          <dd>{{ date(inv.dueDate) }}</dd>
+        </div>
+        <div>
+          <dt>Référence</dt>
+          <dd>{{ inv.invoiceNumber || '—' }}</dd>
+        </div>
+      </dl>
+
+      <div class="cp-alert" data-tone="warning">
+        <lucide-icon [img]="icons['info']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        <div>
+          <strong>Paiement en ligne bientôt disponible</strong>
+          Réglez cette facture par virement ou en agence en indiquant la référence ci-dessus, ou contactez votre conseiller.
+        </div>
+      </div>
+
+      <p class="sr-only" aria-live="polite">{{ copied ? 'Référence copiée' : '' }}</p>
+
+      <div class="pay-modal__actions">
+        @if (inv.invoiceNumber) {
+          <button type="button" class="cp-btn cp-btn--secondary" (click)="copyReference(inv.invoiceNumber)">
+            <lucide-icon [img]="copied ? icons['checkAll'] : icons['copy']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            {{ copied ? 'Référence copiée' : 'Copier la référence' }}
+          </button>
+        }
+        <a routerLink="/client/support" class="cp-btn cp-btn--primary" (click)="closePay()">
+          <lucide-icon [img]="icons['support']" [size]="17" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Contacter mon conseiller
+        </a>
+      </div>
+    </div>
+  </div>
+}

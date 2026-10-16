@@ -1,118 +1,353 @@
-<div class="submit-claim-page">
+<div class="cp">
+  <a [routerLink]="editMode && claimId ? ['/client/claims', claimId] : '/client/claims'" class="cp-back">
+    <lucide-icon [img]="icons['arrowLeft']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+    {{ editMode ? 'Retour au sinistre' : 'Mes sinistres' }}
+  </a>
 
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="page-header__content">
-      <div class="page-header__title">
-        <h1>{{ editMode ? 'Edit Claim' : 'Submit a Claim' }}</h1>
-        <p>{{ editMode ? 'Modify your insurance claim details' : 'File a new insurance claim for one of your active policies' }}</p>
-      </div>
-      <a routerLink="/client/claims" class="btn btn--outline">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Back to Claims
-      </a>
+  <header class="cp-head">
+    <div class="cp-head__text">
+      <p class="cp-head__eyebrow">{{ editMode ? 'Modification' : 'Nouvelle déclaration' }}</p>
+      @if (editMode) {
+        <h1>Modifier ma <span>déclaration</span></h1>
+        <p class="cp-head__lead">Mettez à jour les informations de votre sinistre tant qu’il n’a pas été pris en charge par un gestionnaire.</p>
+      } @else {
+        <h1>Déclarer un <span>sinistre</span></h1>
+        <p class="cp-head__lead">Pas d’inquiétude, nous sommes là pour vous. Trois étapes suffisent : votre déclaration est transmise immédiatement à un gestionnaire.</p>
+      }
+      @if (editMode && existingClaim) {
+        <div class="cp-head__meta">
+          <span>
+            <lucide-icon [img]="icons['hash']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Sinistre n° {{ existingClaim.claimNumber || '—' }}
+          </span>
+        </div>
+      }
     </div>
   </header>
 
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>{{ editMode ? 'Loading claim details...' : 'Loading your policies...' }}</p>
-  </div>
+  <div class="cp-grid cp-grid--aside" aria-live="polite" [attr.aria-busy]="isLoading">
+    <div class="sc__main">
+      @if (isLoading) {
+        <div class="cp-skeleton sc__skeleton-steps"></div>
+        <div class="cp-skeleton cp-skeleton--card"></div>
+        <div class="cp-skeleton cp-skeleton--card sc__skeleton-tall"></div>
+      } @else if (submitSuccess) {
+        <section class="cp-card sc__success" role="status">
+          <span class="sc__success-icon">
+            <lucide-icon [img]="icons['check']" [size]="32" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+          </span>
+          <h2>{{ editMode ? 'Déclaration mise à jour' : 'Déclaration envoyée' }}</h2>
+          <p>
+            @if (editMode) {
+              Vos modifications ont bien été enregistrées. Redirection vers votre sinistre…
+            } @else {
+              Votre sinistre a bien été transmis. Un gestionnaire le prendra en charge sous 48 h ouvrées. Redirection vers vos sinistres…
+            }
+          </p>
+          <div class="sc__success-actions">
+            @if (editMode && claimId) {
+              <a [routerLink]="['/client/claims', claimId]" class="cp-btn cp-btn--primary">
+                Voir mon sinistre
+                <lucide-icon [img]="icons['arrow']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              </a>
+            } @else {
+              @if (createdClaimId) {
+                <a [routerLink]="['/client/claims', createdClaimId]" class="cp-btn cp-btn--primary">
+                  Suivre ma déclaration
+                  <lucide-icon [img]="icons['arrow']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                </a>
+              }
+              <a routerLink="/client/claims" class="cp-btn" [class.cp-btn--primary]="!createdClaimId" [class.cp-btn--secondary]="!!createdClaimId">
+                Voir mes sinistres
+              </a>
+            }
+          </div>
+        </section>
+      } @else if (loadError) {
+        <div class="cp-alert" data-tone="danger" role="alert">
+          <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          <div class="sc__alert-body">
+            <div>
+              <strong>Chargement impossible</strong>
+              {{ loadError }}
+            </div>
+            <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="loadData()">
+              <lucide-icon [img]="icons['refresh']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Réessayer
+            </button>
+          </div>
+        </div>
+      } @else if (selectablePolicies.length === 0 && !editMode) {
+        <div class="cp-empty">
+          <span class="cp-empty__icon"><lucide-icon [img]="icons['contracts']" [size]="28" [strokeWidth]="1.75"></lucide-icon></span>
+          <h3>Aucun contrat actif</h3>
+          <p>Pour déclarer un sinistre, vous devez disposer d’au moins un contrat actif. Consultez vos contrats ou contactez un conseiller.</p>
+          <div class="sc__empty-actions">
+            <a routerLink="/client/policies" class="cp-btn cp-btn--primary cp-btn--sm">Voir mes contrats</a>
+            <a routerLink="/client/support" class="cp-btn cp-btn--secondary cp-btn--sm">Contacter le support</a>
+          </div>
+        </div>
+      } @else {
+        <ol class="sc__steps" aria-label="Étapes de la déclaration">
+          <li [class.is-done]="contractDone" [class.is-current]="!contractDone">
+            <span class="sc__step-num">
+              @if (contractDone) {
+                <lucide-icon [img]="icons['checkAll']" [size]="14" [strokeWidth]="2.5" aria-hidden="true"></lucide-icon>
+              } @else { 1 }
+            </span>
+            Contrat
+          </li>
+          <li [class.is-done]="circumstancesDone" [class.is-current]="contractDone && !circumstancesDone">
+            <span class="sc__step-num">
+              @if (circumstancesDone) {
+                <lucide-icon [img]="icons['checkAll']" [size]="14" [strokeWidth]="2.5" aria-hidden="true"></lucide-icon>
+              } @else { 2 }
+            </span>
+            Circonstances
+          </li>
+          <li [class.is-current]="contractDone && circumstancesDone">
+            <span class="sc__step-num">3</span>
+            Justificatifs
+          </li>
+        </ol>
 
-  <!-- Success State -->
-  <div class="success-card" *ngIf="submitSuccess">
-    <div class="success-icon">
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="var(--success)" stroke-width="2"/><path d="M14 24L21 31L34 17" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <form class="cp-form" (ngSubmit)="onSubmit(claimForm)" #claimForm="ngForm" novalidate>
+          <!-- Étape 1 : contrat -->
+          <section class="cp-card" aria-labelledby="step-contract">
+            <div>
+              <h2 class="cp-card__title" id="step-contract">
+                <span class="sc__badge">1</span>
+                Contrat concerné
+              </h2>
+              <p class="cp-card__sub">
+                {{ editMode ? 'Le contrat associé à une déclaration ne peut pas être modifié.' : 'Sélectionnez le contrat qui couvre ce sinistre.' }}
+              </p>
+            </div>
+
+            <fieldset class="sc__policies" role="radiogroup" aria-required="true"
+                      [attr.aria-invalid]="submitAttempted && !form.policyId"
+                      [attr.aria-describedby]="submitAttempted && !form.policyId ? 'policy-error' : null">
+              <legend class="sc__sr-only">Contrat concerné</legend>
+              @for (policy of selectablePolicies; track policy.id) {
+                <label class="sc__policy" [class.sc__policy--selected]="form.policyId === policy.id"
+                       [class.sc__policy--disabled]="editMode">
+                  <input type="radio" name="policyId" [value]="policy.id" [(ngModel)]="form.policyId"
+                         [disabled]="editMode" required>
+                  <span class="cp-tile" [class.cp-tile--brand]="form.policyId === policy.id">
+                    <lucide-icon [img]="icons[typeOf(policy).icon]" [size]="20" [strokeWidth]="1.75"></lucide-icon>
+                  </span>
+                  <span class="sc__policy-text">
+                    <strong>Assurance {{ typeOf(policy).label }}</strong>
+                    <small>Contrat n° {{ policy.policyNumber || '—' }}</small>
+                  </span>
+                  <span class="pill" [attr.data-tone]="statusOf(policy).tone">{{ statusOf(policy).label }}</span>
+                </label>
+              } @empty {
+                <p class="cp-field__hint">Contrat d’origine introuvable. Contactez le support si vous devez le changer.</p>
+              }
+            </fieldset>
+            @if (submitAttempted && !form.policyId) {
+              <p class="cp-field__error" id="policy-error">Veuillez sélectionner un contrat.</p>
+            }
+          </section>
+
+          <!-- Étape 2 : circonstances -->
+          <section class="cp-card" aria-labelledby="step-circumstances">
+            <div>
+              <h2 class="cp-card__title" id="step-circumstances">
+                <span class="sc__badge">2</span>
+                Circonstances
+              </h2>
+              <p class="cp-card__sub">Décrivez ce qui s’est passé, le plus précisément possible.</p>
+            </div>
+
+            <div class="cp-form-grid">
+              <div class="cp-field">
+                <label for="incidentDate">Date du sinistre</label>
+                <div class="cp-field__control">
+                  <lucide-icon [img]="icons['date']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  <input id="incidentDate" type="date" name="incidentDate" [(ngModel)]="form.incidentDate"
+                         [max]="today" required #dateCtrl="ngModel"
+                         [attr.aria-invalid]="(dateCtrl.touched || submitAttempted) && (!!dateCtrl.invalid || dateInFuture)"
+                         aria-describedby="incidentDate-msg">
+                </div>
+                @if ((dateCtrl.touched || submitAttempted) && dateCtrl.invalid) {
+                  <p class="cp-field__error" id="incidentDate-msg">Indiquez la date du sinistre.</p>
+                } @else if (dateInFuture) {
+                  <p class="cp-field__error" id="incidentDate-msg">La date ne peut pas être dans le futur.</p>
+                } @else {
+                  <p class="cp-field__hint" id="incidentDate-msg">Le jour où l’incident s’est produit.</p>
+                }
+              </div>
+
+              <div class="cp-field">
+                <label for="amount">Montant estimé (MAD)</label>
+                <div class="cp-field__control">
+                  <lucide-icon [img]="icons['banknote']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  <input id="amount" type="number" name="amount" inputmode="decimal" [(ngModel)]="form.amount"
+                         placeholder="Ex. 5 000" [min]="1" required #amountCtrl="ngModel"
+                         [attr.aria-invalid]="(amountCtrl.touched || submitAttempted) && !!amountCtrl.invalid"
+                         aria-describedby="amount-msg">
+                </div>
+                @if ((amountCtrl.touched || submitAttempted) && amountCtrl.invalid) {
+                  <p class="cp-field__error" id="amount-msg">
+                    {{ amountCtrl.errors?.['min'] ? 'Le montant doit être supérieur à 0.' : 'Indiquez une estimation du montant.' }}
+                  </p>
+                } @else {
+                  <p class="cp-field__hint" id="amount-msg">Une estimation suffit, elle sera affinée par votre gestionnaire.</p>
+                }
+              </div>
+
+              <div class="cp-field cp-field--full">
+                <label for="description">Description de l’incident</label>
+                <textarea id="description" name="description" [(ngModel)]="form.description" rows="6"
+                          placeholder="Que s’est-il passé ? Où et comment ? Quels sont les dommages constatés ?"
+                          [minlength]="descriptionMin" [maxlength]="descriptionMax" required #descCtrl="ngModel"
+                          [attr.aria-invalid]="(descCtrl.touched || submitAttempted) && !!descCtrl.invalid"
+                          aria-describedby="description-msg description-count"></textarea>
+                <div class="sc__field-foot">
+                  @if ((descCtrl.touched || submitAttempted) && descCtrl.invalid) {
+                    <p class="cp-field__error" id="description-msg">
+                      {{ descriptionTooShort ? 'Encore ' + (descriptionMin - descriptionLength) + ' caractère(s) minimum.' : 'Décrivez l’incident en quelques phrases.' }}
+                    </p>
+                  } @else {
+                    <p class="cp-field__hint" id="description-msg">Minimum {{ descriptionMin }} caractères.</p>
+                  }
+                  <p class="cp-field__hint sc__count" id="description-count"
+                     [class.sc__count--ok]="descriptionLength >= descriptionMin">
+                    {{ descriptionLength }} / {{ descriptionMax }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Étape 3 : justificatifs et envoi -->
+          <section class="cp-card" aria-labelledby="step-documents">
+            <div>
+              <h2 class="cp-card__title" id="step-documents">
+                <span class="sc__badge">3</span>
+                Justificatifs et envoi
+              </h2>
+              <p class="cp-card__sub">Vérifiez votre déclaration avant de l’envoyer.</p>
+            </div>
+
+            <div class="cp-alert" data-tone="info">
+              <lucide-icon [img]="icons['paperclip']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              <div>
+                <strong>Vos justificatifs vous seront demandés</strong>
+                Photos, constat amiable, factures ou rapport : votre gestionnaire vous indiquera les pièces nécessaires après l’envoi. Préparez-les dès maintenant pour accélérer le traitement.
+              </div>
+            </div>
+
+            <dl class="cp-dl sc__recap">
+              <div>
+                <dt>Contrat</dt>
+                <dd>
+                  @if (selectedPolicy) {
+                    {{ typeOf(selectedPolicy).label }} · n° {{ selectedPolicy.policyNumber || '—' }}
+                  } @else { — }
+                </dd>
+              </div>
+              <div>
+                <dt>Date du sinistre</dt>
+                <dd>{{ date(form.incidentDate) }}</dd>
+              </div>
+              <div>
+                <dt>Montant estimé</dt>
+                <dd>{{ form.amount ? amount(form.amount) : '—' }}</dd>
+              </div>
+            </dl>
+
+            @if (errorMessage) {
+              <div class="cp-alert" data-tone="danger" role="alert">
+                <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                <div>{{ errorMessage }}</div>
+              </div>
+            }
+
+            <div class="sc__actions">
+              @if (editMode && claimId) {
+                <a [routerLink]="['/client/claims', claimId]" class="cp-btn cp-btn--secondary">Annuler</a>
+              } @else {
+                <button type="button" class="cp-btn cp-btn--secondary" (click)="resetForm(claimForm)" [disabled]="isSubmitting">
+                  <lucide-icon [img]="icons['refresh']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  Réinitialiser
+                </button>
+              }
+              <button type="submit" class="cp-btn cp-btn--primary" [disabled]="isSubmitting" [attr.aria-busy]="isSubmitting">
+                @if (isSubmitting) {
+                  <span class="cp-spinner" aria-hidden="true"></span>
+                  {{ editMode ? 'Enregistrement…' : 'Envoi en cours…' }}
+                } @else {
+                  <lucide-icon [img]="icons[editMode ? 'save' : 'send']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  {{ editMode ? 'Enregistrer les modifications' : 'Envoyer ma déclaration' }}
+                }
+              </button>
+            </div>
+          </section>
+        </form>
+      }
     </div>
-    <h2>{{ editMode ? 'Claim Updated Successfully!' : 'Claim Submitted Successfully!' }}</h2>
-    <p>{{ editMode ? 'Your claim has been updated. Redirecting...' : 'Your claim has been submitted and is now under review. Redirecting to your claims...' }}</p>
-  </div>
 
-  <!-- No Policies Warning -->
-  <div class="warning-card" *ngIf="!isLoading && !submitSuccess && policies.length === 0 && !errorMessage && !editMode">
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="var(--warning)" stroke-width="1.5"/><path d="M20 13V21" stroke="var(--warning)" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="27" r="1.5" fill="var(--warning)"/></svg>
-    <h3>No Active Policies Found</h3>
-    <p>You need at least one active policy to submit a claim.</p>
-    <a routerLink="/client/policies" class="btn btn--primary">View My Policies</a>
-  </div>
+    <aside class="sc__aside">
+      <section class="cp-card" aria-labelledby="tips-title">
+        <h2 class="cp-card__title" id="tips-title">
+          <span class="cp-tile"><lucide-icon [img]="icons['fileCheck']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+          Ce qu’il vous faut
+        </h2>
+        <ul class="sc__checklist">
+          <li>
+            <lucide-icon [img]="icons['check']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            La date et le lieu de l’incident
+          </li>
+          <li>
+            <lucide-icon [img]="icons['check']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Une description claire des faits et des dommages
+          </li>
+          <li>
+            <lucide-icon [img]="icons['check']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Une estimation du montant des dégâts
+          </li>
+          <li>
+            <lucide-icon [img]="icons['check']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Vos justificatifs : photos, constat, factures
+          </li>
+        </ul>
+      </section>
 
-  <!-- Error Banner -->
-  <div class="error-banner" *ngIf="errorMessage">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
-    {{ errorMessage }}
-  </div>
+      <section class="cp-card" aria-labelledby="delays-title">
+        <h2 class="cp-card__title" id="delays-title">
+          <span class="cp-tile" data-tone="warning"><lucide-icon [img]="icons['clock']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+          Délais de traitement
+        </h2>
+        <ol class="sc__timeline">
+          <li>
+            <strong>Immédiat</strong>
+            <span>Accusé de réception de votre déclaration</span>
+          </li>
+          <li>
+            <strong>Sous 48 h ouvrées</strong>
+            <span>Prise en charge par un gestionnaire</span>
+          </li>
+          <li>
+            <strong>Après analyse</strong>
+            <span>Décision et indemnisation, suivies en temps réel dans « Mes sinistres »</span>
+          </li>
+        </ol>
+      </section>
 
-  <!-- Claim Form -->
-  <div class="form-card" *ngIf="!isLoading && !submitSuccess && (policies.length > 0 || editMode)">
-    <form (ngSubmit)="submitClaim()" #claimForm="ngForm">
-
-      <div class="form-section">
-        <h3>Claim Details</h3>
-
-        <div class="form-group">
-          <label for="policy">Policy <span class="required">*</span></label>
-          <select
-            id="policy"
-            name="policyId"
-            [(ngModel)]="form.policyId"
-            required>
-            <option value="" disabled selected>Select a policy...</option>
-            <option *ngFor="let policy of policies" [value]="policy.id">
-              {{ policy.policyNumber }} — {{ policy.type }} ({{ policy.status }})
-            </option>
-          </select>
+      <section class="cp-card sc__help" aria-labelledby="help-title">
+        <span class="cp-tile cp-tile--brand"><lucide-icon [img]="icons['advisor']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <div>
+          <h2 class="cp-card__title" id="help-title">Besoin d’aide ?</h2>
+          <p class="cp-card__sub">Un conseiller peut vous accompagner pas à pas dans votre déclaration.</p>
         </div>
-
-        <div class="form-group">
-          <label for="incidentDate">Incident Date <span class="required">*</span></label>
-          <input
-            id="incidentDate"
-            type="date"
-            name="incidentDate"
-            [(ngModel)]="form.incidentDate"
-            [max]="today"
-            required>
-        </div>
-
-        <div class="form-group">
-          <label for="amount">Estimated Amount (MAD) <span class="required">*</span></label>
-          <input
-            id="amount"
-            type="number"
-            name="amount"
-            [(ngModel)]="form.amount"
-            placeholder="e.g. 5000"
-            min="1"
-            required>
-        </div>
-
-        <div class="form-group form-group--full">
-          <label for="description">Description <span class="required">*</span></label>
-          <textarea
-            id="description"
-            name="description"
-            [(ngModel)]="form.description"
-            rows="5"
-            placeholder="Describe the incident in detail (minimum 10 characters)..."
-            minlength="10"
-            maxlength="2000"
-            required></textarea>
-          <small class="form-hint">{{ form.description.length }}/2000 characters (minimum 10)</small>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn btn--outline" (click)="resetForm()">Reset</button>
-        <button
-          type="submit"
-          class="btn btn--primary"
-          [disabled]="isSubmitting || claimForm.invalid">
-          <svg *ngIf="isSubmitting" class="btn--spinning" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8C14 11.3 11.3 14 8 14C4.7 14 2 11.3 2 8C2 4.7 4.7 2 8 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          {{ isSubmitting ? (editMode ? 'Updating...' : 'Submitting...') : (editMode ? 'Update Claim' : 'Submit Claim') }}
-        </button>
-      </div>
-    </form>
+        <a routerLink="/client/support" class="cp-btn cp-btn--soft cp-btn--block">
+          <lucide-icon [img]="icons['chat']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Contacter le support
+        </a>
+      </section>
+    </aside>
   </div>
-
 </div>

@@ -1,481 +1,317 @@
-<div class="dashboard-page">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="page-header__start">
-      <div class="page-header__icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="page-header__content">
-        <h1 class="page-header__title">Dashboard</h1>
-        <p class="page-header__subtitle">Overview of your insurance business</p>
+<div class="dash">
+  <!-- Banner -->
+  <header class="dash__banner dash__full">
+    <div class="dash__banner-bg" aria-hidden="true">
+      <img src="images/admin-dash-hero.jpg" alt="" width="960" height="360" loading="eager" />
+    </div>
+    <div class="dash__banner-content">
+      <div class="dash__banner-panel">
+        <p class="dash__banner-kicker">Espace administration</p>
+        <h1>{{ getGreeting() }}, Admin</h1>
+        <p class="dash__lead">Pilotez clients, contrats et sinistres en un seul endroit.</p>
+
+        <dl class="dash__banner-stats" aria-label="Aperçu rapide">
+          <div>
+            <dt>Clients</dt>
+            <dd>{{ stats.totalClients || 0 }}</dd>
+          </div>
+          <div>
+            <dt>Polices actives</dt>
+            <dd>{{ stats.activePolicies || 0 }}</dd>
+          </div>
+          <div>
+            <dt>Sinistres ouverts</dt>
+            <dd>{{ stats.pendingClaims || 0 }}</dd>
+          </div>
+        </dl>
+
+        <div class="dash__banner-actions">
+          <a routerLink="/admin/claims" class="dash__banner-cta">
+            <span>Traiter les sinistres</span>
+            <span class="dash__banner-cta__ico" aria-hidden="true">
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+          </a>
+          <a routerLink="/admin/clients" class="dash__banner-cta dash__banner-cta--ghost">
+            Voir les clients
+          </a>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- KPI Stats Grid -->
-  <section class="stats-row">
+  <!-- KPI -->
+  <section class="kpi dash__full" aria-label="Indicateurs clés">
     @for (stat of kpiStats; track trackByIndex($index)) {
-      <div class="stat-card" [class.stat-card--loading]="loading" [style.--stat-color]="stat.color" [style.--stat-gradient]="stat.gradient" [style.--stat-shadow]="stat.shadow">
-        <div class="stat-card__icon" [style.background]="stat.gradient">
-          @switch (stat.icon) {
-            @case ('users') {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 7.5C11.3807 7.5 12.5 6.38071 12.5 5C12.5 3.61929 11.3807 2.5 10 2.5C8.61929 2.5 7.5 3.61929 7.5 5C7.5 6.38071 8.61929 7.5 10 7.5Z" stroke="white" stroke-width="1.5"/>
-                <path d="M5.5 15.5C5.5 13.0147 7.51472 11 10 11C12.4853 11 14.5 13.0147 14.5 15.5V16.5H5.5V15.5Z" stroke="white" stroke-width="1.5"/>
-              </svg>
-            }
-            @case ('shield') {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="white" stroke-width="1.5"/>
-                <path d="M6.5 10L9 12.5L13.5 7.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            }
-            @case ('clipboard') {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5C11.3807 2.5 12.5 3.61929 12.5 5V6.5H13.5C14.3284 6.5 15 7.17157 15 8V16C15 16.8284 14.3284 17.5 13.5 17.5H6.5C5.67157 17.5 5 16.8284 5 16V8C5 7.17157 5.67157 6.5 6.5 6.5H7.5V5C7.5 3.61929 8.61929 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
-              </svg>
-            }
-            @case ('dollar') {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 17.5V15M10 5V2.5M6.5 6.5C6.5 5.11929 7.61929 4.25 10 4.25C12.3807 4.25 13.5 5.11929 13.5 6.5C13.5 7.88071 12.3807 8.75 10 8.75C7.61929 8.75 6.5 9.61929 6.5 11V12.5C6.5 13.8807 7.61929 14.75 10 14.75C12.3807 14.75 13.5 13.8807 13.5 12.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M5 18.75H15" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            }
-            @case ('bell') {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 2.5C7.5 2.5 5.83333 4.16667 5.83333 6.66667V10.8333C5.83333 12.5 5 13.3333 4.16667 13.3333H15.8333C15 13.3333 14.1667 12.5 14.1667 10.8333V6.66667C14.1667 4.16667 12.5 2.5 10 2.5Z" stroke="white" stroke-width="1.5"/>
-                <path d="M8.33333 15.8333C8.33333 16.6667 9.16667 17.5 10 17.5C10.8333 17.5 11.6667 16.6667 11.6667 15.8333" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            }
-            @default {
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="5" cy="5.83333" r="2.08333" stroke="white" stroke-width="1.5"/>
-                <circle cx="15" cy="5.83333" r="2.08333" stroke="white" stroke-width="1.5"/>
-                <circle cx="10" cy="14.5833" r="2.08333" stroke="white" stroke-width="1.5"/>
-                <path d="M6 7.08333L8.66667 12.9167" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M14 7.08333L11.3333 12.9167" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            }
-          }
+      <a class="kpi__card" [attr.data-tone]="stat.tone" [routerLink]="stat.link">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <i [class]="stat.faIcon"></i>
+          </span>
+          <span class="kpi__trend" [class.is-up]="stat.trend >= 0" [class.is-down]="stat.trend < 0">
+            <i [class]="stat.trend >= 0 ? 'fa-solid fa-arrow-trend-up' : 'fa-solid fa-arrow-trend-down'"></i>
+            {{ stat.trend >= 0 ? '+' : '' }}{{ stat.trend }}%
+          </span>
         </div>
-        <div class="stat-card__content">
-          <span class="stat-card__label">{{ stat.label }}</span>
-          <div class="stat-card__value-wrapper">
-            @if (loading) {
-              <div class="skeleton skeleton--number"></div>
-            } @else {
-              <span class="stat-card__value">{{ stat.value | number }}</span>
-            }
-          </div>
+        <span class="kpi__label">{{ stat.label }}</span>
+        <strong class="kpi__value">{{ stat.value }}</strong>
+        <div class="kpi__foot">
+          <span class="kpi__hint">{{ stat.hint }}</span>
+          <svg class="kpi__spark" viewBox="0 0 52 18" aria-hidden="true">
+            <path [attr.d]="sparkPath(stat.spark)" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-      </div>
+      </a>
     }
   </section>
 
-  <!-- Quick Actions Section -->
-  <section class="quick-actions-section">
-    <div class="section-header">
-      <div class="section-header__title">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 2.5L12.5 7.5L17.5 8.25L13.75 12L14.5 17.5L10 15L5.5 17.5L6.25 12L2.5 8.25L7.5 7.5L10 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <h3>Quick Actions</h3>
+  <!-- Row: évolution + répartition + actions -->
+  <article class="card dash__evo">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-chart-line"></i></span>
+        <div>
+          <h2>Évolution globale</h2>
+          <p>6 derniers mois · clients, polices, sinistres, factures</p>
+        </div>
       </div>
-      <span class="section-header__subtitle">Frequently used actions</span>
+    </header>
+    <div class="card__body">
+      <div class="chart-box chart-box--line">
+        <canvas #evolutionChart aria-label="Évolution globale"></canvas>
+      </div>
     </div>
+  </article>
 
-    <div class="quick-actions-grid">
-      <a routerLink="/admin/clients" class="action-card">
-        <div class="action-card__icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 8.25C12.5213 8.25 13.75 7.02129 13.75 5.5C13.75 3.97871 12.5213 2.75 11 2.75C9.47871 2.75 8.25 3.97871 8.25 5.5C8.25 7.02129 9.47871 8.25 11 8.25Z" stroke="white" stroke-width="1.5"/>
-            <path d="M6.875 16.5C6.875 14.1528 8.75279 12.25 11.0625 12.25C13.3722 12.25 15.25 14.1528 15.25 16.5V17.25H6.875V16.5Z" stroke="white" stroke-width="1.5"/>
-          </svg>
+  <article class="card dash__rep">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-chart-pie"></i></span>
+        <div>
+          <h2>Répartition des contrats</h2>
+          <p>{{ stats.totalPolicies || 0 }} polices</p>
         </div>
-        <div class="action-card__content">
-          <span class="action-card__label">New Client</span>
-          <span class="action-card__description">Add a new client</span>
+      </div>
+    </header>
+    <div class="card__body card__body--split">
+      @if (policySlices.length === 0) {
+        <p class="empty">Aucune police</p>
+      } @else {
+        <div class="chart-box chart-box--donut">
+          <canvas #policyChart aria-label="Répartition des contrats"></canvas>
         </div>
-        <div class="action-card__arrow">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </a>
-
-      <a routerLink="/admin/policies" class="action-card">
-        <div class="action-card__icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 3.66667L4.58333 6.41667V11.9167C4.58333 16.0417 7.33333 19.25 11 20.1667C14.6667 19.25 17.4167 16.0417 17.4167 11.9167V6.41667L11 3.66667Z" stroke="white" stroke-width="1.5"/>
-            <path d="M8.25 11L10.0833 12.8333L13.75 9.16667" stroke="white" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <div class="action-card__content">
-          <span class="action-card__label">New Policy</span>
-          <span class="action-card__description">Create a policy</span>
-        </div>
-        <div class="action-card__arrow">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </a>
-
-      <a routerLink="/admin/claims" class="action-card">
-        <div class="action-card__icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14.6667 5.04167H12.8333V4.58333C12.8333 3.56581 12.0008 2.75 10.9583 2.75C9.91583 2.75 9.08333 3.56581 9.08333 4.58333V5.04167H7.33333C5.95833 5.04167 5.04167 5.95833 5.04167 7.33333V16.5C5.04167 17.875 5.95833 18.7917 7.33333 18.7917H14.6667C16.0417 18.7917 16.9583 17.875 16.9583 16.5V7.33333C16.9583 5.95833 16.0417 5.04167 14.6667 5.04167Z" stroke="white" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <div class="action-card__content">
-          <span class="action-card__label">Process Claim</span>
-          <span class="action-card__description">Handle a claim</span>
-        </div>
-        <div class="action-card__arrow">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </a>
-
-      <a routerLink="/admin/billing" class="action-card">
-        <div class="action-card__icon" style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%); box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4);">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13.75 6.41667V5.04167C13.75 4.275 13.125 3.66667 12.375 3.66667H9.625C8.875 3.66667 8.25 4.275 8.25 5.04167V6.41667" stroke="white" stroke-width="1.5"/>
-            <path d="M5.5 7.33333H16.5V16.9583C16.5 17.4167 16.125 17.875 15.5833 17.875H6.41667C5.875 17.875 5.5 17.4167 5.5 16.9583V7.33333Z" stroke="white" stroke-width="1.5"/>
-            <path d="M8.25 11H13.75" stroke="white" stroke-width="1.5"/>
-            <path d="M8.25 13.75H11.9167" stroke="white" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <div class="action-card__content">
-          <span class="action-card__label">Create Invoice</span>
-          <span class="action-card__description">Generate an invoice</span>
-        </div>
-        <div class="action-card__arrow">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </a>
+        <ul class="legend">
+          @for (item of policySlices; track item.label) {
+            <li>
+              <i [style.background]="item.color"></i>
+              <span class="legend__label">{{ item.label }}</span>
+              <strong>{{ item.percent }}%</strong>
+            </li>
+          }
+        </ul>
+      }
     </div>
-  </section>
+  </article>
 
-  <!-- Recent Activity Section -->
-  <section class="recent-activity-section">
-    <div class="dashboard-card dashboard-card--modern">
-      <div class="dashboard-card__header">
-        <div class="dashboard-card__title">
-          <div class="dashboard-card__icon-wrapper">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M10 2.5C14.1421 2.5 17.5 5.85786 17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5Z" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M10 5V10L13 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+  <article class="card card--actions dash__qa">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+        <div>
+          <h2>Actions rapides</h2>
+          <p>Raccourcis fréquents</p>
+        </div>
+      </div>
+    </header>
+    <div class="card__body card__body--fill">
+      <nav class="qa-grid" aria-label="Actions rapides">
+        @for (item of shortcuts; track item.link) {
+          <a class="qa-grid__item" [routerLink]="item.link" [attr.data-tone]="item.tone">
+            <span class="qa-grid__icon" aria-hidden="true">
+              <i [class]="item.faIcon"></i>
+            </span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    </div>
+  </article>
+
+  <!-- Row: sinistres + finance + alertes -->
+  <article class="card dash__claims">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-clipboard-list"></i></span>
+        <div>
+          <h2>Statut des sinistres</h2>
+          <p>{{ stats.totalClaims || 0 }} dossiers</p>
+        </div>
+      </div>
+      <a routerLink="/admin/claims" class="card__link">Voir tout</a>
+    </header>
+    <div class="card__body card__body--fill">
+      @if (claimsSlices.length === 0) {
+        <p class="empty">Aucun sinistre</p>
+      } @else {
+        <div class="claims-status">
+          <div class="claims-status__viz">
+            <canvas #claimsChart aria-label="Statut des sinistres"></canvas>
           </div>
+          <ul class="claims-legend">
+            @for (item of claimsSlices; track item.label) {
+              <li>
+                <div class="claims-legend__row">
+                  <i [style.background]="item.color"></i>
+                  <span class="claims-legend__label">{{ item.label }}</span>
+                  <strong class="claims-legend__count">{{ item.count }}</strong>
+                  <span class="claims-legend__pct">{{ item.percent }}%</span>
+                </div>
+                <div class="claims-legend__bar" aria-hidden="true">
+                  <span [style.width.%]="item.percent" [style.background]="item.color"></span>
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </article>
+
+  <article class="card card--metric dash__fin">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
+        <div>
+          <h2>Performance financière</h2>
+          <p>Recouvrement & encaissements</p>
+        </div>
+      </div>
+      <a routerLink="/admin/billing" class="card__link">Facturation</a>
+    </header>
+    <div class="card__body card__body--fill">
+      <div class="metrics">
+        <div class="metrics__hero">
+          <div
+            class="metrics__ring"
+            role="img"
+            [attr.aria-label]="'Taux de recouvrement ' + (collectionRate | number:'1.0-0') + '%'"
+            [style.--pct]="collectionRate"
+          >
+            <div class="metrics__ring-inner">
+              <strong>{{ collectionRate | number:'1.0-0' }}%</strong>
+              <span>recouvré</span>
+            </div>
+          </div>
+          <div class="metrics__hero-copy">
+            <p>Taux de recouvrement</p>
+            <span>Part des montants encaissés sur le total facturé</span>
+            <div class="metrics__bar" aria-hidden="true">
+              <span [style.width.%]="collectionRate"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics__grid">
+          <div class="metrics__tile" data-tone="success">
+            <span class="metrics__tile-icon" aria-hidden="true">
+              <i class="fa-solid fa-chart-column"></i>
+            </span>
+            <span class="metrics__tile-label">Revenu mensuel</span>
+            <strong>{{ (stats.monthlyRevenue || 0) | number:'1.0-0' }} <small>MAD</small></strong>
+          </div>
+          <div class="metrics__tile" data-tone="warning">
+            <span class="metrics__tile-icon" aria-hidden="true">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </span>
+            <span class="metrics__tile-label">En attente</span>
+            <strong>{{ (stats.pendingRevenue || 0) | number:'1.0-0' }} <small>MAD</small></strong>
+          </div>
+        </div>
+
+        <div class="metrics__foot">
           <div>
-            <h3>Recent Activity</h3>
-            <p class="dashboard-card__subtitle">Latest updates and changes</p>
+            <span>Revenu total encaissé</span>
+            <strong>{{ (stats.totalRevenue || 0) | number:'1.0-0' }} <small>MAD</small></strong>
           </div>
+          <a routerLink="/admin/billing" class="dash-cta">
+            <span>Voir la facturation</span>
+            <span class="dash-cta__ico" aria-hidden="true">
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+          </a>
         </div>
-        <a routerLink="/admin/claims" class="dashboard-card__link">
-          View All
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
       </div>
+    </div>
+  </article>
 
-      <div class="dashboard-card__body">
-        @if (loading) {
-          <div class="activity-skeleton">
-            @for (item of [1,2,3,4,5]; track $index) {
-              <div class="activity-skeleton__item">
-                <div class="skeleton skeleton--circle"></div>
-                <div class="activity-skeleton__content">
-                  <div class="skeleton skeleton--text skeleton--short"></div>
-                  <div class="skeleton skeleton--text"></div>
-                </div>
+  <article class="card card--alert dash__alert">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa card__fa--alert" aria-hidden="true"><i class="fa-solid fa-bell"></i></span>
+        <div>
+          <h2>Éléments à surveiller</h2>
+          <p>Nécessitent votre attention</p>
+        </div>
+      </div>
+    </header>
+    <div class="card__body card__body--fill">
+      <ul class="alerts">
+        @for (p of priorities; track p.label) {
+          <li>
+            <a class="alerts__item" [routerLink]="p.link" [attr.data-tone]="p.tone">
+              <span class="alerts__icon" aria-hidden="true">
+                <i [class]="p.faIcon"></i>
+              </span>
+              <div class="alerts__copy">
+                <strong>{{ p.count }} {{ p.label | lowercase }}</strong>
+                <span>{{ p.hint }}</span>
               </div>
+            </a>
+          </li>
+        }
+      </ul>
+      <a routerLink="/admin/claims" class="dash-cta">
+        <span>Voir toutes les alertes</span>
+        <span class="dash-cta__ico" aria-hidden="true">
+          <i class="fa-solid fa-arrow-right"></i>
+        </span>
+      </a>
+    </div>
+  </article>
+
+  <!-- Activity -->
+  <article class="card card--activity dash__full">
+    <header class="card__head">
+      <div class="card__title">
+        <span class="card__fa" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
+        <div>
+          <h2>Activité récente</h2>
+          <p>Dernières créations</p>
+        </div>
+      </div>
+      <a routerLink="/admin/clients" class="card__link">Voir tout</a>
+    </header>
+    <div class="card__body">
+      @if (recentActivities.length === 0) {
+        <p class="empty">Aucune activité</p>
+      } @else {
+        <div class="feed-scroll feed-scroll--wide">
+          <ul class="feed feed--row">
+            @for (a of recentActivities; track trackByActivityId($index, a)) {
+              <li>
+                <span class="feed__icon" [attr.data-tone]="a.type">
+                  <i [class]="a.faIcon"></i>
+                </span>
+                <div class="feed__body">
+                  <p>{{ a.text }} <b>{{ a.target }}</b></p>
+                  <time>{{ a.time }}</time>
+                </div>
+                <em class="feed__tag" [attr.data-tone]="a.type">{{ a.type === 'warning' ? 'En cours' : a.type === 'success' ? 'Active' : 'Nouveau' }}</em>
+              </li>
             }
-          </div>
-        } @else {
-          <div class="activity-feed">
-            @for (activity of recentActivities; track trackByActivityId($index, activity)) {
-              <div class="activity-feed__item">
-                <div class="activity-feed__avatar" [style.background]="getAvatarColor(activity.user)">
-                  {{ activity.userInitials }}
-                </div>
-                <div class="activity-feed__content">
-                  <p class="activity-feed__text">
-                    <strong>{{ activity.user }}</strong>
-                    {{ activity.action }}
-                    <strong>{{ activity.target }}</strong>
-                  </p>
-                  <span class="activity-feed__time">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1"/>
-                      <path d="M6 3V6L8 8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-                    </svg>
-                    {{ activity.time }}
-                  </span>
-                </div>
-                <div class="activity-feed__indicator" [class.indicator--success]="activity.type === 'success'" [class.indicator--primary]="activity.type === 'primary'" [class.indicator--warning]="activity.type === 'warning'" [class.indicator--info]="activity.type === 'info'"></div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- Charts Section -->
-  <section class="dashboard__charts dashboard__charts--grid">
-    <!-- Policy Distribution -->
-    <div class="chart-card">
-      <div class="chart-card__header">
-        <div class="chart-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M10 3V10L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3>Policy Distribution</h3>
+          </ul>
         </div>
-      </div>
-
-      <div class="chart-card__body">
-        @if (loading) {
-          <div class="chart-skeleton chart-skeleton--donut">
-            <div class="skeleton skeleton--circle"></div>
-          </div>
-        } @else {
-          @if (policyByType.length > 0) {
-            <div class="donut-chart">
-              <svg viewBox="0 0 100 100" class="donut-chart__svg">
-                @for (item of policyByType; track item.label) {
-                  <circle
-                    class="donut-chart__segment"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    [attr.stroke]="item.color"
-                    stroke-width="12"
-                    [attr.stroke-dasharray]="item.strokeDasharray"
-                    [attr.stroke-dashoffset]="item.strokeDashoffset"
-                  />
-                }
-              </svg>
-              <div class="donut-chart__center">
-                <span class="donut-chart__total">{{ policyByType.length }}</span>
-                <span class="donut-chart__label">Types</span>
-              </div>
-            </div>
-            <div class="donut-chart__legend">
-              @for (item of policyByType; track item.label) {
-                <div class="donut-chart__legend-item">
-                  <span class="donut-chart__legend-dot" [style.background]="item.color"></span>
-                  <span class="donut-chart__legend-label">{{ item.label }}</span>
-                  <span class="donut-chart__legend-value">{{ item.value }}%</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="chart-empty-state">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              <p>No policy data available</p>
-            </div>
-          }
-        }
-      </div>
+      }
     </div>
-
-    <!-- Claims by Status -->
-    <div class="chart-card">
-      <div class="chart-card__header">
-        <div class="chart-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 10V4M10 16V10M14 16V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3>Claims by Status</h3>
-        </div>
-      </div>
-
-      <div class="chart-card__body">
-        @if (loading) {
-          <div class="chart-skeleton chart-skeleton--donut">
-            <div class="skeleton skeleton--circle"></div>
-          </div>
-        } @else {
-          @if (claimsByStatus.length > 0) {
-            <div class="donut-chart">
-              <svg viewBox="0 0 100 100" class="donut-chart__svg">
-                @for (item of claimsByStatus; track item.label) {
-                  <circle
-                    class="donut-chart__segment"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    [attr.stroke]="item.color"
-                    stroke-width="12"
-                    [attr.stroke-dasharray]="item.strokeDasharray"
-                    [attr.stroke-dashoffset]="item.strokeDashoffset"
-                  />
-                }
-              </svg>
-              <div class="donut-chart__center">
-                <span class="donut-chart__total">{{ stats?.totalClaims || 0 }}</span>
-                <span class="donut-chart__label">Claims</span>
-              </div>
-            </div>
-            <div class="donut-chart__legend">
-              @for (item of claimsByStatus; track item.label) {
-                <div class="donut-chart__legend-item">
-                  <span class="donut-chart__legend-dot" [style.background]="item.color"></span>
-                  <span class="donut-chart__legend-label">{{ item.label }}</span>
-                  <span class="donut-chart__legend-value">{{ item.value }}%</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="chart-empty-state">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              <p>No claims data available</p>
-            </div>
-          }
-        }
-      </div>
-    </div>
-
-    <!-- Invoices by Status -->
-    <div class="chart-card">
-      <div class="chart-card__header">
-        <div class="chart-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 3H15C15.5523 3 16 3.44772 16 4V16C16 16.5523 15.5523 17 15 17H5C4.44772 17 4 16.5523 4 16V4C4 3.44772 4.44772 3 5 3Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M7 7H13M7 10H13M7 13H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3>Invoices by Status</h3>
-        </div>
-      </div>
-
-      <div class="chart-card__body">
-        @if (loading) {
-          <div class="chart-skeleton chart-skeleton--donut">
-            <div class="skeleton skeleton--circle"></div>
-          </div>
-        } @else {
-          @if (invoicesByStatus.length > 0) {
-            <div class="donut-chart">
-              <svg viewBox="0 0 100 100" class="donut-chart__svg">
-                @for (item of invoicesByStatus; track item.label) {
-                  <circle
-                    class="donut-chart__segment"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    [attr.stroke]="item.color"
-                    stroke-width="12"
-                    [attr.stroke-dasharray]="item.strokeDasharray"
-                    [attr.stroke-dashoffset]="item.strokeDashoffset"
-                  />
-                }
-              </svg>
-              <div class="donut-chart__center">
-                <span class="donut-chart__total">{{ getTotalInvoices() }}</span>
-                <span class="donut-chart__label">Invoices</span>
-              </div>
-            </div>
-            <div class="donut-chart__legend">
-              @for (item of invoicesByStatus; track item.label) {
-                <div class="donut-chart__legend-item">
-                  <span class="donut-chart__legend-dot" [style.background]="item.color"></span>
-                  <span class="donut-chart__legend-label">{{ item.label }}</span>
-                  <span class="donut-chart__legend-value">{{ item.value }}%</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="chart-empty-state">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              <p>No invoice data available</p>
-            </div>
-          }
-        }
-      </div>
-    </div>
-
-    <!-- Client Distribution -->
-    <div class="chart-card">
-      <div class="chart-card__header">
-        <div class="chart-card__title">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="14" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="6" cy="14" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          <h3>Client Distribution</h3>
-        </div>
-      </div>
-
-      <div class="chart-card__body">
-        @if (loading) {
-          <div class="chart-skeleton chart-skeleton--donut">
-            <div class="skeleton skeleton--circle"></div>
-          </div>
-        } @else {
-          @if (clientByStatus.length > 0) {
-            <div class="donut-chart">
-              <svg viewBox="0 0 100 100" class="donut-chart__svg">
-                @for (item of clientByStatus; track item.label) {
-                  <circle
-                    class="donut-chart__segment"
-                    r="40"
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    [attr.stroke]="item.color"
-                    stroke-width="12"
-                    [attr.stroke-dasharray]="item.strokeDasharray"
-                    [attr.stroke-dashoffset]="item.strokeDashoffset"
-                  />
-                }
-              </svg>
-              <div class="donut-chart__center">
-                <span class="donut-chart__total">{{ stats?.totalClients || 0 }}</span>
-                <span class="donut-chart__label">Clients</span>
-              </div>
-            </div>
-            <div class="donut-chart__legend">
-              @for (item of clientByStatus; track item.label) {
-                <div class="donut-chart__legend-item">
-                  <span class="donut-chart__legend-dot" [style.background]="item.color"></span>
-                  <span class="donut-chart__legend-label">{{ item.label }}</span>
-                  <span class="donut-chart__legend-value">{{ item.value }}%</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="chart-empty-state">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              <p>No client data available</p>
-            </div>
-          }
-        }
-      </div>
-    </div>
-  </section>
+  </article>
 </div>

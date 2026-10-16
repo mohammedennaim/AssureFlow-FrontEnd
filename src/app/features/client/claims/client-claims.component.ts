@@ -1,25 +1,46 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { catchError, of } from 'rxjs';
 import { ClientDashboardService } from '../../../core/application/services/client-dashboard.service';
 import { Claim } from '../../../core/domain/models/claim.model';
-import { catchError, of } from 'rxjs';
 import { CLAIM_REPOSITORY } from '../../../core/domain/ports/claim.repository.port';
-import { AvatarColorPipe } from '../../../shared/pipes/avatar-color.pipe';
-import { StatusClassPipe } from '../../../shared/pipes/status-class.pipe';
-import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency.pipe';
+import { AF_ICONS } from '../../../shared/icons/af-icons';
+import { formatDateFr, formatMad, statusMeta, StatusMeta } from '../../../shared/utils/client-ui';
+
+type ClaimFilter = 'all' | 'pending' | 'processing' | 'approved' | 'rejected';
+
+const FILTER_STATUSES: Record<Exclude<ClaimFilter, 'all'>, string[]> = {
+  pending: ['PENDING', 'SUBMITTED'],
+  processing: ['UNDER_REVIEW', 'IN_REVIEW', 'PROCESSING', 'INFO_REQUESTED'],
+  approved: ['APPROVED', 'PAID'],
+  rejected: ['REJECTED', 'DENIED', 'CLOSED']
+};
+
+const STEP_ORDER = ['SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'PAID'];
 
 @Component({
   selector: 'app-client-claims',
   standalone: true,
-  imports: [CommonModule, RouterLink, AvatarColorPipe, StatusClassPipe, FormatCurrencyPipe],
+  imports: [CommonModule, RouterLink, LucideAngularModule],
   templateUrl: './client-claims.component.html',
   styleUrl: './client-claims.component.scss'
 })
 export class ClientClaimsComponent implements OnInit {
+  readonly icons = AF_ICONS;
+  readonly steps = ['Déclaré', 'Analyse', 'Décision', 'Indemnisé'];
+  readonly filters: { key: ClaimFilter; label: string }[] = [
+    { key: 'all', label: 'Tous' },
+    { key: 'pending', label: 'Déclarés' },
+    { key: 'processing', label: 'En cours' },
+    { key: 'approved', label: 'Acceptés' },
+    { key: 'rejected', label: 'Refusés' }
+  ];
+
   loading = true;
   claims: Claim[] = [];
-  filter: 'all' | 'pending' | 'processing' | 'approved' | 'rejected' = 'all';
+  filter: ClaimFilter = 'all';
 
   private claimRepository = inject(CLAIM_REPOSITORY);
   private clientDashboardService = inject(ClientDashboardService);
@@ -34,48 +55,59 @@ export class ClientClaimsComponent implements OnInit {
       next: (clientId) => {
         if (!clientId) { this.loading = false; return; }
         this.claimRepository.getByClientId(clientId).pipe(
-          catchError(() => { this.loading = false; return of([]); })
+          catchError(() => of([] as Claim[]))
         ).subscribe((claims) => { this.claims = claims; this.loading = false; });
       },
       error: () => { this.loading = false; }
     });
   }
 
-  getFilteredClaims(): Claim[] {
-    if (this.filter === 'all') return this.claims;
-    const filterMap: Record<string, string[]> = {
-      pending: ['PENDING', 'SUBMITTED'],
-      processing: ['UNDER_REVIEW', 'IN_REVIEW'],
-      approved: ['APPROVED', 'PAID'],
-      rejected: ['REJECTED']
-    };
-    return this.claims.filter(c => (filterMap[this.filter] || []).includes(c.status.toUpperCase()));
+  get filteredClaims(): Claim[] {
+    return this.filter === 'all' ? this.claims : this.claims.filter(c => this.matches(c, this.filter));
   }
 
-  isStatusPast(status: string, targetStatus: string): boolean {
-    const order = ['SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'PAID'];
-    return order.indexOf(status.toUpperCase()) > order.indexOf(targetStatus);
+  count(filter: ClaimFilter): number {
+    return filter === 'all' ? this.claims.length : this.claims.filter(c => this.matches(c, filter)).length;
   }
 
-  isRejectedStatus(status: string): boolean {
-    return ['REJECTED', 'CLOSED', 'INFO_REQUESTED'].includes(status.toUpperCase());
+  get inProgressCount(): number {
+    return this.count('pending') + this.count('processing');
   }
 
-  formatDate(dateString: string | Date): string {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  get approvedTotal(): string {
+    const total = this.claims
+      .filter(c => this.matches(c, 'approved'))
+      .reduce((sum, c) => sum + (c.approvedAmount || c.amount || c.estimatedAmount || 0), 0);
+    return formatMad(total);
   }
 
-  getTotalApprovedAmount(): number {
-    return this.claims.filter(c => ['APPROVED', 'PAID'].includes(c.status.toUpperCase()))
-      .reduce((sum, c) => sum + (c.amount || 0), 0);
+  status(claim: Claim): StatusMeta {
+    return statusMeta(claim.status);
   }
 
-  getPendingClaimsCount(): number {
-    return this.claims.filter(c => ['PENDING', 'SUBMITTED'].includes(c.status.toUpperCase())).length;
+  stepState(claim: Claim, index: number): 'is-done' | 'is-current' | 'is-failed' | '' {
+    const status = (claim.status || '').toUpperCase();
+    if (FILTER_STATUSES.rejected.includes(status)) {
+      return index === 0 ? 'is-done' : index === 2 ? 'is-failed' : index === 1 ? 'is-done' : '';
+    }
+    const normalized = ['IN_REVIEW', 'PROCESSING', 'INFO_REQUESTED'].includes(status) ? 'UNDER_REVIEW'
+      : status === 'PENDING' ? 'SUBMITTED' : status;
+    const current = Math.max(0, STEP_ORDER.indexOf(normalized));
+    if (index < current) return 'is-done';
+    if (index === current) return current === STEP_ORDER.length - 1 ? 'is-done' : 'is-current';
+    return '';
   }
 
-  getApprovedClaimsCount(): number {
-    return this.claims.filter(c => ['APPROVED', 'PAID'].includes(c.status.toUpperCase())).length;
+  amount(value: number | null | undefined): string {
+    return formatMad(value);
+  }
+
+  date(value: string | Date | null | undefined): string {
+    return formatDateFr(value);
+  }
+
+  private matches(claim: Claim, filter: ClaimFilter): boolean {
+    if (filter === 'all') return true;
+    return FILTER_STATUSES[filter].includes((claim.status || '').toUpperCase());
   }
 }

@@ -14,23 +14,7 @@ export class HttpClaimRepository implements IClaimRepository {
 
   getAll(): Observable<Claim[]> {
     return this.http.get<any>(this.apiUrl).pipe(
-      map((res) => {
-        let data: ClaimDto[] = [];
-
-        if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.claims && Array.isArray(res.claims)) {
-          data = res.claims;
-        } else if (res?.items && Array.isArray(res.items)) {
-          data = res.items;
-        }
-
-        return data.map(this.mapToClaim);
-      }),
+      map((res) => this.extractList(res).map(this.mapToClaim)),
       catchError(() => of([]))
     );
   }
@@ -56,42 +40,14 @@ export class HttpClaimRepository implements IClaimRepository {
 
   getByPolicyId(policyId: string): Observable<Claim[]> {
     return this.http.get<any>(`${this.apiUrl}/policy/${policyId}`).pipe(
-      map((res) => {
-        let data: ClaimDto[] = [];
-        
-        if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.claims && Array.isArray(res.claims)) {
-          data = res.claims;
-        }
-        
-        return data.map(this.mapToClaim);
-      }),
+      map((res) => this.extractList(res).map(this.mapToClaim)),
       catchError(() => of([]))
     );
   }
 
   getByClientId(clientId: string): Observable<Claim[]> {
     return this.http.get<any>(`${this.apiUrl}/client/${clientId}`).pipe(
-      map((res) => {
-        let data: ClaimDto[] = [];
-
-        if (res?.data && Array.isArray(res.data)) {
-          data = res.data;
-        } else if (Array.isArray(res)) {
-          data = res;
-        } else if (res?.content && Array.isArray(res.content)) {
-          data = res.content;
-        } else if (res?.claims && Array.isArray(res.claims)) {
-          data = res.claims;
-        }
-
-        return data.map(this.mapToClaim);
-      }),
+      map((res) => this.extractList(res).map(this.mapToClaim)),
       catchError(() => of([]))
     );
   }
@@ -176,6 +132,19 @@ export class HttpClaimRepository implements IClaimRepository {
     return this.http.post<void>(`${this.apiUrl}/${id}/close`, {});
   }
 
+  private extractList(res: unknown): ClaimDto[] {
+    if (Array.isArray(res)) return res;
+    const body = res as Record<string, unknown> | null;
+    if (!body) return [];
+    if (Array.isArray(body['data'])) return body['data'] as ClaimDto[];
+    const nested = body['data'] as Record<string, unknown> | undefined;
+    if (nested && Array.isArray(nested['content'])) return nested['content'] as ClaimDto[];
+    if (Array.isArray(body['content'])) return body['content'] as ClaimDto[];
+    if (Array.isArray(body['claims'])) return body['claims'] as ClaimDto[];
+    if (Array.isArray(body['items'])) return body['items'] as ClaimDto[];
+    return [];
+  }
+
   private mapToClaim(dto: ClaimDto): Claim {
     return {
       id: dto.id,
@@ -188,6 +157,7 @@ export class HttpClaimRepository implements IClaimRepository {
       amount: dto.estimatedAmount || dto.approvedAmount || dto.amount || 0,
       submittedAt: dto.createdAt || dto.submittedAt || new Date().toISOString(),
       resolvedAt: dto.resolvedAt,
+      createdAt: dto.createdAt || dto.submittedAt,
     };
   }
 }

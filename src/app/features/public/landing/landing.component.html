@@ -1,0 +1,396 @@
+<ng-template #icon let-name>
+  <lucide-icon [img]="icons[name] || icons['shield']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+</ng-template>
+
+<div class="site">
+  <!-- ==================== Header ==================== -->
+  <header class="site-header" [class.site-header--scrolled]="isScrolled">
+    <div class="site-container site-header__inner">
+      <a class="site-header__brand" routerLink="/" aria-label="AssureFlow – Accueil">
+        <img src="brand/logo-mark.png" alt="" class="site-header__logo">
+        <span class="site-header__wordmark">Assure<span>Flow</span></span>
+      </a>
+
+      <nav class="site-nav" aria-label="Navigation principale">
+        <button *ngFor="let item of nav" type="button" class="site-nav__link" (click)="scrollTo(item.target)">{{ item.label }}</button>
+      </nav>
+
+      <div class="site-header__actions">
+        <ng-container *ngIf="isLoggedIn; else guestActions">
+          <a class="btn-brand btn-brand--sm" [routerLink]="spaceLink">
+            Mon espace
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+        </ng-container>
+        <ng-template #guestActions>
+          <a class="landing-login" routerLink="/login">Se connecter</a>
+          <a class="btn-brand btn-brand--sm" routerLink="/register">Créer un compte</a>
+        </ng-template>
+
+        <button class="site-header__burger" type="button" (click)="toggleMobileMenu()"
+                [attr.aria-expanded]="isMobileMenuOpen" aria-label="Ouvrir le menu">
+          <lucide-icon *ngIf="!isMobileMenuOpen" [img]="icons['menu']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+          <lucide-icon *ngIf="isMobileMenuOpen" [img]="icons['close']" [size]="20" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="site-mobile-nav" *ngIf="isMobileMenuOpen">
+      <button *ngFor="let item of nav" type="button" (click)="scrollTo(item.target)">{{ item.label }}</button>
+      <a *ngIf="!isLoggedIn" routerLink="/login">Se connecter</a>
+      <a *ngIf="!isLoggedIn" class="btn-brand" routerLink="/register">Créer un compte</a>
+      <a *ngIf="isLoggedIn" class="btn-brand" [routerLink]="spaceLink">Mon espace</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==================== Hero ==================== -->
+    <section class="hero">
+      <img class="hero__bg" src="images/hero-bg.jpg"
+           srcset="images/hero-bg-sm.jpg 1024w, images/hero-bg.jpg 1920w" sizes="100vw"
+           alt="" width="1920" height="1080" fetchpriority="high">
+      <div class="hero__overlay" aria-hidden="true"></div>
+
+      <p class="hero__tagline" aria-hidden="true">
+        Votre sécurité,<br>notre priorité
+        <svg viewBox="0 0 160 14" fill="none"><path d="M3 10c40-7 95-9 154-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </p>
+
+      <div class="site-container hero__inner">
+        <div class="hero__content">
+          <p class="hero__eyebrow">
+            <span class="hero__eyebrow-icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'verified' }"></ng-container>
+            </span>
+            <span>Assureur 100 % digital</span>
+            <span class="hero__eyebrow-sep" aria-hidden="true"></span>
+            <span class="hero__eyebrow-muted">Votre partenaire de confiance</span>
+          </p>
+
+          <h1>Votre assurance,<br><span>plus simple et plus proche</span><br>de vous.</h1>
+          <p class="hero__lead">Auto, santé, habitation ou vie : souscrivez en quelques minutes, suivez vos sinistres en temps réel et réglez vos factures en toute sécurité. Rejoignez plus de 200 000 assurés au Maroc.</p>
+
+          <div class="hero__actions">
+            <a class="btn-brand hero__btn" routerLink="/register">
+              Créer mon compte gratuit
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+            </a>
+            <button type="button" class="btn-outline hero__btn hero__btn--ghost" (click)="scrollTo('offres')">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'contracts' }"></ng-container>
+              Découvrir nos offres
+            </button>
+          </div>
+
+          <ul class="hero__features">
+            <li *ngFor="let benefit of benefits">
+              <span class="hero__features-icon">
+                <ng-container *ngTemplateOutlet="icon; context: { $implicit: benefit.icon }"></ng-container>
+              </span>
+              <span>
+                <strong>{{ benefit.title }}</strong>
+                <small>{{ benefit.description }}</small>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="landing-wave-gradient" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#0799d5"/>
+            <stop offset="1" stop-color="#43c4c0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 70C220 118 470 18 760 44C1040 70 1230 116 1440 52V120H0Z" fill="url(#landing-wave-gradient)" opacity="0.9"/>
+        <path d="M0 98C290 126 560 54 860 76C1110 94 1290 118 1440 92V120H0Z" fill="#f3f6fa"/>
+      </svg>
+
+      <div class="site-container hero__bottom">
+        <div class="hero__situation" aria-label="AssureFlow en bref">
+          <div class="hero__situation-item">
+            <span class="hero__situation-icon" data-tone="info">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'users' }"></ng-container>
+            </span>
+            <span class="hero__situation-text">
+              <small>Communauté</small>
+              <strong>+200 000</strong>
+              <small>Assurés au Maroc</small>
+            </span>
+          </div>
+          <div class="hero__situation-item">
+            <span class="hero__situation-icon" data-tone="success">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'star' }"></ng-container>
+            </span>
+            <span class="hero__situation-text">
+              <small>Satisfaction</small>
+              <strong>4,8/5</strong>
+              <small>2 300 avis vérifiés</small>
+            </span>
+          </div>
+          <a class="btn-brand btn-brand--sm hero__situation-cta" routerLink="/register">
+            Commencer
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="site-container page">
+      <!-- ==================== Offres ==================== -->
+      <section id="offres" class="offers" aria-labelledby="offers-title" afReveal>
+        <header class="head">
+          <div class="head__text">
+            <span class="head__eyebrow">Nos offres phares</span>
+            <h2 id="offers-title">Des solutions adaptées à <span>tous vos besoins</span></h2>
+            <p>Protégez ce qui compte pour vous, avec des offres flexibles, claires et sans surprise.</p>
+          </div>
+          <div *ngIf="carousel.offers.prev || carousel.offers.next" class="nav-arrows">
+            <button type="button" (click)="scrollTrack(offersTrack, -1)" [disabled]="!carousel.offers.prev" aria-label="Offres précédentes">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrowLeft' }"></ng-container>
+            </button>
+            <button type="button" (click)="scrollTrack(offersTrack, 1)" [disabled]="!carousel.offers.next" aria-label="Offres suivantes">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+            </button>
+          </div>
+        </header>
+
+        <div #offersTrack class="track offers__track" (scroll)="updateCarousel('offers', offersTrack)">
+          <article *ngFor="let offer of offers" class="offer">
+            <div class="offer__media">
+              <img [src]="offer.image" [alt]="'Assurance ' + offer.title" width="720" height="540" loading="lazy">
+              <span *ngIf="offer.popular" class="offer__tag">Populaire</span>
+              <span class="offer__badge">
+                <ng-container *ngTemplateOutlet="icon; context: { $implicit: offer.icon }"></ng-container>
+              </span>
+            </div>
+            <div class="offer__body">
+              <h3>{{ offer.title }}</h3>
+              <p>{{ offer.description }}</p>
+              <div class="offer__foot">
+                <span class="offer__price"><small>À partir de</small><strong>{{ offer.price }} MAD <small>/ an</small></strong></span>
+                <a class="offer__link" routerLink="/register" [attr.aria-label]="'Souscrire l’assurance ' + offer.title">
+                  <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ==================== Pourquoi AssureFlow ==================== -->
+      <section id="pourquoi" class="band why-band" aria-labelledby="why-title" afReveal>
+        <div class="why">
+          <div class="why__intro">
+            <span class="head__eyebrow">Pourquoi AssureFlow ?</span>
+            <h2 id="why-title">Une assurance pensée pour vous <span>simplifier la vie</span></h2>
+            <p>Depuis 2012, AssureFlow accompagne les familles et les professionnels marocains avec des contrats clairs, un service humain et des outils 100 % digitaux.</p>
+
+            <ul class="figures" aria-label="AssureFlow en chiffres">
+              <li *ngFor="let figure of keyFigures">
+                <strong>{{ figure.value }}</strong>
+                <small>{{ figure.label }}</small>
+              </li>
+            </ul>
+          </div>
+
+          <div class="why__grid">
+            <article *ngFor="let feature of features" class="why__card">
+              <span class="why__icon">
+                <ng-container *ngTemplateOutlet="icon; context: { $implicit: feature.icon }"></ng-container>
+              </span>
+              <h3>{{ feature.title }}</h3>
+              <p>{{ feature.text }}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== Comment ça marche ==================== -->
+      <section id="fonctionnement" class="steps" aria-labelledby="steps-title" afReveal>
+        <header class="head head--center">
+          <div class="head__text">
+            <span class="head__eyebrow">Comment ça marche ?</span>
+            <h2 id="steps-title">Assuré en <span>4 étapes simples</span></h2>
+            <p>De l’inscription à la gestion de vos contrats, tout se fait en ligne, en quelques minutes.</p>
+          </div>
+        </header>
+
+        <ol class="steps__list">
+          <li *ngFor="let step of steps; let i = index" class="steps__item">
+            <span class="steps__icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: step.icon }"></ng-container>
+              <b>{{ i + 1 }}</b>
+            </span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
+          </li>
+        </ol>
+
+        <div class="steps__cta">
+          <a class="btn-brand" routerLink="/register">
+            Créer mon compte
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+          <button type="button" class="btn-outline" (click)="scrollTo('offres')">Comparer les offres</button>
+        </div>
+      </section>
+
+      <!-- ==================== Bandeau ==================== -->
+      <section class="banner" aria-labelledby="banner-title" afReveal>
+        <img class="banner__bg" src="images/hero-bg-sm.jpg" alt="" width="1024" height="576" loading="lazy">
+        <span class="banner__icon" aria-hidden="true">
+          <lucide-icon [img]="icons['contracts']" [size]="30" [strokeWidth]="1.75"></lucide-icon>
+        </span>
+        <div class="banner__text">
+          <h2 id="banner-title">Une assurance aujourd’hui,<br>une tranquillité demain.</h2>
+          <p>Créez votre compte gratuitement et obtenez votre attestation en quelques minutes.</p>
+        </div>
+        <div class="banner__actions">
+          <a class="btn-brand banner__btn" routerLink="/register">
+            Créer mon compte
+            <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+          </a>
+          <a class="banner__btn banner__btn--ghost" routerLink="/login">J’ai déjà un compte</a>
+        </div>
+      </section>
+
+      <!-- ==================== Témoignages ==================== -->
+      <section id="avis" class="reviews" aria-labelledby="reviews-title" afReveal>
+        <aside class="reviews__summary">
+          <span class="head__eyebrow">Ils nous font confiance</span>
+          <h2 id="reviews-title">Ce que disent <span>nos assurés</span></h2>
+          <div class="reviews__score">
+            <strong>4,8</strong>
+            <span>
+              <span class="stars" aria-hidden="true">
+                <lucide-icon *ngFor="let s of stars" [img]="icons['star']" [size]="16"></lucide-icon>
+              </span>
+              <small>Sur plus de 2 300 avis vérifiés</small>
+            </span>
+          </div>
+          <ul class="reviews__bars" aria-label="Répartition des notes">
+            <li *ngFor="let bar of ratingBars">
+              <span>{{ bar.stars }} ★</span>
+              <span class="reviews__bar"><i [style.width.%]="bar.percent"></i></span>
+              <span>{{ bar.percent }} %</span>
+            </li>
+          </ul>
+          <div *ngIf="carousel.reviews.prev || carousel.reviews.next" class="nav-arrows">
+            <button type="button" (click)="scrollTrack(reviewsTrack, -1)" [disabled]="!carousel.reviews.prev" aria-label="Avis précédents">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrowLeft' }"></ng-container>
+            </button>
+            <button type="button" (click)="scrollTrack(reviewsTrack, 1)" [disabled]="!carousel.reviews.next" aria-label="Avis suivants">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+            </button>
+          </div>
+        </aside>
+
+        <div #reviewsTrack class="track reviews__track" (scroll)="updateCarousel('reviews', reviewsTrack)">
+          <figure *ngFor="let review of testimonials" class="review">
+            <lucide-icon class="review__quote" [img]="icons['quote']" [size]="28" aria-hidden="true"></lucide-icon>
+            <blockquote>{{ review.quote }}</blockquote>
+            <span class="stars" [attr.aria-label]="review.rating + ' étoiles sur 5'">
+              <lucide-icon *ngFor="let s of stars" [img]="icons['star']" [size]="14" [class.off]="s > review.rating" aria-hidden="true"></lucide-icon>
+            </span>
+            <figcaption>
+              <span class="review__avatar" aria-hidden="true">{{ initialsOf(review.name) }}</span>
+              <span>
+                <strong>{{ review.name }}</strong>
+                <small>Client depuis {{ review.since }} · {{ review.city }}</small>
+              </span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ==================== Assistant IA ==================== -->
+      <section id="assistant" class="assistant" aria-labelledby="assistant-title" afReveal>
+        <img class="assistant__bot" src="images/help-bot-wave.webp" alt="" width="419" height="440" loading="lazy">
+
+        <div class="assistant__text">
+          <div class="assistant__copy">
+            <span class="head__eyebrow">Nouveau · Assistant IA</span>
+            <h2 id="assistant-title">Votre assistant IA, <span>disponible 24h/24</span></h2>
+            <p>Inclus dans votre espace client : une réponse immédiate pour vos contrats, sinistres et factures.</p>
+          </div>
+          <div class="assistant__actions">
+            <ng-container *ngIf="!isLoggedIn; else connectedCta">
+              <a class="btn-brand" routerLink="/register">
+                Créer mon compte
+                <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+              </a>
+              <span class="assistant__login">Déjà client ? <a class="assistant__link" routerLink="/login">Se connecter</a></span>
+            </ng-container>
+            <ng-template #connectedCta>
+              <a class="btn-brand" [routerLink]="spaceLink">
+                Ouvrir mon espace
+                <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'arrow' }"></ng-container>
+              </a>
+            </ng-template>
+          </div>
+        </div>
+
+        <ul class="assistant__features">
+          <li *ngFor="let feature of assistantFeatures">
+            <span class="assistant__feature-icon">
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: feature.icon }"></ng-container>
+            </span>
+            <span>
+              <strong>{{ feature.title }}</strong>
+              <small>{{ feature.text }}</small>
+            </span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <button type="button" class="back-to-top" [class.back-to-top--visible]="showBackToTop"
+          [attr.tabindex]="showBackToTop ? null : -1" [attr.aria-hidden]="!showBackToTop"
+          (click)="scrollToTop()" aria-label="Revenir en haut de la page">
+    <lucide-icon [img]="icons['arrowUp']" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+  </button>
+
+  <!-- ==================== Footer ==================== -->
+  <footer class="site-footer">
+    <div class="site-container site-footer__inner">
+      <div class="site-footer__brand">
+        <div class="site-footer__logo">
+          <img src="brand/logo-mark-white.png" alt="">
+          <span>Assure<span>Flow</span></span>
+        </div>
+        <p>Votre assurance, plus simple. Contrats, sinistres et factures réunis dans un seul espace sécurisé.</p>
+      </div>
+
+      <nav class="site-footer__links" aria-label="Liens du pied de page">
+        <div>
+          <h4>Assurances</h4>
+          <button type="button" (click)="scrollTo('offres')">Auto</button>
+          <button type="button" (click)="scrollTo('offres')">Santé</button>
+          <button type="button" (click)="scrollTo('offres')">Habitation</button>
+          <button type="button" (click)="scrollTo('offres')">Vie</button>
+        </div>
+        <div>
+          <h4>AssureFlow</h4>
+          <button type="button" (click)="scrollTo('pourquoi')">Pourquoi nous</button>
+          <button type="button" (click)="scrollTo('avis')">Avis clients</button>
+          <button type="button" (click)="scrollTo('assistant')">Assistant IA</button>
+        </div>
+        <div>
+          <h4>Mon compte</h4>
+          <a routerLink="/login">Se connecter</a>
+          <a routerLink="/register">Créer un compte</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="site-container site-footer__bottom">
+      <span>© {{ currentYear }} AssureFlow. Tous droits réservés.</span>
+      <span class="site-footer__secure">
+        <lucide-icon [img]="icons['contracts']" [size]="16" [strokeWidth]="1.75" aria-hidden="true"></lucide-icon>
+        Votre sécurité, notre priorité
+      </span>
+    </div>
+  </footer>
+</div>

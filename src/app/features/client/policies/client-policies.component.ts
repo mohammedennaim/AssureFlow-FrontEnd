@@ -2,25 +2,49 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { catchError, of } from 'rxjs';
 import { ClientDashboardService } from '../../../core/application/services/client-dashboard.service';
 import { Policy } from '../../../core/domain/models/policy.model';
-import { catchError, of } from 'rxjs';
 import { POLICY_REPOSITORY } from '../../../core/domain/ports/policy.repository.port';
-import { AvatarColorPipe } from '../../../shared/pipes/avatar-color.pipe';
-import { StatusClassPipe } from '../../../shared/pipes/status-class.pipe';
-import { FormatCurrencyPipe } from '../../../shared/pipes/format-currency.pipe';
+import { AF_ICONS } from '../../../shared/icons/af-icons';
+import {
+  daysUntil,
+  formatDateFr,
+  formatMad,
+  policyTypeMeta,
+  PolicyTypeMeta,
+  statusMeta,
+  StatusMeta
+} from '../../../shared/utils/client-ui';
+
+type PolicyFilter = 'all' | 'active' | 'pending' | 'ended';
+
+const FILTER_STATUSES: Record<Exclude<PolicyFilter, 'all'>, string[]> = {
+  active: ['ACTIVE', 'RENEWED'],
+  pending: ['PENDING', 'DRAFT', 'SUBMITTED'],
+  ended: ['EXPIRED', 'CANCELLED', 'CANCELED', 'TERMINATED', 'SUSPENDED', 'INACTIVE', 'REJECTED']
+};
 
 @Component({
   selector: 'app-client-policies',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AvatarColorPipe, StatusClassPipe, FormatCurrencyPipe],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   templateUrl: './client-policies.component.html',
   styleUrl: './client-policies.component.scss'
 })
 export class ClientPoliciesComponent implements OnInit {
+  readonly icons = AF_ICONS;
+  readonly filters: { key: PolicyFilter; label: string }[] = [
+    { key: 'all', label: 'Tous' },
+    { key: 'active', label: 'Actifs' },
+    { key: 'pending', label: 'En attente' },
+    { key: 'ended', label: 'Terminés' }
+  ];
+
   loading = true;
   policies: Policy[] = [];
-  filter: 'all' | 'active' | 'pending' | 'expired' = 'all';
+  filter: PolicyFilter = 'all';
   searchQuery = '';
 
   private policyRepository = inject(POLICY_REPOSITORY);
@@ -32,87 +56,85 @@ export class ClientPoliciesComponent implements OnInit {
 
   loadPolicies(): void {
     this.loading = true;
-    
-    // Get current user's client ID first
     this.clientDashboardService.getCurrentClientId().subscribe({
       next: (clientId) => {
-        if (!clientId) {
-          console.warn('[ClientPolicies] No clientId found');
-          this.loading = false;
-          return;
-        }
-
-        console.log('[ClientPolicies] Loading policies for clientId:', clientId);
-        
+        if (!clientId) { this.loading = false; return; }
         this.policyRepository.getByClientId(clientId).pipe(
-          catchError((err) => {
-            console.error('[ClientPolicies] Error loading policies:', err);
-            this.loading = false;
-            return of([]);
-          })
-        ).subscribe((policies) => {
-          console.log('[ClientPolicies] Loaded policies:', policies);
-          this.policies = policies;
-          this.loading = false;
-        });
+          catchError(() => of([] as Policy[]))
+        ).subscribe((policies) => { this.policies = policies; this.loading = false; });
       },
-      error: (err) => {
-        console.error('[ClientPolicies] Error getting clientId:', err);
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
   }
 
-  getFilteredPolicies(): Policy[] {
-    let filtered = this.policies;
-
-    if (this.filter !== 'all') {
-      const filterMap: Record<string, string[]> = {
-        active: ['ACTIVE'],
-        pending: ['PENDING', 'DRAFT', 'SUBMITTED'],
-        expired: ['EXPIRED']
-      };
-      const statuses = filterMap[this.filter] || [];
-      filtered = filtered.filter(p => statuses.includes(p.status.toUpperCase()));
-    }
-
-    if (this.searchQuery) {
-      const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.policyNumber?.toLowerCase().includes(query) ||
-        p.type?.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }
-
-  getPolicyIcon(type: string): string {
-    const icons: Record<string, string> = {
-      AUTO: 'car',
-      HOME: 'home',
-      LIFE: 'heart',
-      HEALTH: 'health',
-      BUSINESS: 'building'
-    };
-    return icons[type.toUpperCase()] || 'shield';
-  }
-
-  formatDate(dateString: string | Date): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
+  get filteredPolicies(): Policy[] {
+    const query = this.searchQuery.trim().toLowerCase();
+    return this.policies.filter(p => {
+      if (!this.matches(p, this.filter)) return false;
+      if (!query) return true;
+      return (p.policyNumber || '').toLowerCase().includes(query)
+        || (p.type || '').toLowerCase().includes(query)
+        || this.type(p).label.toLowerCase().includes(query);
     });
   }
 
-  getTotalPremium(): number {
-    return this.policies.reduce((sum, p) => sum + (p.premium || 0), 0);
+  count(filter: PolicyFilter): number {
+    return this.policies.filter(p => this.matches(p, filter)).length;
   }
 
-  getActivePoliciesCount(): number {
-    return this.policies.filter(p => p.status === 'ACTIVE').length;
+  get activeCount(): number {
+    return this.count('active');
   }
 
-  getPendingPoliciesCount(): number {
-    return this.policies.filter(p => ['PENDING', 'DRAFT', 'SUBMITTED'].includes(p.status)).length;
+  get annualPremium(): string {
+    const source = this.activeCount ? this.policies.filter(p => this.matches(p, 'active')) : this.policies;
+    return formatMad(source.reduce((sum, p) => sum + (p.premium || 0), 0));
+  }
+
+  get nextDue(): { policy: Policy; days: number } | null {
+    let next: { policy: Policy; days: number } | null = null;
+    for (const policy of this.policies) {
+      if (!this.matches(policy, 'active')) continue;
+      const days = daysUntil(policy.endDate);
+      if (days === null || days < 0) continue;
+      if (!next || days < next.days) next = { policy, days };
+    }
+    return next;
+  }
+
+  status(policy: Policy): StatusMeta {
+    return statusMeta(policy.status);
+  }
+
+  type(policy: Policy): PolicyTypeMeta {
+    return policyTypeMeta(policy.type);
+  }
+
+  remaining(policy: Policy): number | null {
+    return daysUntil(policy.endDate);
+  }
+
+  inDays(days: number): string {
+    if (days === 0) return 'aujourd’hui';
+    if (days === 1) return 'demain';
+    return `dans ${days} jours`;
+  }
+
+  amount(value: number | null | undefined): string {
+    return formatMad(value);
+  }
+
+  date(value: string | Date | null | undefined): string {
+    return formatDateFr(value);
+  }
+
+  resetFilters(): void {
+    this.filter = 'all';
+    this.searchQuery = '';
+  }
+
+  private matches(policy: Policy, filter: PolicyFilter): boolean {
+    if (filter === 'all') return true;
+    return FILTER_STATUSES[filter].includes((policy.status || '').toUpperCase());
   }
 }

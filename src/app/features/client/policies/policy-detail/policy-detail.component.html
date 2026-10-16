@@ -1,130 +1,187 @@
-<div class="policy-detail-page">
-  <!-- Back Button -->
-  <div class="back-button-container">
-    <a routerLink="/client/policies" class="back-button">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M13.5 5L8.5 10L13.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Back to Policies
-    </a>
-  </div>
+<div class="cp">
+  <a routerLink="/client/policies" class="cp-back">
+    <lucide-icon [img]="icons['arrowLeft']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+    Mes contrats
+  </a>
 
   @if (loading) {
-    <div class="policy-detail-skeleton">
-      <div class="skeleton skeleton--text" style="width: 200px; height: 32px;"></div>
-      <div class="skeleton skeleton--text" style="width: 100%; height: 200px; margin-top: 1rem;"></div>
+    <div class="cp-skeleton detail__skeleton-head"></div>
+    <div class="cp-grid cp-grid--aside">
+      <div class="cp-skeleton cp-skeleton--card detail__skeleton-main"></div>
+      <div class="cp-skeleton cp-skeleton--card"></div>
     </div>
   } @else if (policy) {
-    <!-- Policy Header -->
-    <header class="policy-header">
-      <div class="policy-header__icon" [style.background]="getAvatarColor(policy.type)">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 4L6 10V18C6 26 11 31 16 33C21 31 26 26 26 18V10L16 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 18L15 21L20 15" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+    <header class="cp-head">
+      <div class="cp-head__text detail__head">
+        <span class="cp-tile cp-tile--lg cp-tile--brand">
+          <lucide-icon [img]="icons[type.icon]" [size]="26" [strokeWidth]="1.75"></lucide-icon>
+        </span>
+        <div>
+          <p class="cp-head__eyebrow">Contrat n° {{ policy.policyNumber || '—' }}</p>
+          <h1>Assurance <span>{{ type.label }}</span></h1>
+          <div class="cp-head__meta">
+            <span class="pill" [attr.data-tone]="status.tone">{{ status.label }}</span>
+            <span>
+              <lucide-icon [img]="icons['date']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Du {{ date(policy.startDate) }} au {{ date(policy.endDate) }}
+            </span>
+          </div>
+        </div>
       </div>
-      <div class="policy-header__content">
-        <h1>{{ policy.type | titlecase }} Insurance</h1>
-        <p class="policy-header__number">Policy #{{ policy.policyNumber || 'N/A' }}</p>
-        <span class="status-badge" [class]="getStatusClass(policy.status)">{{ policy.status | titlecase }}</span>
-      </div>
+      @if (isActive) {
+        <div class="cp-head__actions">
+          <a routerLink="/client/submit-claim" class="cp-btn cp-btn--primary">
+            <lucide-icon [img]="icons['claim']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Déclarer un sinistre
+          </a>
+        </div>
+      }
     </header>
 
-    <!-- Policy Details Grid -->
-    <div class="policy-details-grid">
-      <!-- Coverage Card -->
-      <div class="detail-card">
-        <div class="detail-card__header">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 2.5L4 5.5V9.5C4 13.5 6.5 17 10 18.5C13.5 17 16 13.5 16 9.5V5.5L10 2.5Z" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          <h3>Coverage</h3>
-        </div>
-        <div class="detail-card__value">
-          {{ formatCurrency(policy.coverageAmount || 0) }}
-        </div>
-        <p class="detail-card__subtext">Total coverage amount</p>
+    <div class="cp-grid cp-grid--aside">
+      <div class="detail__main">
+        <section class="cp-card">
+          <div class="cp-card__head">
+            <div>
+              <h2 class="cp-card__title">
+                <span class="cp-tile"><lucide-icon [img]="icons['contracts']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+                Garanties et couverture
+              </h2>
+              <p class="cp-card__sub">Les montants clés de votre contrat {{ type.label | lowercase }}.</p>
+            </div>
+          </div>
+
+          <div class="detail__figures">
+            <div class="detail__figure">
+              <span>Montant de couverture</span>
+              <strong>{{ policy.coverageAmount ? amount(policy.coverageAmount) : '—' }}</strong>
+            </div>
+            <div class="detail__figure">
+              <span>Prime annuelle</span>
+              <strong>{{ amount(policy.premium) }}</strong>
+              <small>soit environ {{ amount((policy.premium || 0) / 12) }} / mois</small>
+            </div>
+          </div>
+
+          <hr class="cp-divider">
+
+          <dl class="cp-dl">
+            <div>
+              <dt>N° de contrat</dt>
+              <dd>{{ policy.policyNumber || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Type d’assurance</dt>
+              <dd>{{ type.label }}</dd>
+            </div>
+            <div>
+              <dt>Statut</dt>
+              <dd><span class="pill" [attr.data-tone]="status.tone">{{ status.label }}</span></dd>
+            </div>
+            @if (policy.clientName) {
+              <div>
+                <dt>Assuré</dt>
+                <dd>{{ policy.clientName }}</dd>
+              </div>
+            }
+            <div>
+              <dt>Souscrit le</dt>
+              <dd>{{ date(policy.createdAt) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cp-card">
+          <div class="cp-card__head">
+            <h2 class="cp-card__title">
+              <span class="cp-tile"><lucide-icon [img]="icons['calendar']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+              Période de validité
+            </h2>
+            <span class="pill" [attr.data-tone]="validityTone">{{ validityLabel }}</span>
+          </div>
+
+          <div class="validity" [attr.data-tone]="validityTone">
+            <div class="validity__bar" role="progressbar" aria-label="Période écoulée"
+                 [attr.aria-valuenow]="progress" aria-valuemin="0" aria-valuemax="100">
+              <span [style.width.%]="progress"></span>
+            </div>
+            <ol class="validity__dates">
+              <li>
+                <span>Début</span>
+                <strong>{{ date(policy.startDate) }}</strong>
+              </li>
+              <li>
+                <span>Échéance</span>
+                <strong>{{ date(policy.endDate) }}</strong>
+              </li>
+            </ol>
+          </div>
+
+          @if (isActive && daysLeft !== null && daysLeft >= 0 && daysLeft <= 30) {
+            <div class="cp-alert" data-tone="warning">
+              <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              <div>
+                <strong>Votre contrat arrive bientôt à échéance</strong>
+                Contactez votre conseiller pour préparer son renouvellement.
+              </div>
+            </div>
+          }
+        </section>
       </div>
 
-      <!-- Premium Card -->
-      <div class="detail-card">
-        <div class="detail-card__header">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.41667 18.3333H15.5833C16.125 18.3333 16.5 17.875 16.5 17.4167V7.33333H5.5V17.4167C5.5 17.875 5.875 18.3333 6.41667 18.3333Z" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          <h3>Premium</h3>
-        </div>
-        <div class="detail-card__value">
-          {{ formatCurrency(policy.premium || 0) }}<span class="detail-card__period">/yr</span>
-        </div>
-        <p class="detail-card__subtext">Annual premium</p>
-      </div>
+      <aside class="detail__aside">
+        <section class="cp-card">
+          <h2 class="cp-card__title">Actions rapides</h2>
+          <div class="detail__actions">
+            @if (isActive) {
+              <a routerLink="/client/submit-claim" class="detail__action">
+                <span class="cp-tile" data-tone="danger"><lucide-icon [img]="icons['claim']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+                <span>
+                  <strong>Déclarer un sinistre</strong>
+                  <small>En quelques minutes, en ligne</small>
+                </span>
+                <lucide-icon class="detail__chevron" [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              </a>
+            }
+            <a routerLink="/client/claims" class="detail__action">
+              <span class="cp-tile" data-tone="info"><lucide-icon [img]="icons['claims']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+              <span>
+                <strong>Suivre mes sinistres</strong>
+                <small>Avancement de vos déclarations</small>
+              </span>
+              <lucide-icon class="detail__chevron" [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            </a>
+            <a routerLink="/client/billing" class="detail__action">
+              <span class="cp-tile" data-tone="success"><lucide-icon [img]="icons['invoices']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+              <span>
+                <strong>Mes factures</strong>
+                <small>Paiements et échéancier</small>
+              </span>
+              <lucide-icon class="detail__chevron" [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            </a>
+            <a routerLink="/client/documents" class="detail__action">
+              <span class="cp-tile" data-tone="neutral"><lucide-icon [img]="icons['documents']" [size]="20" [strokeWidth]="1.75"></lucide-icon></span>
+              <span>
+                <strong>Mes documents</strong>
+                <small>Attestations et pièces du contrat</small>
+              </span>
+              <lucide-icon class="detail__chevron" [img]="icons['chevron']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            </a>
+          </div>
+        </section>
 
-      <!-- Deductible Card -->
-      <div class="detail-card">
-        <div class="detail-card__header">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M10 6V10L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3>Created</h3>
-        </div>
-        <div class="detail-card__value" style="font-size: 1rem;">
-          {{ formatDate(policy.createdAt || '') }}
-        </div>
-        <p class="detail-card__subtext">Policy creation date</p>
-      </div>
-    </div>
-
-    <!-- Policy Information -->
-    <div class="policy-info-section">
-      <h2>Policy Information</h2>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-item__label">Policy Number</span>
-          <span class="info-item__value">{{ policy.policyNumber || 'N/A' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-item__label">Type</span>
-          <span class="info-item__value">{{ policy.type | titlecase }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-item__label">Status</span>
-          <span class="info-item__value">
-            <span class="status-badge" [class]="getStatusClass(policy.status)">{{ policy.status | titlecase }}</span>
-          </span>
-        </div>
-        <div class="info-item">
-          <span class="info-item__label">Start Date</span>
-          <span class="info-item__value">{{ formatDate(policy.startDate) }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-item__label">End Date</span>
-          <span class="info-item__value">{{ formatDate(policy.endDate) }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-item__label">Created At</span>
-          <span class="info-item__value">{{ formatDate(policy.createdAt || '') }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="policy-actions">
-      <a routerLink="/client/documents" class="btn btn--primary">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 2.5L5 5.5V14.5C5 16.5 7 18.5 10 18.5C13 18.5 15 16.5 15 14.5V7.5L10 2.5Z" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M10 2.5V7.5H15" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
-        View Documents
-      </a>
-      <a routerLink="/client/support" class="btn btn--outline">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M9 7V9M9 11V11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        Contact Support
-      </a>
+        <section class="cp-card detail__advisor">
+          <span class="cp-tile cp-tile--brand"><lucide-icon [img]="icons['advisor']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+          <div>
+            <h2 class="cp-card__title">Une question sur ce contrat ?</h2>
+            <p class="cp-card__sub">Nos conseillers vous accompagnent pour toute question sur vos garanties ou votre échéance.</p>
+          </div>
+          <a routerLink="/client/support" class="cp-btn cp-btn--soft cp-btn--block">
+            <lucide-icon [img]="icons['chat']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Contacter le support
+          </a>
+        </section>
+      </aside>
     </div>
   }
 </div>

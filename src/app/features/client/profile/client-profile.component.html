@@ -1,290 +1,486 @@
-<div class="profile-page">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="page-header__content">
-      <div class="page-header__title">
-        <h1>My Profile</h1>
-        <p>Manage your personal information and settings</p>
+<div class="cp">
+  @if (isLoading) {
+    <div class="cp-skeleton profile__skeleton-head" aria-hidden="true"></div>
+    <div class="profile" aria-hidden="true">
+      <div class="profile__main">
+        <div class="cp-skeleton cp-skeleton--card profile__skeleton-main"></div>
+        <div class="cp-skeleton cp-skeleton--card"></div>
+      </div>
+      <div class="profile__side">
+        <div class="cp-skeleton cp-skeleton--card"></div>
       </div>
     </div>
-  </header>
-
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Loading your profile...</p>
-  </div>
-
-  <!-- Error State -->
-  <div class="error-banner" *ngIf="errorMessage && !isLoading">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="currentColor"/></svg>
-    {{ errorMessage }}
-  </div>
-
-  <ng-container *ngIf="!isLoading">
-  <!-- Tabs -->
-  <nav class="profile-tabs">
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'profile'"
-      (click)="activeTab = 'profile'">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M3 15C3 12.5 5.5 10.5 9 10.5C12.5 10.5 15 12.5 15 15" stroke="currentColor" stroke-width="1.5"/>
-      </svg>
-      Profile Information
-    </button>
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'security'"
-      (click)="activeTab = 'security'">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 2L3 6V11C3 14.5 5.5 17 9 18C12.5 17 15.5 14.5 15.5 11V6L9 2Z" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M9 9V11" stroke="currentColor" stroke-width="1.5"/>
-        <circle cx="9" cy="13" r="1" fill="currentColor"/>
-      </svg>
-      Security
-    </button>
-    <button 
-      class="tab-btn" 
-      [class.active]="activeTab === 'notifications'"
-      (click)="activeTab = 'notifications'">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 2.5C8 2.5 6.5 4 6.5 6V9.5C6.5 10.5 5.5 11.5 4.5 11.5H13.5C12.5 11.5 11.5 10.5 11.5 9.5V6C11.5 4 10 2.5 10 2.5Z" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M7.5 15.5C7.5 16.8807 8.61929 18 10 18C11.3807 18 12.5 16.8807 12.5 15.5" stroke="currentColor" stroke-width="1.5"/>
-      </svg>
-      Notifications
-    </button>
-  </nav>
-
-  <!-- Profile Content -->
-  <div class="tab-content" *ngIf="activeTab === 'profile'">
-    <div class="profile-card">
-      <!-- Profile Avatar -->
-      <div class="profile-avatar-section">
-        <div class="profile-avatar">
-          <span>{{ profile.firstName[0] }}{{ profile.lastName[0] }}</span>
+    <p class="sr-only" role="status">Chargement de votre profil…</p>
+  } @else if (loadFailed) {
+    <div class="cp-alert" data-tone="danger" role="alert">
+      <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+      <div class="profile__alert-body">
+        <div>
+          <strong>Profil indisponible</strong>
+          {{ errorMessage }}
         </div>
-        <div class="profile-avatar-actions">
-          <button class="btn btn--outline" *ngIf="!isEditing">Change Photo</button>
-        </div>
-      </div>
-
-      <!-- Profile Form -->
-      <form class="profile-form">
-        <div class="form-section">
-          <h3>Personal Information</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>First Name</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.firstName" 
-                name="firstName"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Last Name</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.lastName" 
-                name="lastName"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input 
-                type="email" 
-                [(ngModel)]="profile.email" 
-                name="email"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Phone</label>
-              <input 
-                type="tel" 
-                [(ngModel)]="profile.phone" 
-                name="phone"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Date of Birth</label>
-              <input 
-                type="date" 
-                [(ngModel)]="profile.dateOfBirth" 
-                name="dateOfBirth"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h3>Address</h3>
-          <div class="form-grid">
-            <div class="form-group form-group--full">
-              <label>Street Address</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.address" 
-                name="address"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>City</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.city" 
-                name="city"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>ZIP Code</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.zipCode" 
-                name="zipCode"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Country</label>
-              <input 
-                type="text" 
-                [(ngModel)]="profile.country" 
-                name="country"
-                [disabled]="!isEditing"
-                [class.disabled]="!isEditing">
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="form-actions" *ngIf="isEditing">
-          <button 
-            type="button" 
-            class="btn btn--outline"
-            (click)="cancelEdit()">
-            Cancel
-          </button>
-          <button 
-            type="button" 
-            class="btn btn--primary"
-            [disabled]="isSaving"
-            (click)="saveProfile()">
-            <svg *ngIf="isSaving" class="btn--spinning" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15.75 9C15.75 10.8 14.85 12.45 13.425 13.5M2.25 9C2.25 7.2 3.15 5.55 4.575 4.5M15.75 9C15.75 13.5 12.6 15.75 9 15.75C7.5 15.75 6.225 15.375 5.175 14.775M4.575 4.5C5.625 3.9 6.9 3.525 8.4 3.525C12.6 3.525 15.75 5.775 15.75 9M2.25 9C2.25 4.5 5.4 2.25 9 2.25C10.5 2.25 11.775 2.625 12.825 3.225" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            {{ isSaving ? 'Saving...' : 'Save Changes' }}
-          </button>
-        </div>
-      </form>
-
-      <!-- View Mode Actions -->
-      <div class="profile-actions" *ngIf="!isEditing">
-        <button class="btn btn--primary" (click)="toggleEdit()">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12.75 3.75L5.25 11.25V14.25H8.25L15.75 6.75C16.1125 6.3875 16.3125 5.8875 16.3125 5.3875C16.3125 4.8875 16.1125 4.3875 15.75 4.025L13.725 2.025C13.3625 1.6625 12.8625 1.4625 12.3625 1.4625C11.8625 1.4625 11.3625 1.6625 11 2.025L12.75 3.75Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M9.75 5.25L12.75 8.25" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          Edit Profile
+        <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="loadProfile()">
+          <lucide-icon [img]="icons['refresh']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          Réessayer
         </button>
       </div>
     </div>
-  </div>
-
-  <!-- Security Tab -->
-  <div class="tab-content" *ngIf="activeTab === 'security'">
-    <div class="security-card">
-      <div class="security-section">
-        <h3>Change Password</h3>
-        <form class="security-form">
-          <div class="form-group">
-            <label>Current Password</label>
-            <input type="password" placeholder="Enter current password">
+  } @else {
+    <!-- ==================== En-tête ==================== -->
+    <header class="head" [class.is-editing]="isEditing">
+      <div class="head__cover">
+        <img [src]="coverSrc" alt="" width="1400" height="360">
+        @if (mediaBusy === 'cover') {
+          <span class="head__busy" role="status"><span class="cp-spinner"></span>Traitement de l’image…</span>
+        }
+        @if (isEditing) {
+          <div class="head__cover-tools">
+            <button type="button" class="head__cover-btn" data-media-trigger (click)="toggleMenu('cover')"
+                    aria-haspopup="menu" [attr.aria-expanded]="menu === 'cover'">
+              <lucide-icon [img]="icons['camera']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Changer la couverture
+            </button>
+            @if (menu === 'cover') {
+              <div class="media-menu media-menu--cover" role="menu" aria-label="Choisir une couverture">
+                <p class="media-menu__title">Choisir une couverture</p>
+                <div class="media-menu__presets">
+                  @for (preset of coverPresets; track preset.id) {
+                    <button type="button" role="menuitemradio" class="media-menu__preset"
+                            [class.is-selected]="isCoverSelected(preset.src)" [attr.aria-checked]="isCoverSelected(preset.src)"
+                            (click)="chooseCover(preset.src)">
+                      <img [src]="preset.src" alt="" loading="lazy">
+                      <span>{{ preset.label }}</span>
+                    </button>
+                  }
+                </div>
+                <label class="media-menu__item" role="menuitem">
+                  <lucide-icon [img]="icons['upload']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  Importer ma photo
+                  <small>JPG, PNG ou WebP · 8 Mo max.</small>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onMediaSelected('cover', $event)">
+                </label>
+                @if (hasCustomCover) {
+                  <button type="button" role="menuitem" class="media-menu__item media-menu__item--danger" (click)="chooseCover(coverPresets[0].src)">
+                    <lucide-icon [img]="icons['trash']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                    Retirer ma photo
+                  </button>
+                }
+              </div>
+            }
           </div>
-          <div class="form-group">
-            <label>New Password</label>
-            <input type="password" placeholder="Enter new password">
-          </div>
-          <div class="form-group">
-            <label>Confirm New Password</label>
-            <input type="password" placeholder="Confirm new password">
-          </div>
-          <button type="button" class="btn btn--primary">Update Password</button>
-        </form>
+        }
       </div>
 
-      <div class="security-section">
-        <h3>Two-Factor Authentication</h3>
-        <p class="security-description">Add an extra layer of security to your account</p>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Enable 2FA</span>
-            <span class="toggle-description">Receive a code via SMS to verify your identity</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox">
-            <span class="toggle-slider"></span>
-          </label>
+      <div class="head__body">
+        <div class="head__avatar-wrap">
+          <span class="head__avatar">
+            @if (avatarSrc; as avatar) {
+              <img [src]="avatar" alt="Photo de profil">
+            } @else {
+              <span aria-hidden="true">{{ initials }}</span>
+            }
+            @if (mediaBusy === 'avatar') {
+              <span class="head__avatar-busy" role="status" aria-label="Traitement de la photo"><span class="cp-spinner"></span></span>
+            }
+          </span>
+          @if (isEditing) {
+            <button type="button" class="head__avatar-btn" data-media-trigger (click)="toggleMenu('avatar')"
+                    aria-haspopup="menu" [attr.aria-expanded]="menu === 'avatar'" aria-label="Changer la photo de profil">
+              <lucide-icon [img]="icons['camera']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            </button>
+            @if (menu === 'avatar') {
+              <div class="media-menu media-menu--avatar" role="menu" aria-label="Photo de profil">
+                <label class="media-menu__item" role="menuitem">
+                  <lucide-icon [img]="icons['upload']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  {{ avatarSrc ? 'Changer la photo' : 'Ajouter une photo' }}
+                  <small>Format carré conseillé</small>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onMediaSelected('avatar', $event)">
+                </label>
+                @if (avatarSrc) {
+                  <button type="button" role="menuitem" class="media-menu__item media-menu__item--danger" (click)="removeAvatar()">
+                    <lucide-icon [img]="icons['trash']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                    Supprimer la photo
+                  </button>
+                }
+              </div>
+            }
+          }
         </div>
+
+        <div class="head__identity">
+          <div class="head__title">
+            <h1>{{ originalProfile.firstName }} {{ originalProfile.lastName }}</h1>
+            @if (status) {
+              <span class="pill" [attr.data-tone]="status.tone">{{ status.label }}</span>
+            }
+          </div>
+          <p class="head__meta">
+            @if (originalProfile.clientNumber) {
+              <span>
+                Client n° <strong>{{ originalProfile.clientNumber }}</strong>
+                <button type="button" class="head__copy" (click)="copyClientNumber()"
+                        [attr.aria-label]="copied ? 'Numéro client copié' : 'Copier le numéro client'"
+                        [attr.title]="copied ? 'Copié' : 'Copier'">
+                  <lucide-icon [img]="icons[copied ? 'checkAll' : 'copy']" [size]="14" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                </button>
+              </span>
+            }
+            @if (originalProfile.email) {
+              <span>
+                <lucide-icon [img]="icons['mail']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                {{ originalProfile.email }}
+              </span>
+            }
+          </p>
+        </div>
+
+        @if (!isEditing) {
+          <button type="button" class="cp-btn cp-btn--primary cp-btn--sm head__edit" (click)="startEdit()">
+            <lucide-icon [img]="icons['edit']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Modifier mon profil
+          </button>
+        } @else {
+          <span class="head__editing">
+            <lucide-icon [img]="icons['edit']" [size]="14" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+            Mode modification
+          </span>
+        }
       </div>
+
+      @if (mediaError) {
+        <div class="cp-alert head__error" data-tone="danger" role="alert">
+          <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+          <div>{{ mediaError }}</div>
+        </div>
+      }
+
+      <dl class="head__stats">
+        <div>
+          <dt>Profil complété</dt>
+          <dd>
+            {{ completionPercent }} %
+            <span class="head__bar" role="progressbar" aria-label="Complétion du profil"
+                  [attr.aria-valuenow]="completionPercent" aria-valuemin="0" aria-valuemax="100">
+              <span [style.width.%]="completionPercent"></span>
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>Client depuis</dt>
+          <dd>{{ seniority }}</dd>
+        </div>
+        <div>
+          <dt>Notifications actives</dt>
+          <dd>{{ enabledPrefs }} sur {{ notificationPrefs.length }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <div class="profile">
+      <div class="profile__main">
+        <!-- ==================== Informations ==================== -->
+        <section class="block" id="informations" aria-labelledby="info-title" [class.is-editing]="isEditing">
+          <div class="block__head">
+            <h2 id="info-title">
+              <lucide-icon [img]="icons['user']" [size]="19" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Informations personnelles
+            </h2>
+            @if (!isEditing) {
+              <button type="button" class="block__link" (click)="startEdit('profile-first-name')">Modifier</button>
+            }
+          </div>
+
+          <div class="profile__alerts" aria-live="polite">
+            @if (saveSuccess) {
+              <div class="cp-alert" data-tone="success">
+                <lucide-icon [img]="icons['check']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                <div>Vos informations ont bien été mises à jour.</div>
+              </div>
+            }
+            @if (errorMessage) {
+              <div class="cp-alert" data-tone="danger">
+                <lucide-icon [img]="icons['alert']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                <div>{{ errorMessage }}</div>
+              </div>
+            }
+          </div>
+
+          @if (isEditing) {
+            <form class="edit" id="profile-form" (ngSubmit)="saveProfile()" novalidate>
+              <div class="edit__grid">
+                <div class="edit__field">
+                  <label for="profile-first-name">Prénom</label>
+                  <input id="profile-first-name" type="text" name="firstName" autocomplete="given-name" maxlength="60"
+                         #firstNameCtrl="ngModel" [(ngModel)]="profile.firstName" required
+                         [attr.aria-invalid]="firstNameCtrl.invalid && firstNameCtrl.touched"
+                         [attr.aria-describedby]="firstNameCtrl.invalid && firstNameCtrl.touched ? 'profile-first-name-error' : null">
+                  @if (firstNameCtrl.invalid && firstNameCtrl.touched) {
+                    <p class="edit__error" id="profile-first-name-error">Le prénom est obligatoire.</p>
+                  }
+                </div>
+
+                <div class="edit__field">
+                  <label for="profile-last-name">Nom</label>
+                  <input id="profile-last-name" type="text" name="lastName" autocomplete="family-name" maxlength="60"
+                         #lastNameCtrl="ngModel" [(ngModel)]="profile.lastName" required
+                         [attr.aria-invalid]="lastNameCtrl.invalid && lastNameCtrl.touched"
+                         [attr.aria-describedby]="lastNameCtrl.invalid && lastNameCtrl.touched ? 'profile-last-name-error' : null">
+                  @if (lastNameCtrl.invalid && lastNameCtrl.touched) {
+                    <p class="edit__error" id="profile-last-name-error">Le nom est obligatoire.</p>
+                  }
+                </div>
+
+                <div class="edit__field">
+                  <label for="profile-phone">Téléphone</label>
+                  <input id="profile-phone" type="tel" name="phone" autocomplete="tel" inputmode="tel"
+                         placeholder="+212 6XX XX XX XX" [(ngModel)]="profile.phone"
+                         [attr.aria-invalid]="phoneInvalid"
+                         [attr.aria-describedby]="phoneInvalid ? 'profile-phone-error' : null">
+                  @if (phoneInvalid) {
+                    <p class="edit__error" id="profile-phone-error">Format attendu : +212 6XX XX XX XX.</p>
+                  }
+                </div>
+
+                <div class="edit__field">
+                  <label for="profile-birth">Date de naissance</label>
+                  <input id="profile-birth" type="date" name="dateOfBirth" autocomplete="bday" [max]="today"
+                         [(ngModel)]="profile.dateOfBirth">
+                </div>
+              </div>
+
+              <p class="edit__note">
+                <lucide-icon [img]="icons['secure']" [size]="14" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                L’e-mail et le CIN ne peuvent pas être modifiés en ligne.
+                <a routerLink="/client/support" fragment="contact">Contacter un conseiller</a>
+              </p>
+
+            </form>
+          } @else {
+            <dl class="rows">
+              <div class="rows__item">
+                <dt><lucide-icon [img]="icons['user']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Nom complet</dt>
+                <dd>{{ originalProfile.firstName }} {{ originalProfile.lastName }}</dd>
+              </div>
+              <div class="rows__item">
+                <dt><lucide-icon [img]="icons['date']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Date de naissance</dt>
+                @if (originalProfile.dateOfBirth) {
+                  <dd>{{ date(originalProfile.dateOfBirth) }}@if (age !== null) {<span class="rows__muted"> · {{ age }} ans</span>}</dd>
+                } @else {
+                  <dd class="rows__muted">
+                    Non renseignée
+                    <button type="button" class="rows__action" (click)="startEdit('profile-birth')">Ajouter</button>
+                  </dd>
+                }
+              </div>
+              <div class="rows__item">
+                <dt><lucide-icon [img]="icons['phone']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Téléphone</dt>
+                @if (originalProfile.phone) {
+                  <dd>{{ originalProfile.phone }}</dd>
+                } @else {
+                  <dd class="rows__muted">
+                    Non renseigné
+                    <button type="button" class="rows__action" (click)="startEdit('profile-phone')">Ajouter</button>
+                  </dd>
+                }
+              </div>
+              <div class="rows__item">
+                <dt><lucide-icon [img]="icons['mail']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>E-mail</dt>
+                <dd class="rows__break">{{ originalProfile.email || '—' }}</dd>
+              </div>
+              @if (originalProfile.cin) {
+                <div class="rows__item">
+                  <dt><lucide-icon [img]="icons['hash']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>CIN</dt>
+                  <dd>
+                    {{ originalProfile.cin }}
+                    <span class="rows__verified">
+                      <lucide-icon [img]="icons['verified']" [size]="15" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                      Vérifiée
+                    </span>
+                  </dd>
+                </div>
+              }
+            </dl>
+          }
+        </section>
+
+        <!-- ==================== Adresse ==================== -->
+        <section class="block" id="adresse" aria-labelledby="address-title">
+          <div class="block__head">
+            <h2 id="address-title">
+              <lucide-icon [img]="icons['mapPin']" [size]="19" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Adresse postale
+            </h2>
+            <a routerLink="/client/support" fragment="contact" class="block__link">
+              {{ hasAddress ? 'Demander un changement' : 'Ajouter' }}
+            </a>
+          </div>
+          <div class="address">
+            @if (hasAddress) {
+              <address>
+                @if (originalProfile.address) { <strong>{{ originalProfile.address }}</strong> }
+                @if (cityLine) { <span>{{ cityLine }}</span> }
+                @if (originalProfile.country) { <span>{{ originalProfile.country }}</span> }
+              </address>
+            } @else {
+              <p class="rows__muted">Aucune adresse enregistrée.</p>
+            }
+            <p class="address__note">Un justificatif de domicile de moins de 3 mois vous sera demandé pour tout changement.</p>
+          </div>
+        </section>
+
+        <!-- ==================== Sécurité ==================== -->
+        <section class="block" id="securite" aria-labelledby="security-title">
+          <div class="block__head">
+            <h2 id="security-title">
+              <lucide-icon [img]="icons['secure']" [size]="19" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Connexion et sécurité
+            </h2>
+          </div>
+          <dl class="rows">
+            <div class="rows__item">
+              <dt><lucide-icon [img]="icons['user']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Identifiant</dt>
+              <dd class="rows__break">{{ originalProfile.email }}</dd>
+            </div>
+            <div class="rows__item">
+              <dt><lucide-icon [img]="icons['key']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Mot de passe</dt>
+              <dd>
+                <span class="rows__dots" aria-label="Masqué">••••••••••</span>
+                <a routerLink="/client/support" fragment="contact" class="rows__action">Modifier</a>
+              </dd>
+            </div>
+            <div class="rows__item">
+              <dt><lucide-icon [img]="icons['smartphone']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>Session</dt>
+              <dd>
+                <span class="rows__session"><i aria-hidden="true"></i>{{ device }} <span class="rows__muted">· cet appareil</span></span>
+                <button type="button" class="rows__action rows__action--danger" (click)="logout()">Se déconnecter</button>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- ==================== Notifications ==================== -->
+        <section class="block" id="notifications" aria-labelledby="prefs-title">
+          <div class="block__head">
+            <h2 id="prefs-title">
+              <lucide-icon [img]="icons['bell']" [size]="19" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+              Notifications par e-mail
+            </h2>
+            <span class="block__hint">Enregistrées automatiquement</span>
+          </div>
+          <ul class="prefs">
+            @for (pref of notificationPrefs; track pref.key) {
+              <li>
+                <label class="prefs__item" [attr.for]="'pref-' + pref.key">
+                  <span class="prefs__text">
+                    <strong>{{ pref.label }}</strong>
+                    <small>{{ pref.hint }}</small>
+                  </span>
+                  @if (savedPref === pref.key) {
+                    <span class="prefs__saved" role="status">
+                      <lucide-icon [img]="icons['check']" [size]="13" [strokeWidth]="2.5" aria-hidden="true"></lucide-icon>
+                      Enregistré
+                    </span>
+                  }
+                  <span class="switch">
+                    <input type="checkbox" role="switch" [id]="'pref-' + pref.key" [name]="'pref-' + pref.key"
+                           [(ngModel)]="pref.enabled" (ngModelChange)="togglePref(pref)">
+                    <span aria-hidden="true"></span>
+                  </span>
+                </label>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+
+      <aside class="profile__side">
+        <!-- Carte assuré -->
+        <div class="card" aria-label="Carte assuré">
+          <img class="card__watermark" src="brand/logo-mark-white.png" alt="" aria-hidden="true">
+          <div class="card__top">
+            <img src="brand/logo-white.png" alt="AssureFlow">
+            <span>Carte assuré</span>
+          </div>
+          <div>
+            <small>Titulaire</small>
+            <div class="card__name">{{ originalProfile.firstName }} {{ originalProfile.lastName }}</div>
+          </div>
+          <div class="card__bottom">
+            <div>
+              <small>N° client</small>
+              <span>{{ originalProfile.clientNumber || '—' }}</span>
+            </div>
+            <div>
+              <small>Depuis</small>
+              <span>{{ memberSinceShort }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complétion -->
+        @if (nextMissing) {
+          <div class="side-box">
+            <div class="side-box__head">
+              <strong>Complétez votre profil</strong>
+              <span>{{ completionPercent }} %</span>
+            </div>
+            <div class="side-box__bar" role="progressbar" aria-label="Complétion du profil"
+                 [attr.aria-valuenow]="completionPercent" aria-valuemin="0" aria-valuemax="100">
+              <span [style.width.%]="completionPercent"></span>
+            </div>
+            <ul class="side-box__todo">
+              @for (item of completion; track item.key) {
+                @if (!item.done) {
+                  <li>
+                    <button type="button" (click)="item.field ? startEdit(item.field) : scrollTo('adresse')">
+                      <lucide-icon [img]="icons['plus']" [size]="15" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+                      Ajouter : {{ item.label.toLowerCase() }}
+                    </button>
+                  </li>
+                }
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- Aide -->
+        <div class="help">
+          <img src="images/help-bot-wave.webp" alt="" width="72" height="72">
+          <div>
+            <strong>Une question sur vos données ?</strong>
+            <p>Un conseiller vous répond du lundi au vendredi, 9h–18h.</p>
+            <a routerLink="/client/support" fragment="contact" class="cp-link">
+              Contacter un conseiller
+              <lucide-icon [img]="icons['arrow']" [size]="15" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+            </a>
+          </div>
+        </div>
+      </aside>
     </div>
-  </div>
 
-  <!-- Notifications Tab -->
-  <div class="tab-content" *ngIf="activeTab === 'notifications'">
-    <div class="notifications-card">
-      <div class="notification-section">
-        <h3>Email Notifications</h3>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Policy Updates</span>
-            <span class="toggle-description">Receive emails about policy changes and renewals</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Claim Updates</span>
-            <span class="toggle-description">Get notified about claim status changes</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Payment Reminders</span>
-            <span class="toggle-description">Receive payment due date reminders</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Marketing Emails</span>
-            <span class="toggle-description">Receive promotional offers and newsletters</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+    @if (isEditing) {
+      <div class="save-bar" role="region" aria-label="Enregistrer les modifications">
+        <p class="save-bar__status" aria-live="polite">
+          @if (isDirty) {
+            <span class="save-bar__dot" aria-hidden="true"></span>
+            Modifications non enregistrées
+          } @else {
+            Aucune modification pour l’instant
+          }
+        </p>
+        <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="cancelEdit()" [disabled]="isSaving">
+          Annuler
+        </button>
+        <button type="submit" form="profile-form" class="cp-btn cp-btn--primary cp-btn--sm"
+                [disabled]="!canSave" [attr.aria-busy]="isSaving">
+          @if (isSaving) {
+            <span class="cp-spinner" aria-hidden="true"></span>
+            Enregistrement…
+          } @else {
+            Enregistrer
+          }
+        </button>
       </div>
-    </div>
-  </div>
-</ng-container>
+    }
+  }
 </div>

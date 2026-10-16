@@ -3,10 +3,14 @@
     <aside class="sidebar bg-dark text-white d-flex flex-column transition-all"
         [class.collapsed]="isSidebarCollapsed">
         <!-- Brand -->
-        <div class="sidebar-brand d-flex align-items-center justify-content-center py-4 border-bottom border-secondary">
-            <i class="fa-solid fa-shield-halved fs-3 text-warning me-2"></i>
-            <span class="fs-4 fw-bold text-uppercase brand-text" *ngIf="!isSidebarCollapsed">Assure<span
-                    class="text-warning">Flow</span></span>
+        <div class="sidebar-brand border-bottom" [class.justify-content-center]="isSidebarCollapsed">
+            <a class="sidebar-logo" routerLink="/finance/dashboard" aria-label="AssureFlow – Finance Hub">
+                <img src="brand/logo-mark-white.png" alt="" width="36" height="36">
+                <span class="sidebar-brand-name" *ngIf="!isSidebarCollapsed">
+                    <span class="brand-text">Assure<span class="brand-flow">Flow</span></span>
+                    <span class="brand-subtitle">Finance Hub</span>
+                </span>
+            </a>
         </div>
 
         <!-- Navigation -->

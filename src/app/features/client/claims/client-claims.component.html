@@ -1,207 +1,126 @@
-<div class="claims-page">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="page-header__content">
-      <div class="page-header__title">
-        <h1>My Claims</h1>
-        <p>Track and manage your insurance claims</p>
-      </div>
-      <div class="page-header__actions">
-        <a routerLink="/client/submit-claim" class="btn btn--primary">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 3.75V14.25M3.75 9H14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Submit New Claim
-        </a>
-      </div>
+<div class="cp">
+  <header class="cp-head">
+    <div class="cp-head__text">
+      <p class="cp-head__eyebrow">Mon espace</p>
+      <h1>Mes <span>sinistres</span></h1>
+      <p class="cp-head__lead">Suivez l’avancement de vos déclarations, étape par étape.</p>
+    </div>
+    <div class="cp-head__actions">
+      <a routerLink="/client/submit-claim" class="cp-btn cp-btn--primary">
+        <lucide-icon [img]="icons['plus']" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+        Déclarer un sinistre
+      </a>
     </div>
   </header>
 
-  <!-- Stats Cards -->
-  <section class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14.6667 5.04167H12.8333V4.58333C12.8333 3.56581 12.0008 2.75 10.9583 2.75C9.91583 2.75 9.08333 3.56581 9.08333 4.58333V5.04167H7.33333C5.95833 5.04167 5.04167 5.95833 5.04167 7.33333V16.5C5.04167 17.875 5.95833 18.7917 7.33333 18.7917H14.6667C16.0417 18.7917 16.9583 17.875 16.9583 16.5V7.33333C16.9583 5.95833 16.0417 5.04167 14.6667 5.04167Z" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Total Claims</span>
-        <span class="stat-card__value">{{ claims.length }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-          <path d="M11 7V11" stroke="white" stroke-width="1.5"/>
-          <circle cx="11" cy="13.5" r="1" fill="white"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Pending</span>
-        <span class="stat-card__value">{{ getPendingClaimsCount() }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="11" r="8" stroke="white" stroke-width="1.5"/>
-          <path d="M9 11L11 13L15 9" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Approved</span>
-        <span class="stat-card__value">{{ getApprovedClaimsCount() }}</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card__icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6.41667 18.3333H15.5833C16.125 18.3333 16.5 17.875 16.5 17.4167V7.33333H5.5V17.4167C5.5 17.875 5.875 18.3333 6.41667 18.3333Z" stroke="white" stroke-width="1.5"/>
-          <path d="M13.75 6.41667V5.04167C13.75 4.275 13.125 3.66667 12.375 3.66667H9.625C8.875 3.66667 8.25 4.275 8.25 5.04167V6.41667" stroke="white" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="stat-card__info">
-        <span class="stat-card__label">Total Approved</span>
-        <span class="stat-card__value">${{ getTotalApprovedAmount() }}</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Filters -->
-  <section class="filters-section">
-    <div class="filters">
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'all'"
-        (click)="filter = 'all'">
-        All
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'pending'"
-        (click)="filter = 'pending'">
-        Pending
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'processing'"
-        (click)="filter = 'processing'">
-        Processing
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'approved'"
-        (click)="filter = 'approved'">
-        Approved
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filter === 'rejected'"
-        (click)="filter = 'rejected'">
-        Rejected
-      </button>
-    </div>
-  </section>
-
-  <!-- Claims Timeline -->
-  <section class="claims-list">
+  <section class="cp-stats" aria-label="Résumé">
     @if (loading) {
-      @for (item of [1,2,3]; track $index) {
-        <div class="claim-card claim-card--skeleton">
-          <div class="skeleton skeleton--circle"></div>
-          <div class="claim-card__content">
-            <div class="skeleton skeleton--text"></div>
-            <div class="skeleton skeleton--text skeleton--short"></div>
-          </div>
-        </div>
+      @for (i of [1, 2, 3]; track i) { <div class="cp-skeleton cp-skeleton--stat"></div> }
+    } @else {
+      <div class="cp-stat" data-tone="info">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['claims']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">Déclarations</span>
+          <span class="cp-stat__value">{{ claims.length }}</span>
+        </span>
+      </div>
+      <div class="cp-stat" [attr.data-tone]="inProgressCount ? 'warning' : 'success'">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['hourglass']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">En cours</span>
+          <span class="cp-stat__value">{{ inProgressCount }}</span>
+        </span>
+      </div>
+      <div class="cp-stat" data-tone="success">
+        <span class="cp-stat__icon"><lucide-icon [img]="icons['banknote']" [size]="22" [strokeWidth]="1.75"></lucide-icon></span>
+        <span class="cp-stat__text">
+          <span class="cp-stat__label">Montant accepté</span>
+          <span class="cp-stat__value">{{ approvedTotal }}</span>
+        </span>
+      </div>
+    }
+  </section>
+
+  <div class="cp-toolbar">
+    <div class="cp-filters" role="tablist" aria-label="Filtrer les sinistres">
+      @for (f of filters; track f.key) {
+        <button type="button" class="cp-filter" role="tab" [class.cp-filter--active]="filter === f.key"
+                [attr.aria-selected]="filter === f.key" (click)="filter = f.key">
+          {{ f.label }}
+          <small>{{ count(f.key) }}</small>
+        </button>
       }
-    } @else if (getFilteredClaims().length === 0) {
-      <div class="empty-state">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
-          <path d="M32 18V32L40 40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <h3>No claims found</h3>
-        <p>Submit a new claim when you need to make an insurance claim</p>
-        <a routerLink="/client/submit-claim" class="btn btn--primary">Submit Claim</a>
+    </div>
+  </div>
+
+  <section class="cp-list" aria-live="polite">
+    @if (loading) {
+      @for (i of [1, 2, 3]; track i) { <div class="cp-skeleton cp-skeleton--card"></div> }
+    } @else if (filteredClaims.length === 0) {
+      <div class="cp-empty">
+        <span class="cp-empty__icon"><lucide-icon [img]="icons['inbox']" [size]="28" [strokeWidth]="1.75"></lucide-icon></span>
+        @if (claims.length === 0) {
+          <h3>Aucun sinistre déclaré</h3>
+          <p>Un imprévu ? Déclarez-le en quelques minutes, nous nous occupons du reste.</p>
+          <a routerLink="/client/submit-claim" class="cp-btn cp-btn--primary cp-btn--sm">
+            <lucide-icon [img]="icons['plus']" [size]="16" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Déclarer un sinistre
+          </a>
+        } @else {
+          <h3>Aucun sinistre dans cette catégorie</h3>
+          <p>Essayez un autre filtre pour retrouver vos déclarations.</p>
+          <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" (click)="filter = 'all'">Voir tous les sinistres</button>
+        }
       </div>
     } @else {
-      @for (claim of getFilteredClaims(); track claim.id) {
-        <div class="claim-card">
-          <div class="claim-card__icon" [style.background]="claim.id.toString() | avatarColor">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3L5 7V13C5 18 8.5 22 12 23C15.5 22 19 18 19 13V7L12 3Z" stroke="white" stroke-width="2"/>
-              <path d="M9 13L11 15L15 11" stroke="white" stroke-width="2"/>
-            </svg>
-          </div>
-          <div class="claim-card__content">
-            <div class="claim-card__header">
-              <div class="claim-card__title">
-                <h3>Claim #{{ claim.claimNumber }}</h3>
-                <span class="claim-card__date">{{ formatDate(claim.createdAt || claim.submittedAt || '') }}</span>
-              </div>
-              <span class="status-badge" [class]="claim.status | statusClass">{{ claim.status | titlecase }}</span>
+      @for (claim of filteredClaims; track claim.id) {
+        <a class="claim cp-card" [routerLink]="['/client/claims', claim.id]">
+          <div class="claim__top">
+            <span class="cp-tile" [attr.data-tone]="status(claim).tone">
+              <lucide-icon [img]="icons['claims']" [size]="20" [strokeWidth]="1.75"></lucide-icon>
+            </span>
+            <div class="claim__title">
+              <h2>Sinistre n° {{ claim.claimNumber || '—' }}</h2>
+              <p>{{ claim.description || 'Aucune description fournie' }}</p>
             </div>
-            
-            <!-- Mini Steps Tracker -->
-            <div class="mini-steps-tracker">
-              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'SUBMITTED') || isRejectedStatus(claim.status)" [class.mini-step--active]="claim.status === 'SUBMITTED'">
-                <div class="mini-step__dot"></div>
-                <span class="mini-step__label">Submitted</span>
+            <span class="pill" [attr.data-tone]="status(claim).tone">{{ status(claim).label }}</span>
+          </div>
+
+          <ol class="cp-steps" aria-label="Avancement">
+            @for (step of steps; track step; let i = $index) {
+              <li [class]="stepState(claim, i)">{{ i === 2 && status(claim).tone === 'danger' ? status(claim).label : step }}</li>
+            }
+          </ol>
+
+          <div class="claim__foot">
+            <dl class="cp-dl">
+              <div>
+                <dt>Déclaré le</dt>
+                <dd>{{ date(claim.submittedAt || claim.createdAt) }}</dd>
               </div>
-              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'UNDER_REVIEW') || isRejectedStatus(claim.status)"></div>
-              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'UNDER_REVIEW') || isRejectedStatus(claim.status)" [class.mini-step--active]="claim.status === 'UNDER_REVIEW'">
-                <div class="mini-step__dot"></div>
-                <span class="mini-step__label">Review</span>
-              </div>
-              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'APPROVED')"></div>
-              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'APPROVED')" [class.mini-step--active]="claim.status === 'APPROVED'">
-                <div class="mini-step__dot"></div>
-                <span class="mini-step__label">Approved</span>
-              </div>
-              <div class="mini-step__line" [class.mini-step__line--completed]="isStatusPast(claim.status, 'PAID')"></div>
-              <div class="mini-step" [class.mini-step--completed]="isStatusPast(claim.status, 'PAID')" [class.mini-step--active]="claim.status === 'PAID'">
-                <div class="mini-step__dot"></div>
-                <span class="mini-step__label">Paid</span>
-              </div>
-              @if (isRejectedStatus(claim.status)) {
-                <div class="mini-step__line mini-step__line--rejected"></div>
-                <div class="mini-step mini-step--rejected">
-                  <div class="mini-step__dot mini-step__dot--rejected"></div>
-                  <span class="mini-step__label mini-step__label--rejected">{{ claim.status === 'CLOSED' ? 'Closed' : 'Rejected' }}</span>
+              @if (claim.incidentDate) {
+                <div>
+                  <dt>Date du sinistre</dt>
+                  <dd>{{ date(claim.incidentDate) }}</dd>
                 </div>
               }
-            </div>
-            
-            <p class="claim-card__description">{{ claim.description || 'No description provided' }}</p>
-            <div class="claim-card__details">
-              <div class="detail">
-                <span class="detail__label">Policy</span>
-                <span class="detail__value">{{ claim.policyId || 'N/A' }}</span>
+              <div>
+                <dt>Montant déclaré</dt>
+                <dd>{{ amount(claim.amount || claim.estimatedAmount) }}</dd>
               </div>
-              <div class="detail">
-                <span class="detail__label">Claim Amount</span>
-                <span class="detail__value">{{ claim.amount || 0 | formatCurrency }}</span>
-              </div>
-              <div class="detail" *ngIf="claim.approvedAmount">
-                <span class="detail__label">Approved Amount</span>
-                <span class="detail__value">{{ claim.approvedAmount | formatCurrency }}</span>
-              </div>
-              <div class="detail" *ngIf="claim.incidentDate">
-                <span class="detail__label">Incident Date</span>
-                <span class="detail__value">{{ formatDate(claim.incidentDate) }}</span>
-              </div>
-            </div>
-            <div class="claim-card__actions">
-              <a routerLink="/client/claims/{{ claim.id }}" class="btn btn--secondary">View Details</a>
-              @if (claim.status === 'PENDING' || claim.status === 'SUBMITTED') {
-                <button class="btn btn--outline">Edit Claim</button>
+              @if (claim.approvedAmount) {
+                <div>
+                  <dt>Montant accepté</dt>
+                  <dd class="claim__approved">{{ amount(claim.approvedAmount) }}</dd>
+                </div>
               }
-            </div>
+            </dl>
+            <span class="cp-link">
+              Voir le détail
+              <lucide-icon [img]="icons['arrow']" [size]="15" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+            </span>
           </div>
-        </div>
+        </a>
       }
     }
   </section>
